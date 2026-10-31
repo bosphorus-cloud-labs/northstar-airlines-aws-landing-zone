@@ -1,0 +1,1644 @@
+{
+  "/api/v1/summary": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": {
+      "account_count": 10,
+      "finding_count": 50,
+      "account_counts": {
+        "compliant": 3,
+        "noncompliant": 3,
+        "unknown": 2,
+        "stale": 2
+      },
+      "finding_counts": {
+        "compliant": 31,
+        "noncompliant": 3,
+        "unknown": 6,
+        "stale": 10
+      },
+      "environment_counts": {
+        "production": 3,
+        "pre-production": 2,
+        "testing": 2,
+        "development": 3
+      }
+    }
+  },
+  "/api/v1/accounts": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": [
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-001",
+          "name": "NorthStar production 01",
+          "environment": "production",
+          "ou_id": "sim-ou-production",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "compliant",
+          "controls": {
+            "compliant": 5,
+            "noncompliant": 0,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-002",
+          "name": "NorthStar production 02",
+          "environment": "production",
+          "ou_id": "sim-ou-production",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "noncompliant",
+          "controls": {
+            "compliant": 4,
+            "noncompliant": 1,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": [
+            {
+              "id": "exc-002",
+              "state": "active"
+            }
+          ]
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-003",
+          "name": "NorthStar production 03",
+          "environment": "production",
+          "ou_id": "sim-ou-production",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "stale",
+          "controls": {
+            "compliant": 0,
+            "noncompliant": 0,
+            "unknown": 0,
+            "stale": 5
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-004",
+          "name": "NorthStar pre-production 04",
+          "environment": "pre-production",
+          "ou_id": "sim-ou-pre-production",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "unknown",
+          "controls": {
+            "compliant": 4,
+            "noncompliant": 0,
+            "unknown": 1,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-005",
+          "name": "NorthStar pre-production 05",
+          "environment": "pre-production",
+          "ou_id": "sim-ou-pre-production",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "noncompliant",
+          "controls": {
+            "compliant": 4,
+            "noncompliant": 1,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-006",
+          "name": "NorthStar testing 06",
+          "environment": "testing",
+          "ou_id": "sim-ou-testing",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "compliant",
+          "controls": {
+            "compliant": 5,
+            "noncompliant": 0,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-007",
+          "name": "NorthStar testing 07",
+          "environment": "testing",
+          "ou_id": "sim-ou-testing",
+          "lifecycle_status": "onboarding",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "unknown",
+          "controls": {
+            "compliant": 0,
+            "noncompliant": 0,
+            "unknown": 5,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-008",
+          "name": "NorthStar development 08",
+          "environment": "development",
+          "ou_id": "sim-ou-development",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "noncompliant",
+          "controls": {
+            "compliant": 4,
+            "noncompliant": 1,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": [
+            {
+              "id": "exc-008",
+              "state": "expired"
+            }
+          ]
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-009",
+          "name": "NorthStar development 09",
+          "environment": "development",
+          "ou_id": "sim-ou-development",
+          "lifecycle_status": "active",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "compliant",
+          "controls": {
+            "compliant": 5,
+            "noncompliant": 0,
+            "unknown": 0,
+            "stale": 0
+          },
+          "exceptions": []
+        }
+      },
+      {
+        "account": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "sim-account-010",
+          "name": "NorthStar development 10",
+          "environment": "development",
+          "ou_id": "sim-ou-development",
+          "lifecycle_status": "suspended",
+          "desired_policy_version": "1.0.0",
+          "created_at": "2026-10-01T00:00:00Z"
+        },
+        "compliance": {
+          "status": "stale",
+          "controls": {
+            "compliant": 0,
+            "noncompliant": 0,
+            "unknown": 0,
+            "stale": 5
+          },
+          "exceptions": []
+        }
+      }
+    ],
+    "pagination": {
+      "total": 10,
+      "limit": 100,
+      "offset": 0,
+      "next_offset": null
+    }
+  },
+  "/api/v1/findings": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": [
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-001-baseline-encryption",
+        "account_id": "sim-account-001",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-001-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-001-deployment-approval",
+        "account_id": "sim-account-001",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-001-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-001-logging",
+        "account_id": "sim-account-001",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-001-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-001-public-access",
+        "account_id": "sim-account-001",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-001-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-001-security-monitoring",
+        "account_id": "sim-account-001",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-001-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-002-baseline-encryption",
+        "account_id": "sim-account-002",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": false,
+        "evidence_id": "ev-002-baseline-encryption",
+        "status": "noncompliant",
+        "reason": "mismatch",
+        "exceptions": [
+          {
+            "id": "exc-002",
+            "state": "active"
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-002-deployment-approval",
+        "account_id": "sim-account-002",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-002-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-002-logging",
+        "account_id": "sim-account-002",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-002-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-002-public-access",
+        "account_id": "sim-account-002",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-002-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-002-security-monitoring",
+        "account_id": "sim-account-002",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-002-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-003-baseline-encryption",
+        "account_id": "sim-account-003",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-003-baseline-encryption",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-003-deployment-approval",
+        "account_id": "sim-account-003",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-003-deployment-approval",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-003-logging",
+        "account_id": "sim-account-003",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-003-logging",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-003-public-access",
+        "account_id": "sim-account-003",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-003-public-access",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-003-security-monitoring",
+        "account_id": "sim-account-003",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-003-security-monitoring",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-004-baseline-encryption",
+        "account_id": "sim-account-004",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-004-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-004-deployment-approval",
+        "account_id": "sim-account-004",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-004-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-004-logging",
+        "account_id": "sim-account-004",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-004-public-access",
+        "account_id": "sim-account-004",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-004-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-004-security-monitoring",
+        "account_id": "sim-account-004",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-004-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-005-baseline-encryption",
+        "account_id": "sim-account-005",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-005-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-005-deployment-approval",
+        "account_id": "sim-account-005",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-005-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-005-logging",
+        "account_id": "sim-account-005",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-005-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-005-public-access",
+        "account_id": "sim-account-005",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": false,
+        "evidence_id": "ev-005-public-access",
+        "status": "noncompliant",
+        "reason": "mismatch",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-005-security-monitoring",
+        "account_id": "sim-account-005",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-005-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-006-baseline-encryption",
+        "account_id": "sim-account-006",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-006-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-006-deployment-approval",
+        "account_id": "sim-account-006",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": false,
+        "observed_value": false,
+        "evidence_id": "ev-006-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-006-logging",
+        "account_id": "sim-account-006",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-006-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-006-public-access",
+        "account_id": "sim-account-006",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-006-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-006-security-monitoring",
+        "account_id": "sim-account-006",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-006-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-007-baseline-encryption",
+        "account_id": "sim-account-007",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-007-deployment-approval",
+        "account_id": "sim-account-007",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": false,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-007-logging",
+        "account_id": "sim-account-007",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-007-public-access",
+        "account_id": "sim-account-007",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-007-security-monitoring",
+        "account_id": "sim-account-007",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": null,
+        "evidence_id": null,
+        "status": "unknown",
+        "reason": "missing-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-008-baseline-encryption",
+        "account_id": "sim-account-008",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-008-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-008-deployment-approval",
+        "account_id": "sim-account-008",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": false,
+        "observed_value": false,
+        "evidence_id": "ev-008-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-008-logging",
+        "account_id": "sim-account-008",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-008-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-008-public-access",
+        "account_id": "sim-account-008",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-008-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-008-security-monitoring",
+        "account_id": "sim-account-008",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": false,
+        "evidence_id": "ev-008-security-monitoring",
+        "status": "noncompliant",
+        "reason": "mismatch",
+        "exceptions": [
+          {
+            "id": "exc-008",
+            "state": "expired"
+          }
+        ]
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-009-baseline-encryption",
+        "account_id": "sim-account-009",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-009-baseline-encryption",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-009-deployment-approval",
+        "account_id": "sim-account-009",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": false,
+        "observed_value": false,
+        "evidence_id": "ev-009-deployment-approval",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-009-logging",
+        "account_id": "sim-account-009",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-009-logging",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-009-public-access",
+        "account_id": "sim-account-009",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-009-public-access",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-009-security-monitoring",
+        "account_id": "sim-account-009",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-009-security-monitoring",
+        "status": "compliant",
+        "reason": "match",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-010-baseline-encryption",
+        "account_id": "sim-account-010",
+        "control_id": "baseline-encryption",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-010-baseline-encryption",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-010-deployment-approval",
+        "account_id": "sim-account-010",
+        "control_id": "deployment-approval",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": false,
+        "observed_value": false,
+        "evidence_id": "ev-010-deployment-approval",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-010-logging",
+        "account_id": "sim-account-010",
+        "control_id": "logging",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-010-logging",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-010-public-access",
+        "account_id": "sim-account-010",
+        "control_id": "public-access",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-010-public-access",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "finding-sim-account-010-security-monitoring",
+        "account_id": "sim-account-010",
+        "control_id": "security-monitoring",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "policy_version": "1.0.0",
+        "desired_value": true,
+        "observed_value": true,
+        "evidence_id": "ev-010-security-monitoring",
+        "status": "stale",
+        "reason": "stale-evidence",
+        "exceptions": []
+      }
+    ],
+    "pagination": {
+      "total": 50,
+      "limit": 100,
+      "offset": 0,
+      "next_offset": null
+    }
+  },
+  "/api/v1/deployments": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": [
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-001",
+        "account_id": "sim-account-001",
+        "tool": "aft",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-001",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-002",
+        "account_id": "sim-account-002",
+        "tool": "terraform",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-002",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-003",
+        "account_id": "sim-account-003",
+        "tool": "aft",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-003",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-004",
+        "account_id": "sim-account-004",
+        "tool": "terraform",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-004",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-005",
+        "account_id": "sim-account-005",
+        "tool": "aft",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-001",
+        "status": "failed",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-005",
+        "failure_reason": "Simulated customization failure"
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-006",
+        "account_id": "sim-account-006",
+        "tool": "terraform",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-006",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-007",
+        "account_id": "sim-account-007",
+        "tool": "aft",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": null,
+        "status": "pending",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": null,
+        "correlation_id": "sim-correlation-007",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-008",
+        "account_id": "sim-account-008",
+        "tool": "terraform",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-008",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-009",
+        "account_id": "sim-account-009",
+        "tool": "aft",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-009",
+        "failure_reason": null
+      },
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "deploy-010",
+        "account_id": "sim-account-010",
+        "tool": "terraform",
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-002",
+        "status": "succeeded",
+        "started_at": "2026-10-31T06:00:00Z",
+        "completed_at": "2026-10-31T12:00:00Z",
+        "correlation_id": "sim-correlation-010",
+        "failure_reason": null
+      }
+    ],
+    "pagination": {
+      "total": 10,
+      "limit": 100,
+      "offset": 0,
+      "next_offset": null
+    }
+  },
+  "/api/v1/drift": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": [
+      {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "drift-005",
+        "account_id": "sim-account-005",
+        "control_id": "public-access",
+        "desired_value": true,
+        "observed_value": false,
+        "desired_revision": "synthetic-revision-002",
+        "observed_revision": "synthetic-revision-001",
+        "observed_at": "2026-10-31T06:00:00Z",
+        "status": "drifted"
+      }
+    ],
+    "pagination": {
+      "total": 1,
+      "limit": 100,
+      "offset": 0,
+      "next_offset": null
+    }
+  },
+  "/api/v1/exceptions": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": [
+      {
+        "exception": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "exc-002",
+          "account_id": "sim-account-002",
+          "control_id": "baseline-encryption",
+          "status": "approved",
+          "rationale": "Synthetic migration window",
+          "owner": "sim-platform-owner",
+          "approver": "sim-security-reviewer",
+          "approval_reference": "sim-review-002",
+          "approved_at": "2026-10-01T00:00:00Z",
+          "created_at": "2026-10-01T00:00:00Z",
+          "expires_at": "2026-11-15T00:00:00Z",
+          "audit": [
+            {
+              "at": "2026-10-01T00:00:00Z",
+              "action": "approved",
+              "actor": "sim-security-reviewer"
+            }
+          ]
+        },
+        "expiration_state": {
+          "id": "exc-002",
+          "state": "active"
+        }
+      },
+      {
+        "exception": {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "exc-008",
+          "account_id": "sim-account-008",
+          "control_id": "security-monitoring",
+          "status": "approved",
+          "rationale": "Synthetic migration window",
+          "owner": "sim-platform-owner",
+          "approver": "sim-security-reviewer",
+          "approval_reference": "sim-review-008",
+          "approved_at": "2026-10-01T00:00:00Z",
+          "created_at": "2026-10-01T00:00:00Z",
+          "expires_at": "2026-10-30T00:00:00Z",
+          "audit": [
+            {
+              "at": "2026-10-01T00:00:00Z",
+              "action": "approved",
+              "actor": "sim-security-reviewer"
+            }
+          ]
+        },
+        "expiration_state": {
+          "id": "exc-008",
+          "state": "expired"
+        }
+      }
+    ],
+    "pagination": {
+      "total": 2,
+      "limit": 100,
+      "offset": 0,
+      "next_offset": null
+    }
+  },
+  "/api/v1/accounts/sim-account-001": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": {
+      "account": {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "sim-account-001",
+        "name": "NorthStar production 01",
+        "environment": "production",
+        "ou_id": "sim-ou-production",
+        "lifecycle_status": "active",
+        "desired_policy_version": "1.0.0",
+        "created_at": "2026-10-01T00:00:00Z"
+      },
+      "compliance": {
+        "status": "compliant",
+        "controls": {
+          "compliant": 5,
+          "noncompliant": 0,
+          "unknown": 0,
+          "stale": 0
+        },
+        "exceptions": []
+      },
+      "ou": {
+        "schema_version": "1.0.0",
+        "id": "sim-ou-production",
+        "parent_id": "sim-ou-root",
+        "environment": "production"
+      },
+      "findings": [
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-001-baseline-encryption",
+          "account_id": "sim-account-001",
+          "control_id": "baseline-encryption",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-001-baseline-encryption",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-001-deployment-approval",
+          "account_id": "sim-account-001",
+          "control_id": "deployment-approval",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-001-deployment-approval",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-001-logging",
+          "account_id": "sim-account-001",
+          "control_id": "logging",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-001-logging",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-001-public-access",
+          "account_id": "sim-account-001",
+          "control_id": "public-access",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-001-public-access",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-001-security-monitoring",
+          "account_id": "sim-account-001",
+          "control_id": "security-monitoring",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-001-security-monitoring",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        }
+      ]
+    }
+  },
+  "/api/v1/accounts/sim-account-002": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": {
+      "account": {
+        "schema_version": "1.0.0",
+        "source": "northstar-synthetic-v1",
+        "simulated": true,
+        "id": "sim-account-002",
+        "name": "NorthStar production 02",
+        "environment": "production",
+        "ou_id": "sim-ou-production",
+        "lifecycle_status": "active",
+        "desired_policy_version": "1.0.0",
+        "created_at": "2026-10-01T00:00:00Z"
+      },
+      "compliance": {
+        "status": "noncompliant",
+        "controls": {
+          "compliant": 4,
+          "noncompliant": 1,
+          "unknown": 0,
+          "stale": 0
+        },
+        "exceptions": [
+          {
+            "id": "exc-002",
+            "state": "active"
+          }
+        ]
+      },
+      "ou": {
+        "schema_version": "1.0.0",
+        "id": "sim-ou-production",
+        "parent_id": "sim-ou-root",
+        "environment": "production"
+      },
+      "findings": [
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-002-baseline-encryption",
+          "account_id": "sim-account-002",
+          "control_id": "baseline-encryption",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": false,
+          "evidence_id": "ev-002-baseline-encryption",
+          "status": "noncompliant",
+          "reason": "mismatch",
+          "exceptions": [
+            {
+              "id": "exc-002",
+              "state": "active"
+            }
+          ]
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-002-deployment-approval",
+          "account_id": "sim-account-002",
+          "control_id": "deployment-approval",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-002-deployment-approval",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-002-logging",
+          "account_id": "sim-account-002",
+          "control_id": "logging",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-002-logging",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-002-public-access",
+          "account_id": "sim-account-002",
+          "control_id": "public-access",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-002-public-access",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        },
+        {
+          "schema_version": "1.0.0",
+          "source": "northstar-synthetic-v1",
+          "simulated": true,
+          "id": "finding-sim-account-002-security-monitoring",
+          "account_id": "sim-account-002",
+          "control_id": "security-monitoring",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "policy_version": "1.0.0",
+          "desired_value": true,
+          "observed_value": true,
+          "evidence_id": "ev-002-security-monitoring",
+          "status": "compliant",
+          "reason": "match",
+          "exceptions": []
+        }
+      ]
+    }
+  }
+}

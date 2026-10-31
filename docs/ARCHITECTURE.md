@@ -1,6 +1,6 @@
 # Architecture and responsibility boundaries
 
-Status: the Phase 1 offline governance model and Phase 2 local backend are implemented. AWS infrastructure and frontend remain design intent. See [contracts and evaluation](GOVERNANCE_MODEL.md) and [local API](BACKEND_API.md).
+Status: the Phase 1 model, Phase 2 local backend, and Phase 3 React console are implemented. AWS infrastructure remains design intent. See [contracts and evaluation](GOVERNANCE_MODEL.md) and [local API](BACKEND_API.md).
 
 ## Scope and ownership
 
@@ -16,6 +16,12 @@ The deployable POC targets one personal account in `eu-central-1`. The fleet is 
 AFT requires an existing Control Tower landing zone. Its account customizations establish account baselines; application workload delivery uses a separate pipeline. Existing Control Tower-managed accounts require the supported AFT import/update process before AFT customization.
 
 Central policy pipelines and account customization pipelines have separate resource ownership, state, and execution roles. Two states must never manage the same attachment or resource. Respect the supported lifecycle of Control Tower-managed resources.
+
+## Implemented local console
+
+React/TypeScript/Vite routes provide overview, inventory and details, compliance, deployments, drift, and exceptions. Generated OpenAPI types connect a read-only client to FastAPI via a loopback-only Vite proxy. Backend results are the sole runtime source; no frontend evaluator or fallback fixtures exist. TanStack Query handles loading, errors, cancellation, caching, and refresh. All data requests use the fixed reference timestamp and verify simulation provenance.
+
+The proxy is deliberately restricted to a trusted local workstation: Vite and FastAPI bind to `127.0.0.1`, and Vite rewrites Host for the backend's demo guard. This is not production identity propagation. Future hosting requires Cognito authorization and reviewed API routing. No deployment authority or credentials are included in the browser. See [frontend implementation](FRONTEND.md) for contracts, paging, accessibility, tests, and snapshot limitations.
 
 ## Implemented local backend
 
@@ -53,7 +59,7 @@ Enterprise documentation will map these controls to CodePipeline/CodeBuild and A
 
 ## Open decisions
 
-Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Select supported Node.js/Terraform versions and local service strategy during implementation. Deployment account details, state bootstrap, OIDC trust, and real evidence sources remain deferred until explicitly authorized.
+Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Node.js 24 and the local Vite/API development strategy are established. Select Terraform versions when infrastructure implementation is authorized. Deployment account details, state bootstrap, OIDC trust, and real evidence sources remain deferred until explicitly authorized.
 
 ## AWS reference documentation
 
