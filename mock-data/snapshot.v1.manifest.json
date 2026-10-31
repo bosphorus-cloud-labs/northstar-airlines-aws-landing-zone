@@ -1,0 +1,8 @@
+{
+  "fleet_schema_version": "1.0.0",
+  "item_count": 78,
+  "schema_version": "1.0.0",
+  "sha256": "08456a729e0dbe3b2bf36f02f79baa4778a8eaf518d1761831607fbf08de97dd",
+  "simulated": true,
+  "source": "northstar-synthetic-v1"
+}

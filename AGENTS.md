@@ -65,3 +65,13 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - Bind Vite to loopback and proxy only the fixed local API target. The Vite proxy is authorized for local-demo integration only; never expose it publicly or treat it as production authentication.
 - Preserve accessible focus, labeled controls, responsive tables, and loading/error/empty states. Run type checking, lint, frontend tests/build, and the existing Python suite.
 - Phase 3 does not authorize cloud access, Amplify deployment, or Terraform/workflows. Commit and push only when explicitly authorized by the current user task.
+
+## Phase 4A deployment foundation
+
+- Implement deployment source only. No AWS credentials, AWS endpoints, account discovery, remote state initialization, normal plans/refresh, apply/destroy, data insertion, commits or pushes are authorized by this phase.
+- Terraform formatting/validate, `init -backend=false` public registry downloads and mock-provider tests with `command=plan` are permitted offline checks. Never add apply runs or AWS data sources to those tests.
+- Keep AWS adapters lazy: imports/default tests must not create SDK clients. Inject fake clients in tests. The local CLI and default ASGI application retain their existing authentication restrictions.
+- Deployed identity comes only from the configured gateway's verified authorizer context plus read scope/group checks. IAM invocation isolation is part of that trust boundary. No direct invoke or function URL for untrusted principals.
+- Production SPA builds require Cognito/API public settings and may not enable local-demo mode. No secrets belong in VITE variables or Terraform source/state.
+- DynamoDB reads pin a content-addressed immutable synthetic snapshot. Only the separately authorized loader can conditionally write it; manifest publication is last and retries never overwrite conflicts.
+- Build Lambda ZIPs offline from pinned Linux ARM64 Python 3.13 dependencies. Keep artifacts, generated environments, plans and state ignored. Rebuild after source/dependency changes.

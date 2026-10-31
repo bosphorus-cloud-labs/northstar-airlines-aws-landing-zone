@@ -1,3 +1,5 @@
+import { runtimeConfig } from "../auth/config";
+import { accessToken } from "../auth/session";
 import { useQuery } from "@tanstack/react-query";
 import type { components, paths } from "./schema";
 
@@ -35,16 +37,26 @@ export async function request<P extends ApiPath>(
   );
   for (const [key, value] of Object.entries(params))
     query.set(key, String(value));
+  const config = runtimeConfig();
+  const token = config.mode === "cognito" ? accessToken() : null;
+  if (config.mode === "cognito" && !token)
+    throw new ApiError(
+      401,
+      "Sign in with Cognito to access governance evidence.",
+    );
   let response: Response;
   try {
     const target = accountId
       ? path.replace("{account_id}", encodeURIComponent(accountId))
       : path;
-    response = await fetch(`${target}?${query}`, {
+    response = await fetch(`${config.apiBase}${target}?${query}`, {
       method: "GET",
       signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
       credentials: "omit",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
   } catch {
     if (signal.aborted)
@@ -57,9 +69,13 @@ export async function request<P extends ApiPath>(
   if (!response.ok) {
     const message =
       response.status === 401
-        ? "Backend access is locked. Start the API with --local-demo on this workstation."
+        ? config.mode === "local"
+          ? "Backend access is locked. Start the API with --local-demo on this workstation."
+          : "Your session was rejected. Sign out and sign in again."
         : response.status === 403
-          ? "Access was denied. This console requires the loopback-only local demo backend."
+          ? config.mode === "local"
+            ? "Access was denied. This console requires the loopback-only local demo backend."
+            : "Access was denied. A governance reader scope and group membership are required."
           : response.status === 404
             ? "The requested account or resource was not found."
             : "The governance API could not complete this request. Try again.";

@@ -1,6 +1,6 @@
 # Governance model v1
 
-Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) exposes this model to the Phase 3 [React console](FRONTEND.md); no AWS integrations, resources, or deployment workflows exist. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
+Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) exposes this model to the Phase 3 [React console](FRONTEND.md). Phase 4A adds [deployment source and a DynamoDB adapter](AWS_DEPLOYMENT_FOUNDATION.md); no AWS resources have been deployed, data inserted, or GitHub deployment workflows introduced. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
 
 ## Execute locally
 

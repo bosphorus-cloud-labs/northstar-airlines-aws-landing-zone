@@ -23,6 +23,7 @@ import { Deployments, Drift, Exceptions } from "./pages/Operations";
 import { Overview } from "./pages/Overview";
 import { ConsoleBoundary } from "./components/ConsoleBoundary";
 import { Empty } from "./components/ui";
+import { useSession } from "./auth/context";
 const navigation = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/accounts", label: "Accounts", icon: Layers3 },
@@ -32,6 +33,7 @@ const navigation = [
   { to: "/exceptions", label: "Governance Exceptions", icon: ShieldQuestion },
 ];
 export function App() {
+  const session = useSession();
   const [menu, setMenu] = useState(false);
   const location = useLocation();
   const client = useQueryClient();
@@ -105,7 +107,11 @@ export function App() {
           <div className="workspace-initials">NS</div>
           <div>
             <strong>Governance console</strong>
-            <small>Local demonstration</small>
+            <small>
+              {session.mode === "local"
+                ? "Local demonstration"
+                : "Authenticated POC"}
+            </small>
           </div>
           <span className="workspace-dot" />
         </div>
@@ -173,9 +179,23 @@ export function App() {
                 ? "API unavailable"
                 : query.isPending
                   ? "Connecting to API"
-                  : "Local API"}
+                  : session.mode === "local"
+                    ? "Local API"
+                    : "Governance API"}
             </span>
-            <div className="reader-avatar" title="Local demo reader">
+            {session.signOut && (
+              <button className="button" onClick={session.signOut}>
+                Sign out
+              </button>
+            )}
+            <div
+              className="reader-avatar"
+              title={
+                session.mode === "local"
+                  ? "Local demo reader"
+                  : "Signed-in governance reader"
+              }
+            >
               NS
             </div>
           </div>
@@ -189,7 +209,9 @@ export function App() {
             Synthetic fleet and evidence. No real AWS compliance is being
             assessed.
           </p>
-          <span className="banner-mode">LOCAL DEMO</span>
+          <span className="banner-mode">
+            {session.mode === "local" ? "LOCAL DEMO" : "AUTHENTICATED POC"}
+          </span>
         </div>
         <main id="main-content">
           <div className="evaluation-toolbar">
