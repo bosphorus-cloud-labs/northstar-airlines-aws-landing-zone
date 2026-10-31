@@ -1,6 +1,6 @@
 # Architecture and responsibility boundaries
 
-Status: design intent; no infrastructure or application is implemented yet.
+Status: application/infrastructure sections remain design intent. The Phase 1 offline governance model is implemented; see [contracts and evaluation](GOVERNANCE_MODEL.md). No infrastructure or application API/frontend is implemented.
 
 ## Scope and ownership
 
@@ -45,7 +45,7 @@ Enterprise documentation will map these controls to CodePipeline/CodeBuild and A
 
 ## Open decisions
 
-Confirm dashboard personas, mock fleet size and OU model, representative controls, exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Select supported Node.js/Terraform versions and local service strategy during implementation. Deployment account details, state bootstrap, OIDC trust, and real evidence sources remain deferred until explicitly authorized.
+Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Select supported Node.js/Terraform versions and local service strategy during implementation. Deployment account details, state bootstrap, OIDC trust, and real evidence sources remain deferred until explicitly authorized.
 
 ## AWS reference documentation
 

@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "id": "northstar-baseline",
+  "version": "1.0.0",
+  "controls": [
+    {
+      "id": "deployment-approval",
+      "category": "cicd-approval",
+      "description": "Review approval configuration; not proof that a deployment was approved."
+    },
+    {
+      "id": "baseline-encryption",
+      "category": "detective-check",
+      "description": "Check baseline encryption configuration."
+    },
+    {
+      "id": "public-access",
+      "category": "preventive-intent",
+      "description": "Intent to restrict public access; future SCPs can constrain supported APIs but require service-level controls and detective evidence."
+    },
+    {
+      "id": "logging",
+      "category": "detective-check",
+      "description": "Check centralized audit logging configuration."
+    },
+    {
+      "id": "security-monitoring",
+      "category": "detective-check",
+      "description": "Check security monitoring configuration."
+    }
+  ],
+  "baseline_requirements": {
+    "baseline-encryption": true,
+    "public-access": true,
+    "logging": true,
+    "security-monitoring": true
+  }
+}

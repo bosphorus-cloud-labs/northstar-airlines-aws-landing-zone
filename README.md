@@ -2,7 +2,7 @@
 
 A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a planned, single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** repository foundation only. No application, Terraform resources, workflows, or AWS infrastructure have been implemented or deployed by this foundation task.
+**Current status:** Phase 1 offline governance model implemented: versioned JSON contracts, four environment policies, ten synthetic accounts, a deterministic Python evaluator, and unit tests. No frontend, backend API, Terraform resources, workflows, or AWS infrastructure have been implemented or deployed.
 
 ## Objectives
 
@@ -48,11 +48,22 @@ Empty directories contain `.gitkeep` placeholders so Git preserves the structure
 
 Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-The planned toolchain is Node.js with a supported version selected when frontend scaffolding is added, Python 3.13 with an isolated virtual environment, and Terraform with pinned CLI/provider versions when modules are introduced. No installation or application startup command exists yet. Dependency manifests, lockfiles, local service configuration, and exact developer commands will arrive with the relevant implementation phase.
+The planned toolchain is Node.js with a supported version selected when frontend scaffolding is added, Python 3.13 with an isolated virtual environment, and Terraform with pinned CLI/provider versions when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. Application startup and local services will be documented in their implementation phases.
 
 Local development will default to deterministic mock data without AWS credentials or live AWS API calls. Later phases will document mock API behavior and local DynamoDB/event substitutes where needed. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
 
-Foundation checks:
+Offline governance model (no AWS access):
+
+```sh
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/python -m governance.model.evaluate --at 2026-10-31T12:00:00Z
+```
+
+See [data contracts and policy semantics](docs/GOVERNANCE_MODEL.md) for validation rules, simulation limits, environment differences, and the expected ten-account summary. At the reference timestamp, 50 control evaluations produce 31 compliant, 3 noncompliant, 6 unknown, and 10 stale results. Approved exceptions never convert failures into passes. JSON policy definitions are offline intent, not deployed SCPs.
+
+Repository checks:
 
 ```sh
 git diff --check
