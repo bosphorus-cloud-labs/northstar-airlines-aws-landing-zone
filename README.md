@@ -1,8 +1,8 @@
 # NorthStar Airlines AWS Landing Zone Governance
 
-A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a planned, single-account governance dashboard and clearly labeled multi-account simulation.
+A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** Phases 1–3 work locally. Phase 4A now prepares reusable Terraform, Cognito Code + PKCE sign-in, verified gateway permissions, an immutable DynamoDB adapter, offline packaging and seed preparation. Nothing has been deployed or inserted in AWS. No executable GitHub deployment workflow exists.
+**Current status:** Version 1 is AWS-hosted, as confirmed by the project owner; Phase 5 does not inspect or change that deployment. Phases 1–4A provide the local application and deployment foundation. Phase 5 adds an isolated offline CLI for a Version 2 policy proposal, simulated approval, canary rollout, failure/retry and account onboarding. No executable GitHub deployment workflow or automatic publication path is introduced.
 
 ## Objectives
 
@@ -36,6 +36,7 @@ terraform/poc/             Single-account POC roots
 terraform/enterprise/      Reference-only enterprise examples
 governance/policies/       Versioned governance definitions
 governance/environments/   Non-secret environment configuration
+governance/simulation/     Offline policy-rollout CLI, scenario and run contract
 mock-data/                 Synthetic fixtures with explicit provenance
 tests/                     Cross-component and acceptance tests
 docs/                      Architecture, milestones, and operating guidance
@@ -101,7 +102,25 @@ git diff --check
 git status --short --branch
 ```
 
-## Secure deployment foundation (source only)
+## Phase 5 — offline policy lifecycle demonstration
+
+The CLI uses the existing evaluator and ten-account V1 fixtures, proposes a sixth detective control in policy `2.0.0`, requires a simulated independent approval, and performs ordered canary/fleet attempts. Generated results stay under ignored `artifacts/policy-rollout/`; the hosted dashboard, Terraform, API and DynamoDB data are unchanged.
+
+```sh
+.venv/bin/python -m governance.simulation.rollout plan
+.venv/bin/python -m governance.simulation.rollout approve --approver sim-security-reviewer
+.venv/bin/python -m governance.simulation.rollout rollout --fail-account sim-account-005
+# The preceding command intentionally exits 2: a simulated failure stops the rollout.
+.venv/bin/python -m governance.simulation.rollout rollout
+.venv/bin/python -m governance.simulation.rollout onboard
+.venv/bin/python -m governance.simulation.rollout status
+```
+
+Use a new `--run-dir artifacts/policy-rollout/NAME` on every command for another demonstration. Final results contain eleven accounts and 66 findings: **43 compliant, 4 noncompliant, 9 unknown, 10 stale**. Distribution success does not imply workload compliance. Two existing inactive accounts remain deferred. See the [interview runbook and safe future integration requirements](docs/POLICY_ROLLOUT_DEMO.md).
+
+The optional [provider-free Terraform companion](terraform/simulation/README.md) uses a reusable module to calculate baseline/environment desired settings for the same frozen ten-account proposal. Real fmt/init/validate/V1/V2 plans and a full Python parity check are in the runbook's five-minute walkthrough. There are no providers, resources or data sources, and no apply; deployment records and compliance evidence remain simulated. The deployed POC root is not used.
+
+## Secure deployment foundation
 
 See [Phase 4A deployment guide](docs/AWS_DEPLOYMENT_FOUNDATION.md) for Terraform module boundaries, Cognito/PKCE and IAM trust, DynamoDB snapshot loading, Linux ARM64 packaging, public frontend settings, state bootstrap, costs, repository integration and teardown. Offline seed preparation is `.venv/bin/python -m scripts.seed_governance`; it never connects to AWS by default.
 

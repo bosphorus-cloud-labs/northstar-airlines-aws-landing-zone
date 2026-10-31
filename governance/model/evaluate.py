@@ -19,8 +19,10 @@ def load_model() -> tuple[dict, dict, list[dict]]:
     )
 
 
-def evaluate(fleet: dict, policy: dict, environments: list[dict], *, at: str) -> list[dict]:
-    validate_model(fleet, policy, environments)
+def evaluate(
+    fleet: dict, policy: dict, environments: list[dict], *, at: str, profile: str = "v1"
+) -> list[dict]:
+    validate_model(fleet, policy, environments, profile=profile)
     clock = timestamp(at)
     envs = {e["id"]: e for e in environments}
     findings = []
@@ -80,7 +82,7 @@ def evaluate(fleet: dict, policy: dict, environments: list[dict], *, at: str) ->
                 reason=reason,
                 exceptions=exceptions,
             )
-            validate("finding", finding)
+            validate("finding", finding, profile=profile)
             findings.append(finding)
     return findings
 
