@@ -23,6 +23,7 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - `terraform/modules/`: narrowly scoped modules with documented inputs, outputs, dependencies, and ownership.
 - `terraform/poc/`: single-account deployable roots; `terraform/enterprise/`: clearly labeled reference-only examples with separate state and credentials.
 - `governance/policies/`: versioned policy definitions; `governance/environments/`: non-secret environment configuration.
+- `governance/contracts/` and `governance/model/`: versioned JSON Schema contracts and offline Python validation/evaluation.
 - `mock-data/`: deterministic synthetic fixtures; `tests/`: cross-component tests; `docs/`: architecture, decisions, and operations; `.github/workflows/`: automation.
 - Use descriptive names, small cohesive changes, explicit interfaces, and typed TypeScript/Python boundaries. Validate all input at trust boundaries.
 - Keep environment-specific values out of reusable modules. Use tags and consistent naming for ownership, environment, and cost attribution.
@@ -48,4 +49,4 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - Do not run commands that contact AWS, initialize a remote backend, or refresh real infrastructure as part of routine local validation. Use offline checks where possible and report tool limitations.
 - Enterprise examples must never be included in the POC deployment path. Keep state, IAM roles, environment approvals, and workflows separate.
 - Future deployment workflows must validate first, show a reviewable plan, require an approval gate, and apply the approved plan with scoped credentials. Production-like changes need a recovery procedure.
-- Initial foundation work adds documentation and directory placeholders only: no frontend/backend implementation, Terraform resources, cloud deployment, or executable workflows.
+- Phase 1 implements only the offline governance model, versioned JSON contracts/environment policies, synthetic fixtures, and tests. No frontend, Lambda/API Gateway, Terraform resources, cloud deployment, or executable workflows are authorized by that phase.

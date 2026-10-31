@@ -1,0 +1,828 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:northstar:governance:1.0.0",
+  "$defs": {
+    "ou": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "environment": {
+          "enum": [
+            "root",
+            "production",
+            "pre-production",
+            "testing",
+            "development"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "parent_id",
+        "environment"
+      ],
+      "additionalProperties": false
+    },
+    "account": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "environment": {
+          "enum": [
+            "production",
+            "pre-production",
+            "testing",
+            "development"
+          ]
+        },
+        "ou_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lifecycle_status": {
+          "enum": [
+            "active",
+            "onboarding",
+            "suspended"
+          ]
+        },
+        "desired_policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "name",
+        "environment",
+        "ou_id",
+        "lifecycle_status",
+        "desired_policy_version",
+        "created_at"
+      ],
+      "additionalProperties": false
+    },
+    "control": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "category": {
+          "enum": [
+            "preventive-intent",
+            "detective-check",
+            "cicd-approval"
+          ]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "category",
+        "description"
+      ],
+      "additionalProperties": false
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "const": "1.0.0"
+        },
+        "controls": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "$ref": "#/$defs/control"
+          }
+        },
+        "baseline_requirements": {
+          "type": "object",
+          "properties": {
+            "baseline-encryption": {
+              "const": true
+            },
+            "public-access": {
+              "const": true
+            },
+            "logging": {
+              "const": true
+            },
+            "security-monitoring": {
+              "const": true
+            }
+          },
+          "required": [
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "version",
+        "controls",
+        "baseline_requirements"
+      ],
+      "additionalProperties": false
+    },
+    "requirement": {
+      "type": "object",
+      "properties": {
+        "control_id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "expected": {
+          "type": "boolean"
+        },
+        "max_age_hours": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "control_id",
+        "expected",
+        "max_age_hours"
+      ],
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "id": {
+          "enum": [
+            "production",
+            "pre-production",
+            "testing",
+            "development"
+          ]
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "policy_version": {
+          "const": "1.0.0"
+        },
+        "requirements": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "$ref": "#/$defs/requirement"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "policy_id",
+        "policy_version",
+        "requirements"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "control_id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "observed_value": {
+          "type": "boolean"
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "observed_policy_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "control_id",
+        "observed_value",
+        "observed_at",
+        "observed_policy_version"
+      ],
+      "additionalProperties": false
+    },
+    "deployment": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "tool": {
+          "enum": [
+            "terraform",
+            "aft"
+          ]
+        },
+        "desired_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "pending"
+          ]
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completed_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "failure_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "tool",
+        "desired_revision",
+        "observed_revision",
+        "status",
+        "started_at",
+        "completed_at",
+        "correlation_id",
+        "failure_reason"
+      ],
+      "additionalProperties": false
+    },
+    "drift": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "control_id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "desired_value": {
+          "type": "boolean"
+        },
+        "observed_value": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "desired_revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observed_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "enum": [
+            "in-sync",
+            "drifted",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "control_id",
+        "desired_value",
+        "observed_value",
+        "desired_revision",
+        "observed_revision",
+        "observed_at",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "exception": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "control_id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "status": {
+          "enum": [
+            "approved",
+            "pending",
+            "rejected"
+          ]
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "approver": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "approval_reference": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "audit": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "action": {
+                "type": "string",
+                "minLength": 1
+              },
+              "actor": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "at",
+              "action",
+              "actor"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "approved_at": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "control_id",
+        "status",
+        "rationale",
+        "owner",
+        "approver",
+        "approval_reference",
+        "created_at",
+        "expires_at",
+        "audit",
+        "approved_at"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "type": {
+          "enum": [
+            "account.created",
+            "evidence.recorded",
+            "deployment.failed",
+            "exception.approved"
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "correlation_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subject_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "type",
+        "occurred_at",
+        "revision",
+        "correlation_id",
+        "subject_id"
+      ],
+      "additionalProperties": false
+    },
+    "finding": {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0.0"
+        },
+        "source": {
+          "const": "northstar-synthetic-v1"
+        },
+        "simulated": {
+          "const": true
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "account_id": {
+          "type": "string",
+          "pattern": "^sim-account-[0-9]{3}$"
+        },
+        "control_id": {
+          "enum": [
+            "deployment-approval",
+            "baseline-encryption",
+            "public-access",
+            "logging",
+            "security-monitoring"
+          ]
+        },
+        "evaluated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "policy_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "desired_value": {
+          "type": "boolean"
+        },
+        "observed_value": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "evidence_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "compliant",
+            "noncompliant",
+            "unknown",
+            "stale"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "match",
+            "mismatch",
+            "missing-evidence",
+            "future-evidence",
+            "stale-evidence",
+            "revision-mismatch"
+          ]
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state": {
+                "enum": [
+                  "active",
+                  "expired",
+                  "not-yet-active",
+                  "pending",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "state"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "source",
+        "simulated",
+        "id",
+        "account_id",
+        "control_id",
+        "evaluated_at",
+        "policy_version",
+        "desired_value",
+        "observed_value",
+        "evidence_id",
+        "status",
+        "reason",
+        "exceptions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0"
+    },
+    "ous": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ou"
+      }
+    },
+    "accounts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/account"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "deployments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/deployment"
+      }
+    },
+    "drift": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/drift"
+      }
+    },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/exception"
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/event"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "ous",
+    "accounts",
+    "evidence",
+    "deployments",
+    "drift",
+    "exceptions",
+    "events"
+  ],
+  "additionalProperties": false
+}
