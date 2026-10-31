@@ -1,6 +1,6 @@
 # Architecture and responsibility boundaries
 
-Status: application/infrastructure sections remain design intent. The Phase 1 offline governance model is implemented; see [contracts and evaluation](GOVERNANCE_MODEL.md). No infrastructure or application API/frontend is implemented.
+Status: the Phase 1 offline governance model and Phase 2 local backend are implemented. AWS infrastructure and frontend remain design intent. See [contracts and evaluation](GOVERNANCE_MODEL.md) and [local API](BACKEND_API.md).
 
 ## Scope and ownership
 
@@ -17,7 +17,15 @@ AFT requires an existing Control Tower landing zone. Its account customizations 
 
 Central policy pipelines and account customization pipelines have separate resource ownership, state, and execution roles. Two states must never manage the same attachment or resource. Respect the supported lifecycle of Control Tower-managed resources.
 
-## Planned application
+## Implemented local backend
+
+FastAPI routes → GovernanceService → GovernanceRepository/FixtureRepository. The service reuses the Phase 1 evaluator; Pydantic validates transport models and domain records are checked against the existing JSON Schema. Data access returns request-owned snapshots and performs no AWS calls. Pagination/filtering is bounded and deterministic for the fixed dataset. Evaluation defaults to a fixed demo time, not wall-clock time.
+
+The default authenticator denies every request. Explicit local-demo mode grants only a loopback demo reader and rejects tokens; the launcher disables forwarded-header trust and binds only `127.0.0.1`. Server-side permission checks cover health/docs as well as data. The Authenticator interface is reserved for verified Cognito identities. Mangum compatibility is provided using a fail-closed application; no Lambda resource or API Gateway configuration exists. Local demo identity must never be used for deployed authentication.
+
+No storage writes, exception mutations, event consumers, AWS integrations, or infrastructure execution are implemented.
+
+## Planned AWS application
 
 React on Amplify Hosting authenticates through Cognito. API Gateway enforces authorization before Python 3.13 Lambda reads DynamoDB. EventBridge routes asynchronous lifecycle and governance events to handlers. Browser code receives no deployment credentials or direct database access. API, event processing, and deployment roles remain separate.
 

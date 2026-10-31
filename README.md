@@ -2,7 +2,7 @@
 
 A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a planned, single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** Phase 1 offline governance model implemented: versioned JSON contracts, four environment policies, ten synthetic accounts, a deterministic Python evaluator, and unit tests. No frontend, backend API, Terraform resources, workflows, or AWS infrastructure have been implemented or deployed.
+**Current status:** Phase 1 governance model and Phase 2 local FastAPI backend implemented. Eight read-only v1 endpoints expose the ten-account simulation and deterministic evaluator with Pydantic validation and fail-closed authorization. No frontend, Terraform resources, deployment workflows, or AWS infrastructure have been implemented or deployed.
 
 ## Objectives
 
@@ -30,7 +30,7 @@ Organizations, Control Tower, AFT, Transit Gateway, Palo Alto firewalls, and ent
 
 ```text
 frontend/                  Planned React application
-backend/                   Planned Python API and event handlers
+backend/                   Local FastAPI API, service, fixture repository, ASGI adapter
 terraform/modules/         Reusable infrastructure modules
 terraform/poc/             Single-account POC roots
 terraform/enterprise/      Reference-only enterprise examples
@@ -48,9 +48,9 @@ Empty directories contain `.gitkeep` placeholders so Git preserves the structure
 
 Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-The planned toolchain is Node.js with a supported version selected when frontend scaffolding is added, Python 3.13 with an isolated virtual environment, and Terraform with pinned CLI/provider versions when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. Application startup and local services will be documented in their implementation phases.
+The planned toolchain is Node.js with a supported version selected when frontend scaffolding is added, Python 3.13 with an isolated virtual environment, and Terraform with pinned CLI/provider versions when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
 
-Local development will default to deterministic mock data without AWS credentials or live AWS API calls. Later phases will document mock API behavior and local DynamoDB/event substitutes where needed. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
+Local development will default to deterministic mock data without AWS credentials or live AWS API calls. The API currently reads local fixtures; no DynamoDB or event runtime is required. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
 
 Offline governance model (no AWS access):
 
@@ -63,9 +63,19 @@ python3.13 -m venv .venv
 
 See [data contracts and policy semantics](docs/GOVERNANCE_MODEL.md) for validation rules, simulation limits, environment differences, and the expected ten-account summary. At the reference timestamp, 50 control evaluations produce 31 compliant, 3 noncompliant, 6 unknown, and 10 stale results. Approved exceptions never convert failures into passes. JSON policy definitions are offline intent, not deployed SCPs.
 
+Local API (explicit demo identity bypass; trusted workstation only):
+
+```sh
+.venv/bin/python -m backend --local-demo
+```
+
+The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be proxied or exposed publicly. The Lambda adapter stays fail-closed. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
+
 Repository checks:
 
 ```sh
+.venv/bin/ruff check backend governance tests
+.venv/bin/ruff format --check backend governance tests
 git diff --check
 git status --short --branch
 ```

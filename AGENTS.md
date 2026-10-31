@@ -19,7 +19,7 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 
 ## Repository conventions
 
-- `frontend/`, `backend/`: application code, added in later tasks.
+- `frontend/`: reserved for later React implementation; `backend/`: local FastAPI routes, typed transport models, services, replaceable repository, authorization, and fail-closed Mangum adapter.
 - `terraform/modules/`: narrowly scoped modules with documented inputs, outputs, dependencies, and ownership.
 - `terraform/poc/`: single-account deployable roots; `terraform/enterprise/`: clearly labeled reference-only examples with separate state and credentials.
 - `governance/policies/`: versioned policy definitions; `governance/environments/`: non-secret environment configuration.
@@ -50,3 +50,9 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - Enterprise examples must never be included in the POC deployment path. Keep state, IAM roles, environment approvals, and workflows separate.
 - Future deployment workflows must validate first, show a reviewable plan, require an approval gate, and apply the approved plan with scoped credentials. Production-like changes need a recovery procedure.
 - Phase 1 implements only the offline governance model, versioned JSON contracts/environment policies, synthetic fixtures, and tests. No frontend, Lambda/API Gateway, Terraform resources, cloud deployment, or executable workflows are authorized by that phase.
+
+## Phase 2 backend conventions
+
+- Keep policy logic in `governance.model`; API layers must reuse it. Use explicit/fixed evaluation time, never a wall-clock default.
+- Default authentication denies access. Local-demo identity bypass requires explicit opt-in, loopback peer/Host restrictions, and must never be used by the Lambda entry point. No fake JWT validation.
+- Keep the API read-only and errors sanitized; bound paging/filter inputs and retain simulation provenance. No Lambda/API Gateway resources, frontend, or deployment workflows are authorized by Phase 2. Commit and push only when explicitly authorized by the current user task.
