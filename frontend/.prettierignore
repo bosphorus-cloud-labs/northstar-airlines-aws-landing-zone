@@ -1,0 +1,5 @@
+src/api/schema.d.ts
+src/test/api-responses.json
+package-lock.json
+dist
+node_modules

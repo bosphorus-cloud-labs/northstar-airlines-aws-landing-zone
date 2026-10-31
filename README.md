@@ -2,7 +2,7 @@
 
 A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a planned, single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** Phase 1 governance model and Phase 2 local FastAPI backend implemented. Eight read-only v1 endpoints expose the ten-account simulation and deterministic evaluator with Pydantic validation and fail-closed authorization. No frontend, Terraform resources, deployment workflows, or AWS infrastructure have been implemented or deployed.
+**Current status:** Phases 1–3 are implemented locally: the governance model, eight-endpoint FastAPI backend, and React/TypeScript/Vite Governance Console. Six dashboard pages and account details display API-sourced synthetic evidence with visible simulation labels. No Terraform resources, deployment workflows, Amplify hosting, or AWS infrastructure have been implemented or deployed.
 
 ## Objectives
 
@@ -29,7 +29,7 @@ Organizations, Control Tower, AFT, Transit Gateway, Palo Alto firewalls, and ent
 ## Repository layout
 
 ```text
-frontend/                  Planned React application
+frontend/                  React/TypeScript/Vite Governance Console
 backend/                   Local FastAPI API, service, fixture repository, ASGI adapter
 terraform/modules/         Reusable infrastructure modules
 terraform/poc/             Single-account POC roots
@@ -48,7 +48,7 @@ Empty directories contain `.gitkeep` placeholders so Git preserves the structure
 
 Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-The planned toolchain is Node.js with a supported version selected when frontend scaffolding is added, Python 3.13 with an isolated virtual environment, and Terraform with pinned CLI/provider versions when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
+The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform CLI/provider versions will be pinned when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
 
 Local development will default to deterministic mock data without AWS credentials or live AWS API calls. The API currently reads local fixtures; no DynamoDB or event runtime is required. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
 
@@ -69,9 +69,30 @@ Local API (explicit demo identity bypass; trusted workstation only):
 .venv/bin/python -m backend --local-demo
 ```
 
-The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be proxied or exposed publicly. The Lambda adapter stays fail-closed. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
+The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be exposed publicly. The console uses an explicitly scoped loopback-only Vite proxy for local development. The Lambda adapter stays fail-closed. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
 
-Repository checks:
+In a second terminal from the repository root, run the frontend while the API continues running:
+
+```sh
+cd frontend
+npm ci
+npm run dev
+```
+
+Open [NorthStar Governance Console](http://127.0.0.1:5173). The fixed reference time is visible on every page. No fallback mock data is used if the backend is unavailable. See the [frontend guide](docs/FRONTEND.md) for architecture, generated contracts, page behavior, tests, preview, and limitations.
+
+Frontend checks (from `frontend/`):
+
+```sh
+npm run api:check
+npm run typecheck
+npm run lint
+npm run format:check
+npm test
+npm run build
+```
+
+Repository checks (from the repository root):
 
 ```sh
 .venv/bin/ruff check backend governance tests

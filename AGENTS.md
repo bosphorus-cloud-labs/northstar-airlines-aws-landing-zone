@@ -19,7 +19,7 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 
 ## Repository conventions
 
-- `frontend/`: reserved for later React implementation; `backend/`: local FastAPI routes, typed transport models, services, replaceable repository, authorization, and fail-closed Mangum adapter.
+- `frontend/`: local React/TypeScript/Vite console, generated API types, and test-only API response fixtures; `backend/`: local FastAPI routes, typed transport models, services, replaceable repository, authorization, and fail-closed Mangum adapter.
 - `terraform/modules/`: narrowly scoped modules with documented inputs, outputs, dependencies, and ownership.
 - `terraform/poc/`: single-account deployable roots; `terraform/enterprise/`: clearly labeled reference-only examples with separate state and credentials.
 - `governance/policies/`: versioned policy definitions; `governance/environments/`: non-secret environment configuration.
@@ -56,3 +56,12 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - Keep policy logic in `governance.model`; API layers must reuse it. Use explicit/fixed evaluation time, never a wall-clock default.
 - Default authentication denies access. Local-demo identity bypass requires explicit opt-in, loopback peer/Host restrictions, and must never be used by the Lambda entry point. No fake JWT validation.
 - Keep the API read-only and errors sanitized; bound paging/filter inputs and retain simulation provenance. No Lambda/API Gateway resources, frontend, or deployment workflows are authorized by Phase 2. Commit and push only when explicitly authorized by the current user task.
+
+## Phase 3 console conventions
+
+- Treat FastAPI as the only runtime source of governance data. Never duplicate policy evaluation or import test fixtures into production code.
+- Regenerate TypeScript API types and test responses with `npm run api:generate`; verify contract drift with `npm run api:check`.
+- Keep simulation provenance and the fixed reference time visible. Unknown/stale evidence and underlying violations remain explicit even when exceptions exist.
+- Bind Vite to loopback and proxy only the fixed local API target. The Vite proxy is authorized for local-demo integration only; never expose it publicly or treat it as production authentication.
+- Preserve accessible focus, labeled controls, responsive tables, and loading/error/empty states. Run type checking, lint, frontend tests/build, and the existing Python suite.
+- Phase 3 does not authorize cloud access, Amplify deployment, or Terraform/workflows. Commit and push only when explicitly authorized by the current user task.
