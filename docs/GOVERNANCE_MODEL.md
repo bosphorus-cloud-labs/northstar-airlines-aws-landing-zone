@@ -1,6 +1,8 @@
 # Governance model v1
 
-Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) exposes this model to the Phase 3 [React console](FRONTEND.md). Phase 4A adds [deployment source and a DynamoDB adapter](AWS_DEPLOYMENT_FOUNDATION.md); no AWS resources have been deployed, data inserted, or GitHub deployment workflows introduced. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
+Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) exposes this model to the Phase 3 [React console](FRONTEND.md). Phase 4A adds [deployment source and a DynamoDB adapter](AWS_DEPLOYMENT_FOUNDATION.md). The owner confirms the V1 application is AWS-hosted; Phase 5 leaves that deployment untouched. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
+
+Phase 5 adds an explicit `policy-v2` contract profile and [offline rollout CLI](POLICY_ROLLOUT_DEMO.md), reusing this evaluator with `profile="policy-v2"`. All defaults, V1 schema/fixtures, API contracts and pinned DynamoDB snapshot remain V1. Record schema/source versions are independent of policy revision; V2 adds one control without changing record shapes. Nested V2 environment files are not loaded by the V1 fixture reader. Updated CLI results require a separately reviewed integration and cannot be loaded directly through the existing V1 codec/loader.
 
 ## Execute locally
 

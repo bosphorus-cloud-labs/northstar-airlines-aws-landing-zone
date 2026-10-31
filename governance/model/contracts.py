@@ -1,6 +1,7 @@
 """JSON Schema validation plus referential and temporal integrity checks."""
 
 import json
+from copy import deepcopy
 from datetime import datetime
 from pathlib import Path
 
@@ -18,12 +19,41 @@ def timestamp(value: str) -> datetime:
     return parsed
 
 
-def validate(kind: str, value: dict) -> None:
+def schema_for(profile: str = "v1") -> dict:
+    """Opt-in offline policy extension; the deployed/default V1 contract stays strict."""
+    if profile == "v1":
+        return SCHEMA
+    if profile != "policy-v2":
+        raise ValueError("Unsupported contract profile")
+    extension = json.loads((ROOT / "governance/contracts/policy-v2.profile.json").read_text())
+    schema = deepcopy(SCHEMA)
+    schema["$id"] = extension["$id"]
+    definitions = schema["$defs"]
+    cid = extension["additional_control_id"]
+    for kind, definition in definitions.items():
+        properties = definition.get("properties", {})
+        field = "id" if kind == "control" else "control_id"
+        if field in properties and "enum" in properties[field]:
+            properties[field]["enum"].append(cid)
+    definitions["policy"]["properties"]["version"]["const"] = extension["policy_version"]
+    definitions["environment"]["properties"]["policy_version"]["const"] = extension[
+        "policy_version"
+    ]
+    baseline = definitions["policy"]["properties"]["baseline_requirements"]
+    baseline["properties"][cid] = {"const": True}
+    baseline["required"].append(cid)
+    definitions["policy"]["properties"]["controls"]["minItems"] += 1
+    definitions["environment"]["properties"]["requirements"]["minItems"] += 1
+    return schema
+
+
+def validate(kind: str, value: dict, *, profile: str = "v1") -> None:
+    contract = schema_for(profile)
     schema = (
-        SCHEMA
+        contract
         if kind == "fleet"
         else {
-            "$defs": SCHEMA["$defs"],
+            "$defs": contract["$defs"],
             "$ref": "#/$defs/" + kind,
         }
     )
@@ -37,12 +67,14 @@ def unique(records: list[dict], key: str = "id") -> dict:
     return indexed
 
 
-def validate_model(fleet: dict, policy: dict, environments: list[dict]) -> None:
-    validate("fleet", fleet)
-    validate("policy", policy)
+def validate_model(
+    fleet: dict, policy: dict, environments: list[dict], *, profile: str = "v1"
+) -> None:
+    validate("fleet", fleet, profile=profile)
+    validate("policy", policy, profile=profile)
     controls = unique(policy["controls"])
     for env in environments:
-        validate("environment", env)
+        validate("environment", env, profile=profile)
     envs = unique(environments)
     if set(envs) != {"production", "pre-production", "testing", "development"}:
         raise ValueError("Exactly four environment definitions required")

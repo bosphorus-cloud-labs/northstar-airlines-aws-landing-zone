@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "simulated": true,
+  "new_control_observations": {
+    "sim-account-001": true,
+    "sim-account-002": true,
+    "sim-account-003": true,
+    "sim-account-004": false,
+    "sim-account-005": true,
+    "sim-account-006": null,
+    "sim-account-007": null,
+    "sim-account-008": true,
+    "sim-account-009": true,
+    "sim-account-010": null,
+    "sim-account-011": true
+  }
+}

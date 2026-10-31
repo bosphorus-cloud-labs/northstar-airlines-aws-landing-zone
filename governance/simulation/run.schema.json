@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:northstar:policy-rollout-run:1.0.0",
+  "$defs": {
+    "snapshot": {
+      "type": "object",
+      "required": ["fleet", "policy", "environments"],
+      "properties": {"fleet": {"type": "object"}, "policy": {"type": "object"}, "environments": {"type": "array"}},
+      "additionalProperties": false
+    },
+    "actor": {"type": "string", "pattern": "^sim-[A-Za-z0-9-]{1,64}$"},
+    "account": {"type": "string", "pattern": "^sim-account-[0-9]{3}$"},
+    "digest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+  },
+  "type": "object",
+  "required": ["format_version", "source", "simulated", "contract_profile", "proposal", "proposal_digest", "candidate", "phase", "approval", "results", "journal"],
+  "additionalProperties": false,
+  "properties": {
+    "format_version": {"const": "1.0.0"},
+    "source": {"const": "northstar-policy-rollout-v1"},
+    "simulated": {"const": true},
+    "contract_profile": {"const": "policy-v2"},
+    "proposal_digest": {"$ref": "#/$defs/digest"},
+    "candidate": {"$ref": "#/$defs/snapshot"},
+    "phase": {"enum": ["planned", "approved", "blocked", "rolled-out", "onboarded"]},
+    "proposal": {
+      "type": "object",
+      "required": ["baseline", "policy", "environments", "scenario", "at", "canary", "proposer"],
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {"$ref": "#/$defs/snapshot"},
+        "policy": {"type": "object"},
+        "environments": {"type": "array"},
+        "scenario": {
+          "type": "object", "required": ["version", "simulated", "new_control_observations"], "additionalProperties": false,
+          "properties": {
+            "version": {"const": "1.0.0"}, "simulated": {"const": true},
+            "new_control_observations": {"type": "object", "propertyNames": {"$ref": "#/$defs/account"}, "additionalProperties": {"type": ["boolean", "null"]}}
+          }
+        },
+        "at": {"type": "string", "format": "date-time"},
+        "canary": {"$ref": "#/$defs/account"},
+        "proposer": {"$ref": "#/$defs/actor"}
+      }
+    },
+    "approval": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object", "required": ["approver", "proposal_digest", "at"], "additionalProperties": false,
+          "properties": {"approver": {"$ref": "#/$defs/actor"}, "proposal_digest": {"$ref": "#/$defs/digest"}, "at": {"type": "string", "format": "date-time"}}
+        }
+      ]
+    },
+    "results": {
+      "type": "object", "propertyNames": {"$ref": "#/$defs/account"},
+      "additionalProperties": {"enum": ["succeeded", "failed", "gate-failed", "deferred"]}
+    },
+    "journal": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "required": ["sequence", "at", "action", "detail", "account_id", "actor", "source", "simulated"], "additionalProperties": false,
+        "properties": {
+          "sequence": {"type": "integer", "minimum": 1}, "at": {"type": "string", "format": "date-time"},
+          "action": {"enum": ["policy.validated", "policy.approved", "deployment.started", "deployment.succeeded", "deployment.failed", "deployment.deferred", "rollout.blocked", "rollout.completed", "canary.rejected", "canary.passed", "account.created", "account.activated"]},
+          "detail": {"type": "string", "minLength": 1},
+          "account_id": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/account"}]},
+          "actor": {"$ref": "#/$defs/actor"}, "source": {"const": "northstar-policy-rollout-v1"}, "simulated": {"const": true}
+        }
+      }
+    }
+  }
+}

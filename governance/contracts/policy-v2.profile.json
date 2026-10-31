@@ -1,0 +1,6 @@
+{
+  "$id": "urn:northstar:governance:policy-v2-profile:1",
+  "description": "Opt-in extension of V1 record shapes for the offline Phase 5 policy simulation. Does not change the default API or DynamoDB contract.",
+  "policy_version": "2.0.0",
+  "additional_control_id": "audit-log-integrity"
+}

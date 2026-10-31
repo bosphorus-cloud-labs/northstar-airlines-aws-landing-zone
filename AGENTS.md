@@ -75,3 +75,11 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - Production SPA builds require Cognito/API public settings and may not enable local-demo mode. No secrets belong in VITE variables or Terraform source/state.
 - DynamoDB reads pin a content-addressed immutable synthetic snapshot. Only the separately authorized loader can conditionally write it; manifest publication is last and retries never overwrite conflicts.
 - Build Lambda ZIPs offline from pinned Linux ARM64 Python 3.13 dependencies. Keep artifacts, generated environments, plans and state ignored. Rebuild after source/dependency changes.
+
+## Phase 5 offline simulation
+
+- The existing hosted V1 dashboard must remain unchanged. No AWS credentials, cloud calls, Terraform operations, DynamoDB publication, frontend changes, commits or pushes are authorized by the initial Phase 5 task.
+- The CLI writes only below ignored `artifacts/policy-rollout/`; it must not modify V1 fixtures, the pinned snapshot manifest, Terraform or deployment configuration.
+- V2 contracts are an explicit opt-in profile. Default API/evaluator/loader behavior stays V1. Reuse policy evaluation rather than reproducing its rules in the CLI.
+- Approval and rollout are explicitly simulated. Preserve desired/observed distinctions, baseline violations, exceptions, missing/stale evidence, failure stop conditions, inactive-account deferrals and deterministic timestamps. No automatic integration/publication path is permitted.
+- The optional `terraform/simulation/` root is an authorized exception for real offline fmt, init with `-backend=false`, validate, plan and show only. Keep it provider/resource/data-source-free; import only `simulated_governance`, never POC/enterprise modules. Save plans/JSON only under ignored artifacts and verify the full desired output against the frozen CLI proposal. No apply, AWS access, deployment or compliance measurement is authorized.
