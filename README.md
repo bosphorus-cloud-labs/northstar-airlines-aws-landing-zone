@@ -2,7 +2,7 @@
 
 A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a planned, single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** Phases 1–3 are implemented locally: the governance model, eight-endpoint FastAPI backend, and React/TypeScript/Vite Governance Console. Six dashboard pages and account details display API-sourced synthetic evidence with visible simulation labels. No Terraform resources, deployment workflows, Amplify hosting, or AWS infrastructure have been implemented or deployed.
+**Current status:** Phases 1–3 work locally. Phase 4A now prepares reusable Terraform, Cognito Code + PKCE sign-in, verified gateway permissions, an immutable DynamoDB adapter, offline packaging and seed preparation. Nothing has been deployed or inserted in AWS. No executable GitHub deployment workflow exists.
 
 ## Objectives
 
@@ -48,7 +48,7 @@ Empty directories contain `.gitkeep` placeholders so Git preserves the structure
 
 Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
-The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform CLI/provider versions will be pinned when modules are introduced. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
+The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform is constrained to >=1.14,<2 (tested 1.14.6), with AWS provider 6.71.0 locked for the isolated POC root. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
 
 Local development will default to deterministic mock data without AWS credentials or live AWS API calls. The API currently reads local fixtures; no DynamoDB or event runtime is required. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
 
@@ -69,7 +69,7 @@ Local API (explicit demo identity bypass; trusted workstation only):
 .venv/bin/python -m backend --local-demo
 ```
 
-The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be exposed publicly. The console uses an explicitly scoped loopback-only Vite proxy for local development. The Lambda adapter stays fail-closed. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
+The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be exposed publicly. The console uses an explicitly scoped loopback-only Vite proxy for local development. The Lambda adapter stays fail-closed unless all deployment settings and a verified gateway identity are present; no local-demo flag can enable it. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
 
 In a second terminal from the repository root, run the frontend while the API continues running:
 
@@ -100,6 +100,14 @@ Repository checks (from the repository root):
 git diff --check
 git status --short --branch
 ```
+
+## Secure deployment foundation (source only)
+
+See [Phase 4A deployment guide](docs/AWS_DEPLOYMENT_FOUNDATION.md) for Terraform module boundaries, Cognito/PKCE and IAM trust, DynamoDB snapshot loading, Linux ARM64 packaging, public frontend settings, state bootstrap, costs, repository integration and teardown. Offline seed preparation is `.venv/bin/python -m scripts.seed_governance`; it never connects to AWS by default.
+
+Development remains `npm run dev` with the loopback API. Production builds require the public Cognito/API configuration exported by Terraform and do not use the local proxy. Without that configuration, the compiled bundle shows a configuration-required screen and makes no API calls.
+
+No AWS credentials, account discovery, remote state initialization, normal Terraform plans, apply/destroy, seeding execution, or hosting deployment is authorized by Phase 4A. The only Terraform test plan uses a mock provider.
 
 ## Security and delivery model
 

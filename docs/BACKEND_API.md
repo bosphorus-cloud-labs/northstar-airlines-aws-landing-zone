@@ -1,6 +1,6 @@
 # Local governance backend API (v1)
 
-Implemented for Python 3.13: FastAPI/Pydantic read APIs over the Phase 1 synthetic fleet and evaluator. The Phase 3 [React console](FRONTEND.md) now consumes these APIs. No AWS service, credential access, event consumer, database, infrastructure, or deployment workflow is involved. Simulated AFT/Terraform history is data only; requests cannot execute either tool.
+Implemented for Python 3.13: FastAPI/Pydantic read APIs over the Phase 1 synthetic fleet and evaluator. The Phase 3 [React console](FRONTEND.md) now consumes these APIs. Local mode involves no AWS service or credentials. Phase 4A adds deployment-only DynamoDB/authentication composition and Terraform source without cloud execution; see [deployment guide](AWS_DEPLOYMENT_FOUNDATION.md). Simulated AFT/Terraform history is data only; requests cannot execute either tool.
 
 ## Install and run
 
@@ -33,9 +33,9 @@ Default mode is **fail-closed**, not an anonymous API. All routes, health, docs,
 
 `--local-demo` is an explicit identity bypass for development on a trusted workstation, **not production authentication**. It grants a fixed local demo reader only to numeric loopback client addresses, requires exactly one raw Host header matching a loopback name/address (with an optional numeric port), and rejects every Authorization header. It never parses or accepts bearer tokens. Forwarded identity/address headers confer no identity; no CORS allowances are configured. The Phase 3 Vite proxy is the sole documented proxy exception: both processes bind to loopback on a trusted workstation, with a fixed API target. Do not expose either server via public binds, tunnels, public reverse proxies, port forwarding, or shared hosts. Local processes can access demo data while the mode is enabled.
 
-`Authenticator.authenticate(Request) -> Principal` is the replaceable identity interface. A future Cognito implementation must verify signature, trusted issuer, audience/client binding, expiry and permitted algorithms before mapping verified claims to permissions. API Gateway authorization and application checks must use an explicitly reviewed trust boundary. No fake JWT verification exists now.
+`Authenticator.authenticate(Request) -> Principal` is the replaceable identity interface. A future Cognito implementation must verify signature, trusted issuer, audience/client binding, expiry and permitted algorithms before mapping verified claims to permissions. API Gateway authorization and application checks must use an explicitly reviewed trust boundary. The deployed authenticator consumes only API Gateway verified claims and checks read scope/group; it does not pretend to verify arbitrary bearer tokens. No local-demo bypass exists in that composition.
 
-`backend.lambda_handler.handler` wraps a fail-closed app in Mangum, with an explicitly owned Python 3.13 event loop per invocation. It is tested with an in-memory API Gateway-shaped event, not deployed or connected to AWS. It explicitly constructs the app with `local_demo=False`; environment variables, forwarded headers, and bearer tokens cannot enable demo mode. JWT validation and AWS deployment configuration remain future work.
+`backend.lambda_handler.handler` wraps a fail-closed app in Mangum, with an explicitly owned Python 3.13 event loop per invocation. It is tested with an in-memory API Gateway-shaped event, not deployed or connected to AWS. It constructs the deployment composition with `local_demo=False`; environment variables, forwarded headers, and bearer tokens cannot enable demo mode. Complete deployment settings select the DynamoDB adapter and trusted gateway authenticator; incomplete settings deny requests. Real AWS validation remains future work.
 
 ## Dependency and Lambda packaging boundaries
 

@@ -1,6 +1,6 @@
 # NorthStar Governance Console
 
-Phase 3 implements a local React/TypeScript/Vite console over the existing read-only FastAPI API. The browser has no alternative mock-data source, AWS SDK, credentials, deployment role, or mutation operations. No Amplify hosting, Cognito integration, Terraform, or deployment workflow is implemented.
+Phase 3 implements a local React/TypeScript/Vite console over the existing read-only FastAPI API. The browser has no alternative mock-data source, AWS SDK, credentials, deployment role, or mutation operations. Phase 4A adds Cognito/PKCE sign-in and Terraform deployment source; no hosting resources or deployment workflow have been executed. See [deployment foundation](AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## Start locally
 
@@ -26,7 +26,7 @@ Open [the console](http://127.0.0.1:5173). The API must be listening on `127.0.0
 
 This proxy is an explicitly scoped local-demo integration: the backend sees the loopback Vite process, not an authenticated browser identity. Keep both processes on a trusted workstation. Do not publish, tunnel, bind publicly, or place this setup behind a public reverse proxy. Default backend mode still denies requests, and the Lambda entry point remains fail-closed. All authorization remains server-side; the console does not pretend to verify JWTs or grant permissions.
 
-To inspect the optimized bundle locally, run `npm run build` then `npm run preview` from `frontend/`, with the same backend running. Preview binds `127.0.0.1:4173` and uses the same local proxy. These proxy settings are development/preview configuration, not Amplify routing or production authentication.
+Phase 4A production builds require public Cognito settings and never permit a local-demo authentication fallback. A build without settings compiles to a configuration-required screen and makes no API calls. `npm run preview` serves that static bundle on `127.0.0.1:4173`; it cannot substitute the local-demo API for Cognito. Use `npm run dev` for the existing local demonstration. A configured production build uses its absolute deployed API URL, not the Vite proxy.
 
 ## Experience and navigation
 
@@ -89,4 +89,4 @@ Dependencies are exact-pinned with an included npm lockfile. Development-only ov
 
 ## Remaining deployment work
 
-The production build is validated as a static bundle, not deployed. Amplify SPA rewrites, production API routing, Cognito authentication, authorized identity propagation, durable telemetry, and deployed accessibility/security verification remain future phases. The local proxy and identity bypass must not be used as production authentication. See [architecture](ARCHITECTURE.md) and [backend boundaries](BACKEND_API.md).
+The production build is validated as a static bundle, not deployed. Phase 4A prepares Amplify SPA rewrites, absolute API routing, Cognito Code + PKCE, and verified gateway identity checks in source. Real sign-in/MFA/gateway integration, durable telemetry, and deployed accessibility/security verification remain future acceptance gates. The local proxy and identity bypass must not be used as production authentication. See [architecture](ARCHITECTURE.md) and [backend boundaries](BACKEND_API.md).

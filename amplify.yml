@@ -1,0 +1,24 @@
+# Future repository-connected Amplify builds only; this file does not create a deployment.
+version: 1
+applications:
+  - appRoot: frontend
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 24.19.0
+            - nvm use 24.19.0
+            - npm ci
+        build:
+          commands:
+            - npm run typecheck
+            - npm run lint
+            - npm test
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*

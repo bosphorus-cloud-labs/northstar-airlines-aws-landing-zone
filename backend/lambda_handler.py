@@ -1,12 +1,14 @@
-"""ASGI compatibility only: no deployment and no local-demo Lambda bypass."""
+"""Deployment ASGI composition: verified gateway permissions; no local-demo bypass."""
 
 import asyncio
 
 from mangum import Mangum
 
-from backend.app import create_app
+from backend.deployment.application import deployed_app
 
-_adapter = Mangum(create_app(local_demo=False), lifespan="off")
+# HTTP API's named stage can be present in requestContext.http.path. Strip only
+# our fixed deployment prefix; GatewayIdentity still verifies the trusted stage.
+_adapter = Mangum(deployed_app(), lifespan="off", api_gateway_base_path="/poc")
 
 
 def handler(event, context):

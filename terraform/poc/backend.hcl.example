@@ -1,0 +1,5 @@
+bucket = "REPLACE_WITH_PRIVATE_STATE_BUCKET"
+key = "northstar/poc/terraform.tfstate"
+region = "eu-central-1"
+encrypt = true
+use_lockfile = true

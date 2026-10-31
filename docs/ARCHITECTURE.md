@@ -1,6 +1,6 @@
 # Architecture and responsibility boundaries
 
-Status: the Phase 1 model, Phase 2 local backend, and Phase 3 React console are implemented. AWS infrastructure remains design intent. See [contracts and evaluation](GOVERNANCE_MODEL.md) and [local API](BACKEND_API.md).
+Status: the Phase 1 model, Phase 2 local backend, and Phase 3 React console are implemented. Phase 4A implements AWS deployment source, authentication composition and storage adapters; no cloud resources exist. See [deployment foundation](AWS_DEPLOYMENT_FOUNDATION.md). See [contracts and evaluation](GOVERNANCE_MODEL.md) and [local API](BACKEND_API.md).
 
 ## Scope and ownership
 
@@ -27,11 +27,11 @@ The proxy is deliberately restricted to a trusted local workstation: Vite and Fa
 
 FastAPI routes → GovernanceService → GovernanceRepository/FixtureRepository. The service reuses the Phase 1 evaluator; Pydantic validates transport models and domain records are checked against the existing JSON Schema. Data access returns request-owned snapshots and performs no AWS calls. Pagination/filtering is bounded and deterministic for the fixed dataset. Evaluation defaults to a fixed demo time, not wall-clock time.
 
-The default authenticator denies every request. Explicit local-demo mode grants only a loopback demo reader and rejects tokens; the launcher disables forwarded-header trust and binds only `127.0.0.1`. Server-side permission checks cover health/docs as well as data. The Authenticator interface is reserved for verified Cognito identities. Mangum compatibility is provided using a fail-closed application; no Lambda resource or API Gateway configuration exists. Local demo identity must never be used for deployed authentication.
+The default authenticator denies every request. Explicit local-demo mode grants only a loopback demo reader and rejects tokens; the launcher disables forwarded-header trust and binds only `127.0.0.1`. Server-side permission checks cover health/docs as well as data. The Authenticator interface is reserved for verified Cognito identities. Mangum uses the fail-closed deployment factory: required configuration selects the immutable DynamoDB adapter and verified-gateway authenticator; missing configuration denies all access. Terraform defines Lambda/API Gateway source only; no resource exists in AWS. Local demo identity must never be used for deployed authentication.
 
-No storage writes, exception mutations, event consumers, AWS integrations, or infrastructure execution are implemented.
+No API storage writes, exception mutations, event consumers, or infrastructure execution are implemented. Phase 4A adds a deployment-only DynamoDB reader and an explicitly gated operator loader; neither has been executed against AWS.
 
-## Planned AWS application
+## AWS deployment source (not deployed)
 
 React on Amplify Hosting authenticates through Cognito. API Gateway enforces authorization before Python 3.13 Lambda reads DynamoDB. EventBridge routes asynchronous lifecycle and governance events to handlers. Browser code receives no deployment credentials or direct database access. API, event processing, and deployment roles remain separate.
 
