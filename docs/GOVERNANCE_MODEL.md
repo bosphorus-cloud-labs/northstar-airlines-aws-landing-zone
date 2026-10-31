@@ -1,6 +1,6 @@
 # Governance model v1
 
-Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. No AWS integrations, resources, application API, frontend, or workflows exist. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
+Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) now exposes this model; no AWS integrations, resources, frontend, or deployment workflows exist. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
 
 ## Execute locally
 

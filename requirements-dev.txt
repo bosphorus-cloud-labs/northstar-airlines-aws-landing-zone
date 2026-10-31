@@ -1,8 +1,5 @@
-jsonschema==4.25.1
-attrs==25.4.0
-jsonschema-specifications==2025.9.1
-referencing==0.37.0
-rpds-py==0.28.0
-rfc3339-validator==0.1.4
-six==1.17.0
+-r backend/requirements.txt
 ruff==0.14.3
+httpx2==2.16.0
+httpcore2==2.16.0
+truststore==0.10.5
