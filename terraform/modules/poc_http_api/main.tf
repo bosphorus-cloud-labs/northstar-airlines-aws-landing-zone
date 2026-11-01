@@ -2,7 +2,7 @@ resource "aws_apigatewayv2_api" "governance" {
   name          = var.name
   protocol_type = "HTTP"
   cors_configuration {
-    allow_origins     = [var.allowed_origin]
+    allow_origins     = distinct(concat([var.allowed_origin], var.additional_origins))
     allow_methods     = ["GET", "OPTIONS"]
     allow_headers     = ["authorization", "content-type"]
     allow_credentials = false

@@ -1,9 +1,5 @@
-# Static Amplify app without source-provider credentials
+# Existing Amplify app: staged repository migration
 
-Reference implementation only until deployment is explicitly authorized. AWS provider >=6.71,<7 and Terraform >=1.14,<2; provider/account/region configuration is owned by the POC root.
+The existing `aws_amplify_app.console` address and `app_id/default_domain` outputs remain unchanged. Optional `github_repository_url`, sensitive `github_access_token` and `github_build_spec` configure that app in place. `prevent_destroy=true` protects it; no repository ignore_changes or second app is used. Security headers/rewrite and app-wide automatic-build default stay unchanged.
 
-Inputs: `name/tags`. Outputs: `app_id/default_domain`. See `variables.tf` and `outputs.tf` for the exact typed interface.
-
-Root creates the poc branch and public build variables after Cognito/API composition. No automatic builds, repository token, upload or deployment job. Repository association is explicitly operator-managed later.
-
-Only the isolated POC root composes this module. Enterprise state and resources must not share ownership. See [deployment guide](../../../docs/AWS_DEPLOYMENT_FOUNDATION.md) for permissions, costs, validation and teardown.
+AWS rejects repository association while a manually deployed branch exists. Root therefore separates legacy-branch retirement, repository connection, and main creation into explicit checkpoints. Provider 6.71.0 sends a token only on an attribute change; a failed apply can record a token without connecting GitHub. Do not blindly reuse/remove that input or print state. See the [staged migration procedure](../../../docs/AMPLIFY_GITHUB_INTEGRATION.md).
