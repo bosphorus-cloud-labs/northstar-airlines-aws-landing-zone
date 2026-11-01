@@ -27,6 +27,21 @@ def verify(sha, digest, *, get=api, env=None):
     if not re.fullmatch(r"[a-f0-9]{40}", sha) or not re.fullmatch(r"[a-f0-9]{64}", digest):
         raise ValueError("Exact reviewed commit and approved snapshot digest are required")
     root = f"repos/{REPOSITORY}"
+    approval_model = env.get("GOVERNANCE_APPROVAL_MODEL", "independent")
+    if approval_model not in {"independent", "single-owner-poc"}:
+        raise ValueError("Unsupported approval model")
+    single_owner = approval_model == "single-owner-poc"
+    owner = REPOSITORY.split("/")[0]
+    if single_owner:
+        repository = get(root)
+        if (
+            repository.get("owner", {}).get("login") != owner
+            or repository["owner"].get("type") != "User"
+            or repository.get("default_branch") != "main"
+            or env.get("GITHUB_ACTOR") != owner
+            or get(f"{root}/branches/main").get("protected") is not True
+        ):
+            raise ValueError("Single-owner POC requires the real owner and protected main")
     environment = get(f"{root}/environments/{ENVIRONMENT}")
     reviews = [
         r for r in environment.get("protection_rules", []) if r["type"] == "required_reviewers"
@@ -34,11 +49,18 @@ def verify(sha, digest, *, get=api, env=None):
     if (
         len(reviews) != 1
         or not reviews[0].get("reviewers")
-        or reviews[0].get("prevent_self_review") is not True
+        or reviews[0].get("prevent_self_review") is not (not single_owner)
     ):
         raise ValueError(
-            "Protected environment needs required reviewers and self-review prevention"
+            "Protected environment reviewer settings differ from the selected approval model"
         )
+    if single_owner and (
+        environment.get("can_admins_bypass") is not False
+        or len(reviews[0]["reviewers"]) != 1
+        or reviews[0]["reviewers"][0].get("type") != "User"
+        or reviews[0]["reviewers"][0].get("reviewer", {}).get("login") != owner
+    ):
+        raise ValueError("Single-owner POC requires actual owner approval without admin bypass")
     # Public REST does not currently expose the UI's admin-bypass setting.
     # Require its manual owner review; reject it if a server explicitly reports bypass.
     if environment.get("can_admins_bypass") is True:
@@ -89,11 +111,15 @@ def verify(sha, digest, *, get=api, env=None):
                 latest[review["user"]["login"]] = review
         if any(r["state"] == "CHANGES_REQUESTED" for r in latest.values()):
             continue
-        approved = any(
-            user != pr["user"]["login"]
-            and r["state"] == "APPROVED"
-            and r.get("commit_id") == pr["head"]["sha"]
-            for user, r in latest.items()
+        approved = (
+            pr["user"]["login"] == owner
+            if single_owner
+            else any(
+                user != pr["user"]["login"]
+                and r["state"] == "APPROVED"
+                and r.get("commit_id") == pr["head"]["sha"]
+                for user, r in latest.items()
+            )
         )
         if approved:
             break
@@ -101,7 +127,12 @@ def verify(sha, digest, *, get=api, env=None):
         raise ValueError(
             "The merged source PR needs an independent approval of its final head commit"
         )
-    return {"source_commit": sha, "approved_digest": digest, "environment": ENVIRONMENT}
+    return {
+        "source_commit": sha,
+        "approved_digest": digest,
+        "environment": ENVIRONMENT,
+        "approval_model": approval_model,
+    }
 
 
 def main():

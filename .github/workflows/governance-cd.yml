@@ -8,7 +8,7 @@ name: Approved synthetic governance delivery
         options: [bootstrap, publish, rollback]
         required: true
       source_sha:
-        description: Exact current main commit with successful CI and reviewed merged PR
+        description: Exact current main commit with successful CI and merged PR
         type: string
         required: true
       snapshot_digest:
@@ -43,6 +43,7 @@ jobs:
       pull-requests: read
     env:
       GH_TOKEN: ${{ github.token }}
+      GOVERNANCE_APPROVAL_MODEL: ${{ vars.GOVERNANCE_APPROVAL_MODEL || 'independent' }}
       SOURCE_SHA: ${{ inputs.source_sha }}
       APPROVED_DIGEST: ${{ inputs.snapshot_digest }}
       ACTION: ${{ inputs.action }}

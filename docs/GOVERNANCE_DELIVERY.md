@@ -22,9 +22,9 @@ IAM separates reader and publisher. Publisher has only table Query/GetItem/PutIt
 
 `governance-ci.yml` runs for PRs, main pushes, manual execution and as reusable CI. It has contents:read only, immutable action pins, no OIDC/AWS role and no persisted checkout credentials. It runs Python/schema/auth/delivery tests, Ruff/source credential/artifact guards, real provider-free fmt/init/validate/plan/parity, POC mock-provider plan tests and frontend contract/type/lint/tests/build. The mock Lambda ZIP exists only for mock plans; it is not a deployable package. Review artifacts contain synthetic reports and a commit-bound release.json; no state or executable plan is uploaded.
 
-`governance-cd.yml` is manual-dispatch on main only. It reruns unprivileged CI, requires successful main-push CI for the exact main SHA and an independent APPROVED review of the final head of its merged PR. It checks `governance-production` required reviewers, self-review prevention and exact main-only branch policy before requesting credentials. The privileged job then waits for actual environment approval. Only that job has id-token:write. It downloads only its own workflow's deterministic candidate, verifies SHA/digest offline, assumes the data-only role and executes bootstrap/publish/rollback. Concurrency serializes promotions; generation checks also reject races with other operators. The protected approval is real; `sim-security-reviewer` inside fleet events is not production authorization.
+`governance-cd.yml` is manual-dispatch on main only. It reruns unprivileged CI and requires successful main-push CI for the exact main SHA and a merged PR. The default independent model requires an independent APPROVED review of the final head. The explicitly authorized `single-owner-poc` model instead requires an owner-authored merged PR, an owner-triggered run, protected main, and the real owner as the environment approver. It never invents PR approvals. It checks `governance-production` required reviewers, the selected self-review setting and exact main-only branch policy before requesting credentials. `GOVERNANCE_APPROVAL_MODEL=single-owner-poc` is an explicit repository variable; an absent value preserves independent review. The privileged job then waits for actual environment approval. Only that job has id-token:write. It downloads only its own workflow's deterministic candidate, verifies SHA/digest offline, assumes the data-only role and executes bootstrap/publish/rollback. Concurrency serializes promotions; generation checks also reject races with other operators. The protected approval is real; `sim-security-reviewer` inside fleet events is not production authorization.
 
-GitHub's public REST response does not expose the administrator-bypass UI setting. An owner must disable **Allow administrators to bypass configured protection rules** and verify it in Settings before enabling CD. Do not add an unsupported IAM claim or pretend that setting was API-verified. Main branch protection must require PR review and CI checks; no force pushes/admin shortcuts. The gate additionally rejects self/stale PR reviews and outstanding changes requests. Reviews reaching the 100-record API budget fail closed pending explicit pagination review. Repository administrators can change workflows, environment protections or IAM trust; they remain trusted operators.
+GitHub's public REST response does not expose the administrator-bypass UI setting. An owner must disable **Allow administrators to bypass configured protection rules** and verify it in Settings before enabling CD. The current environment API also exposes `can_admins_bypass`; the single-owner model requires an explicit false value. Do not add an unsupported IAM claim or pretend that setting was API-verified. Main branch protection requires a PR, strict successful Governance checks/Frontend checks, resolved conversations, and no force pushes/deletions/admin shortcuts. In the single-owner POC it requires zero independent approving reviews and no last-pusher approval; deployment authorization is the actual protected environment approval. This is a documented POC separation-of-duties limitation, not an independent review claim. The gate additionally rejects self/stale PR reviews and outstanding changes requests. Reviews reaching the 100-record API budget fail closed pending explicit pagination review. Repository administrators can change workflows, environment protections or IAM trust; they remain trusted operators.
 
 ## Deployment gates and exact plans
 
@@ -62,16 +62,16 @@ An operator must separately approve/apply that exact reviewed plan. This source 
 
 ### 2. Configure protected GitHub delivery
 
-The repository is private and user-owned; its plan was not exposed by the read-only account API. GitHub documents required-reviewer/wait-timer protection for private repositories as an Enterprise feature (Free/Pro/Team support those rules on public repositories only). The owner must verify plan support or explicitly approve a suitable plan/visibility strategy. Do not make the repository public, incur an upgrade charge, or remove the approval check automatically. This is a deployment prerequisite, not an assumed supported feature.
+The repository is public and user-owned. The owner has explicitly chosen the single-owner interview POC model: `GOVERNANCE_APPROVAL_MODEL=single-owner-poc` as a repository variable. `governance-production` requires the real owner, permits self-review, disables administrator bypass, and allows only exact main. The workflow still waits for the owner's actual GitHub deployment approval. No CLI approval, fabricated review or administrative bypass is used. Enterprise deployments should keep the default independent model and assign a different reviewer.
 
-An owner must create `governance-production`, choose a real independent required reviewer/team, prevent self-review, disable admin bypass in the UI, and allow only the exact main branch (custom deployment branch policy, no tag wildcard). A single person cannot both trigger and approve their own job under these rules. Add environment variables, not AWS keys:
+Add environment variables, not AWS keys:
 
 - GOVERNANCE_PUBLISH_ROLE_ARN: Terraform governance_publisher_role_arn output.
 - AWS_ACCOUNT_ID: authorized account ID.
 - GOVERNANCE_TABLE: existing table name.
 - GOVERNANCE_BASELINE_ID: Terraform governance_baseline_id output.
 
-No such environment or approver was created/chosen automatically. Missing protection or reviewer approval is a real blocker, not permission to weaken the workflow. Keep CI unprivileged; never put repository tokens or AWS keys into artifacts.
+Missing protection or actual deployment approval is a real blocker, not permission to bypass the workflow. Keep CI unprivileged; never put repository tokens or AWS keys into artifacts.
 
 ### 3. Bootstrap the existing V1 registration
 
@@ -83,7 +83,7 @@ gh workflow run governance-cd.yml --ref main \
   -f snapshot_digest=PINNED_V1_DIGEST -f expected_generation=0
 ```
 
-An independent environment reviewer must inspect the exact SHA/digest/operation and approve. Verify the publication receipt and strong catalogue generation 1. Do not enable the reader while bootstrap is missing.
+The configured environment reviewer must inspect the exact SHA/digest/operation and approve. Verify the publication receipt and strong catalogue generation 1. Do not enable the reader while bootstrap is missing.
 
 ### 4. Activate the reader and the existing frontend
 
