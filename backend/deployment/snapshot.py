@@ -120,12 +120,20 @@ def encode(snapshot: GovernanceSnapshot) -> tuple[str, list[dict], dict]:
 
 
 def decode(rows: list[dict], expected: str) -> GovernanceSnapshot:
+    if any(
+        set(row) != {"pk", "sk", "payload"}
+        or any(set(row[key]) != {"S"} or not isinstance(row[key]["S"], str) for key in row)
+        for row in rows
+    ):
+        raise ValueError("Unexpected snapshot row attributes or types")
     indexed = {r["sk"]["S"]: r for r in rows}
     if len(indexed) != len(rows) or any(r["pk"]["S"] != f"SNAPSHOT#{expected}" for r in rows):
         raise ValueError("Invalid snapshot keys")
     manifest = json.loads(indexed["MANIFEST"]["payload"]["S"])
     if (
-        manifest.get("sha256") != expected
+        set(manifest)
+        != {"schema_version", "simulated", "source", "sha256", "item_count", "fleet_schema_version"}
+        or manifest.get("sha256") != expected
         or manifest.get("simulated") is not True
         or manifest.get("source") != "northstar-synthetic-v1"
         or manifest.get("schema_version") != "1.0.0"

@@ -119,3 +119,25 @@ variable "github_baseline_compatibility" {
   nullable    = false
   description = "Explicit main-branch frontend baseline mode for the existing V1 Lambda. Set false only after the separate backend upgrade is verified."
 }
+
+variable "enable_governance_delivery" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Create the narrowly scoped GitHub OIDC publisher and extend read-only runtime access. No automatic deployment."
+}
+variable "governance_catalog_enabled" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Enable the live DynamoDB Current/history reader only after the registry has been bootstrapped and verified."
+  validation {
+    condition     = !var.governance_catalog_enabled || var.enable_governance_delivery
+    error_message = "Dynamic catalogue requires delivery/read IAM to be enabled first."
+  }
+}
+variable "github_oidc_provider_arn" {
+  type        = string
+  default     = null
+  description = "Optional existing GitHub OIDC provider ARN; null creates one after approved plan. Inventory was empty at implementation."
+}

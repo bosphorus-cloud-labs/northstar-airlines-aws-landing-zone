@@ -2,18 +2,13 @@ name: Governance validation (no AWS deployment)
 
 "on":
   pull_request:
-    paths:
-      - 'terraform/simulation/**'
-      - 'terraform/modules/simulated_governance/**'
-      - 'governance/**'
-      - 'mock-data/**'
-      - 'backend/**'
-      - 'tests/**'
-      - 'scripts/**'
-      - 'requirements-dev.txt'
-      - 'demo.sh'
-      - '.github/workflows/governance-ci.yml'
+  push:
+    branches: [main]
   workflow_dispatch:
+  workflow_call:
+    outputs:
+      release_digest:
+        value: ${{ jobs.governance.outputs.release_digest }}
 
 permissions:
   contents: read
@@ -26,7 +21,9 @@ jobs:
   governance:
     name: Governance checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    outputs:
+      release_digest: ${{ steps.release.outputs.digest }}
     defaults:
       run:
         shell: bash
@@ -58,10 +55,21 @@ jobs:
         run: .venv/bin/python -m scripts.ci_governance preflight
       - name: Python lint and governance/backend tests (real offline checks)
         run: |
-          .venv/bin/ruff check backend governance scripts tests
-          .venv/bin/ruff format --check backend governance scripts tests
+          .venv/bin/python -m scripts.check_source_security
+          .venv/bin/ruff check backend governance scripts tests terraform/poc/tests/*.py
+          .venv/bin/ruff format --check backend governance scripts tests terraform/poc/tests/*.py
           .venv/bin/python -m pip check
           .venv/bin/python -m unittest discover -s tests -v 2>&1 | tee artifacts/ci/python-tests.txt
+      - name: Validate POC Terraform offline (mock provider only)
+        run: |
+          terraform fmt -check -recursive terraform
+          terraform -chdir=terraform/poc init -backend=false -input=false -lockfile=readonly -no-color
+          terraform -chdir=terraform/poc validate -no-color
+          mkdir -p artifacts/validation
+          .venv/bin/python -m zipfile -c artifacts/validation/mock-lambda.zip README.md
+          terraform -chdir=terraform/poc test -json -verbose -var=lambda_package_path=../../artifacts/validation/mock-lambda.zip > artifacts/validation/terraform-tests.jsonl
+          .venv/bin/python terraform/poc/tests/check_origin_plans.py artifacts/validation/terraform-tests.jsonl
+          .venv/bin/python terraform/poc/tests/check_github_hosting_plans.py artifacts/validation/terraform-tests.jsonl
       - name: Freeze synthetic policy proposal
         run: .venv/bin/python -m governance.simulation.rollout plan --run-dir artifacts/policy-rollout/ci
       - name: REAL Terraform formatting
@@ -119,3 +127,43 @@ jobs:
             artifacts/ci/summary.md
             artifacts/policy-rollout/ci/report.json
             artifacts/policy-rollout/ci/findings.json
+
+      - name: Build commit-bound immutable candidate (no AWS)
+        id: release
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          digest=$(.venv/bin/python -m scripts.governance_release build --source-commit "$SOURCE_COMMIT")
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Synthetic candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain synthetic release input only
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: governance-candidate-${{ github.sha }}
+          retention-days: 7
+          path: artifacts/release/release.json
+
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+    env:
+      VITE_AUTH_MODE: cognito
+      VITE_GOVERNANCE_API_MODE: baseline-v1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 24.19.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: python -m venv ../.venv && ../.venv/bin/python -m pip install -r ../requirements-dev.txt
+      - run: npm ci
+      - run: npm run api:check
+      - run: npm run typecheck && npm run lint && npm run format:check && npm test && npm run build

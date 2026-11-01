@@ -52,6 +52,7 @@ export function App() {
       ),
     retry: false,
     staleTime: 30000,
+    refetchInterval: baselineMode ? false : 30000,
   });
   const versions =
     catalog.data && "versions" in catalog.data.data

@@ -128,6 +128,14 @@ class ConfiguredCatalog:
 
 def deployment_catalog(config, baseline):
     """Optional server-only allowlist; absent configuration preserves the original V1 path."""
+    if config.get("GOVERNANCE_CATALOG_MODE") == "dynamodb":
+        if config.get("GOVERNANCE_VERSIONS_JSON") or config.get("CURRENT_POLICY_VERSION"):
+            raise ValueError("Choose dynamic catalogue or static selection, not both")
+        from backend.deployment.catalog import DynamoCatalog
+
+        return DynamoCatalog(config["GOVERNANCE_TABLE"], config["SNAPSHOT_ID"])
+    if config.get("GOVERNANCE_CATALOG_MODE") not in (None, "pinned"):
+        raise ValueError("Unsupported catalogue mode")
     if not config.get("GOVERNANCE_VERSIONS_JSON"):
         if config.get("CURRENT_POLICY_VERSION", "1.0.0") != "1.0.0":
             raise ValueError("A non-baseline current policy requires an explicit allowlist")

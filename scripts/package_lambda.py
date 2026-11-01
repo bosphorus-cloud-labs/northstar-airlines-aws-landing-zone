@@ -77,7 +77,10 @@ def package(vendor: Path, output: Path) -> str:
             files[path.relative_to(vendor).as_posix()] = content
     for directory in ["backend", "governance"]:
         for path in (ROOT / directory).rglob("*.py"):
-            if "__pycache__" not in path.parts:
+            if (
+                "__pycache__" not in path.parts
+                and path.relative_to(ROOT).as_posix() != "governance/delivery/publisher.py"
+            ):
                 files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
     for name in ["v1.schema.json", "policy-v2.profile.json"]:
         schema = ROOT / "governance/contracts" / name

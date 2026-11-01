@@ -45,6 +45,8 @@ module "http" {
 }
 module "compute" {
   source                   = "../modules/poc_compute"
+  delivery_enabled         = var.enable_governance_delivery
+  catalog_enabled          = var.governance_catalog_enabled
   name                     = var.name
   tags                     = local.tags
   table_arn                = module.data.table_arn

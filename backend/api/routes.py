@@ -76,7 +76,7 @@ def summary(request: Request, query: Annotated[SummaryQuery, Query()]):
     result = service.evaluate(query.evaluation_timestamp, query.policy_version)
     data = result.summary()
     if query.catalog or result.version is not None or result.snapshot.context is not None:
-        entries, current_policy, current_run = service.catalogue()
+        entries, current_policy, current_run = result.catalog_view or service.catalogue()
         data.update(
             current=entries[current_policy].descriptor(),
             current_run=current_run,
