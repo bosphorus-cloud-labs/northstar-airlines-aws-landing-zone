@@ -26,7 +26,7 @@ Open [the console](http://127.0.0.1:5173). The API must be listening on `127.0.0
 
 This proxy is an explicitly scoped local-demo integration: the backend sees the loopback Vite process, not an authenticated browser identity. Keep both processes on a trusted workstation. Do not publish, tunnel, bind publicly, or place this setup behind a public reverse proxy. Default backend mode still denies requests, and the Lambda entry point remains fail-closed. All authorization remains server-side; the console does not pretend to verify JWTs or grant permissions.
 
-Phase 4A production builds require public Cognito settings and never permit a local-demo authentication fallback. A build without settings compiles to a configuration-required screen and makes no API calls. `npm run preview` serves that static bundle on `127.0.0.1:4173`; it cannot substitute the local-demo API for Cognito. Use `npm run dev` for the existing local demonstration. A configured production build uses its absolute deployed API URL, not the Vite proxy.
+Production builds require public Cognito settings and never permit a local-demo authentication fallback. A build without settings compiles to a configuration-required screen and makes no API calls. `npm run preview` serves that static bundle on `127.0.0.1:4173`; it cannot substitute the local-demo API for Cognito. Use `npm run dev` for the existing local demonstration. A configured production build uses its absolute deployed API URL, not the Vite proxy.
 
 ## Experience and navigation
 

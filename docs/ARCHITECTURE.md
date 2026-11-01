@@ -33,9 +33,9 @@ React/TypeScript/Vite routes provide overview, inventory and details, compliance
 
 The proxy is deliberately restricted to a trusted local workstation: Vite and FastAPI bind to `127.0.0.1`, and Vite rewrites Host for the backend's demo guard. This is not production identity propagation. Deployed hosting uses Cognito Authorization Code + PKCE and API Gateway JWT authorization with explicit public API configuration, not the Vite proxy. No deployment authority or credentials are included in the browser. See [frontend implementation](FRONTEND.md) for contracts, paging, accessibility, tests, and snapshot limitations.
 
-## Implemented local backend
+## Backend and data access
 
-FastAPI routes → GovernanceService → GovernanceRepository/FixtureRepository. The service reuses the Phase 1 evaluator; Pydantic validates transport models and domain records are checked against the existing JSON Schema. The local fixture adapter performs no AWS calls; the deployed DynamoDB adapter uses bounded strongly consistent reads and digest verification. Pagination/filtering is bounded and deterministic for the fixed dataset. Evaluation defaults to a fixed demo time, not wall-clock time.
+FastAPI routes → GovernanceService → GovernanceRepository/FixtureRepository. The service reuses the shared governance evaluator; Pydantic validates transport models and domain records are checked against the existing JSON Schema. The local fixture adapter performs no AWS calls; the deployed DynamoDB adapter uses bounded strongly consistent reads and digest verification. Pagination/filtering is bounded and deterministic for the fixed dataset. Evaluation defaults to a fixed demo time, not wall-clock time.
 
 The default authenticator denies every request. Explicit local-demo mode grants only a loopback demo reader and rejects tokens; the launcher disables forwarded-header trust and binds only `127.0.0.1`. Server-side permission checks cover health/docs as well as data. The Authenticator interface supports verified Cognito identities. Mangum uses the fail-closed deployment factory: required configuration selects the immutable DynamoDB adapter and verified-gateway authenticator; missing configuration denies all access. The deployed factory supports a read-only DynamoDB Current/History catalogue while preserving pinned V1 compatibility. Local demo identity must never be used for deployed authentication.
 
@@ -45,13 +45,13 @@ No API storage writes, exception mutations, event consumers, or infrastructure e
 
 React on Amplify Hosting authenticates through Cognito. API Gateway enforces authorization before Python 3.13 Lambda reads DynamoDB. EventBridge-based asynchronous lifecycle handlers remain planned. Browser code receives no deployment credentials or direct database access. API, event processing, and deployment roles remain separate.
 
-Start with read APIs. Any later exception submission or approval API needs a separately reviewed authorization and audit design. Display access does not imply mutation authority.
+Any future exception submission or approval API needs a separately reviewed authorization and audit design. Display access does not imply mutation authority.
 
 Every inventory/evidence record identifies simulation versus real observation, source, observation time, and stable identifiers. Compliance distinguishes evaluated pass/fail from unknown, stale, and not evaluated. Exceptions preserve underlying findings. Deployment history distinguishes simulated runs from actual workflow results and records revisions and correlation IDs.
 
 ## Account lifecycle and fleet operations
 
-Phase 5 implements a local simulation of the lifecycle below. The CLI writes only ignored artifacts and explicitly opts into the `policy-v2` contract profile; default V1 validation, API contracts, fixture loading and pinned DynamoDB snapshot are unchanged. It separates V2 desired assignments from observed revisions, retains historical evidence/violations, stops on failed attempts, resumes pending targets and defers inactive accounts. Its approval journal is simulated, not an authenticated enterprise approval service. The local launcher never publishes cloud data. The separate protected CD workflow publishes a commit/digest-bound candidate after real approval. See [the demo runbook](POLICY_ROLLOUT_DEMO.md).
+The policy-rollout CLI implements a local simulation of the lifecycle below. The CLI writes only ignored artifacts and explicitly opts into the `policy-v2` contract profile; default V1 validation, API contracts, fixture loading and pinned DynamoDB snapshot are unchanged. It separates V2 desired assignments from observed revisions, retains historical evidence/violations, stops on failed attempts, resumes pending targets and defers inactive accounts. Its approval journal is simulated, not an authenticated enterprise approval service. The local launcher never publishes cloud data. The separate protected CD workflow publishes a commit/digest-bound candidate after real approval. See [the demo runbook](POLICY_ROLLOUT_DEMO.md).
 
 The optional isolated `terraform/simulation/` root consumes that same frozen proposal and calls the pure `simulated_governance` module per existing account. Real Terraform plans calculate only desired outputs; a separate read-only Python verifier compares the entire output and proposal digest. No provider/resource/data source, apply or live integration exists in this root. Terraform planning and Python simulated deployment/compliance reporting are explicitly distinct.
 
@@ -69,11 +69,11 @@ GitHub Actions validates application code, policies, Terraform and security; sep
 
 POC and enterprise roots never share state or execution roles. Shared module storage is not shared execution scope: POC roots must reference only POC-compatible modules, never enterprise-only modules or resources. The deployed POC uses encrypted remote Terraform state with locking; state/setup-token inputs and saved plans remain private and outside Git. Routine checks must not initialize remote state or query AWS.
 
-Enterprise documentation will map these controls to CodePipeline/CodeBuild and AFT customization pipelines. Organizations, Control Tower, AFT, Transit Gateway, Palo Alto firewalls, and enterprise landing-zone infrastructure remain reference-only and will not be deployed for this POC.
+The enterprise delivery design maps these controls to CodePipeline/CodeBuild and AFT customization pipelines. Organizations, Control Tower, AFT, Transit Gateway, Palo Alto firewalls, and enterprise landing-zone infrastructure remain reference-only and will not be deployed for this POC.
 
 ## Open decisions
 
-Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Node.js 24 and the local Vite/API development strategy are established. Terraform >=1.14,<2 and the locked AWS provider 6.71.0 define the current toolchain. The POC infrastructure and exact immutable GitHub OIDC trust are deployed. Real account evidence integrations remain outside this synthetic POC.
+V1 defines ten synthetic accounts, one root with four environment OUs and five representative controls; V2 adds a sixth control and an eleventh account. Production adoption requires decisions on user roles, exception approval, cost limits, retention, custom domains and recovery/teardown requirements. Node.js 24 and loopback Vite/API development are established. Terraform >=1.14,<2 and the locked AWS provider 6.71.0 define the current toolchain. The POC infrastructure and exact immutable GitHub OIDC trust are deployed. Real account evidence integrations remain outside this synthetic POC.
 
 ## AWS reference documentation
 
