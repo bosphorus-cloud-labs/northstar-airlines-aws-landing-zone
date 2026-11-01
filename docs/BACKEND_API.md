@@ -1,6 +1,6 @@
-# Local governance backend API (v1)
+# Governance backend API (v1)
 
-Implemented for Python 3.13: FastAPI/Pydantic read APIs over the Phase 1 synthetic fleet and evaluator. The Phase 3 [React console](FRONTEND.md) now consumes these APIs. Local mode involves no AWS service or credentials. Phase 4A adds deployment-only DynamoDB/authentication composition and Terraform source without cloud execution; see [deployment guide](AWS_DEPLOYMENT_FOUNDATION.md). Simulated AFT/Terraform history is data only; requests cannot execute either tool.
+Python 3.13 FastAPI/Pydantic read APIs reuse the governance contracts and deterministic evaluator. Local development uses synthetic fixtures without AWS calls; deployed Lambda/Mangum uses strongly verified DynamoDB snapshots and API Gateway's Cognito JWT-authorizer context. See [deployment evidence](DEPLOYMENT_ACCEPTANCE.md). Simulated Terraform/AFT history is data only; HTTP requests cannot execute either tool.
 
 ## Install and run
 
@@ -33,15 +33,15 @@ Default mode is **fail-closed**, not an anonymous API. All routes, health, docs,
 
 `--local-demo` is an explicit identity bypass for development on a trusted workstation, **not production authentication**. It grants a fixed local demo reader only to numeric loopback client addresses, requires exactly one raw Host header matching a loopback name/address (with an optional numeric port), and rejects every Authorization header. It never parses or accepts bearer tokens. Forwarded identity/address headers confer no identity; no CORS allowances are configured. The Phase 3 Vite proxy is the sole documented proxy exception: both processes bind to loopback on a trusted workstation, with a fixed API target. Do not expose either server via public binds, tunnels, public reverse proxies, port forwarding, or shared hosts. Local processes can access demo data while the mode is enabled.
 
-`Authenticator.authenticate(Request) -> Principal` is the replaceable identity interface. A future Cognito implementation must verify signature, trusted issuer, audience/client binding, expiry and permitted algorithms before mapping verified claims to permissions. API Gateway authorization and application checks must use an explicitly reviewed trust boundary. The deployed authenticator consumes only API Gateway verified claims and checks read scope/group; it does not pretend to verify arbitrary bearer tokens. No local-demo bypass exists in that composition.
+`Authenticator.authenticate(Request) -> Principal` is the replaceable identity interface. API Gateway verifies JWT signature, issuer, audience/client binding, expiry and scopes; Lambda requires the configured gateway/stage and verified reader scope/group. A different authenticator must preserve an equivalent reviewed identity boundary. The deployed authenticator consumes only API Gateway verified claims and checks read scope/group; it does not pretend to verify arbitrary bearer tokens. No local-demo bypass exists in that composition.
 
-`backend.lambda_handler.handler` wraps a fail-closed app in Mangum, with an explicitly owned Python 3.13 event loop per invocation. It is tested with an in-memory API Gateway-shaped event, not deployed or connected to AWS. It constructs the deployment composition with `local_demo=False`; environment variables, forwarded headers, and bearer tokens cannot enable demo mode. Complete deployment settings select the DynamoDB adapter and trusted gateway authenticator; incomplete settings deny requests. Real AWS validation remains future work.
+`backend.lambda_handler.handler` wraps a fail-closed app in Mangum, with an explicitly owned Python 3.13 event loop per invocation. It has both in-process API Gateway event regressions and actual deployed smoke-test evidence. It constructs the deployment composition with `local_demo=False`; environment variables, forwarded headers, and bearer tokens cannot enable demo mode. Complete deployment settings select the DynamoDB adapter and trusted gateway authenticator; incomplete settings deny requests. The live result is recorded separately from local tests in the acceptance report.
 
 ## Dependency and Lambda packaging boundaries
 
-Runtime and test dependencies are exact-pinned for Python 3.13. Final review upgraded FastAPI to 0.162.0 and Starlette to 1.10.0 after five advisories were reported for Starlette 0.49.3; the supported HTTPX2 test client is pinned separately from runtime dependencies. The complete flattened set of 26 pins was checked with pip-audit 2.9.0 on 2026-10-31, with no known vulnerabilities reported after the update. Advisory scans are point-in-time checks, not proof of absence of vulnerabilities. Review future updates with the full test suite and a new audit. FastAPI's OpenTelemetry API dependency is included; no telemetry SDK/exporter or outbound telemetry is configured by this application.
+Runtime and test dependencies are exact-pinned for Python 3.13; advisory scans and update guidance are in [SECURITY.md](../SECURITY.md). FastAPI's OpenTelemetry API dependency has no configured telemetry SDK/exporter. Do not remove transitive pins independently: the package builder validates the complete runtime set.
 
-Local tests run on Python 3.13. Runtime requirements also resolve to binary/universal wheels for Linux ARM64 and x86_64 Python 3.13. This checks packaging availability, not execution in Lambda. Native `pydantic-core` and `rpds-py` dependencies must be built/resolved for the chosen Linux runtime/architecture; do not copy the macOS virtual environment into a deployment package. A future authorized package must preserve `backend/`, `governance/` (including schemas, policies, environments), and `mock-data/` while the fixture adapter remains in use. Linux runtime import tests, deployment configuration, and cloud smoke tests remain deferred. See [AWS Python packaging guidance](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html) and [Starlette advisories](https://github.com/Kludex/starlette/security/advisories).
+`scripts.package_lambda` accepts preinstalled Linux ARM64/Python 3.13 wheels and assembles a deterministic ZIP containing backend/governance code and the approved contract files. It excludes local fixtures, tests, environment files, Terraform and the publisher. Deployed Lambda uses DynamoDB, not a copied local fixture directory. Native wheel compatibility is checked locally and actual Lambda execution is verified separately; never package the workstation virtual environment. See [the deployment guide](AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## API structure
 
@@ -59,26 +59,26 @@ Successful responses use:
 }
 ```
 
-List responses contain `data: []` and `pagination: {"total": 10, "limit": 25, "offset": 0, "next_offset": null}`. Totals are computed **after filtering**. Records are ordered by ID (findings by account/control); offset pagination is deterministic for an unchanged snapshot. `limit` defaults to 25 and is bounded 1–100. `offset` defaults to zero and is bounded 0–1,000,000. Beyond the end, data is empty and next_offset is null. A future DynamoDB repository will need cursor-based paging and a versioned API transition, not a table scan behind this interface.
+List responses contain `data: []` and `pagination: {"total": 10, "limit": 25, "offset": 0, "next_offset": null}`. Totals are computed **after filtering**. Records are ordered by ID (findings by account/control); offset pagination is deterministic for an unchanged snapshot. `limit` defaults to 25 and is bounded 1–100. `offset` defaults to zero and is bounded 0–1,000,000. Beyond the end, data is empty and next_offset is null. The bounded snapshot adapter uses strongly consistent Query pages internally; fleet-scale indexed queries/cursors would require a separately versioned storage/API design, not Scan.
 
-Except for process health, endpoints accept `at`, a timezone-aware RFC 3339 timestamp. Omission uses the **fixed demo timestamp `2026-10-31T12:00:00Z`**, never wall-clock time. Timestamps are normalized to UTC; values whose UTC conversion overflows the supported datetime range return 422. Numeric epochs, naive timestamps, duplicate query parameters, unknown filter fields, invalid enum values, and evaluations predating account creation are rejected with 422.
+Except for process health, endpoints accept `at`, a timezone-aware RFC 3339 timestamp. Local/pinned V1 omission uses 2026-10-31T12:00:00Z. In deployed catalogue mode, omission of both `at` and `policy_version` resolves Current and its fixed reference time; explicit versions use their registered timestamps. Evaluation never defaults to wall-clock time. Timestamps are normalized to UTC; values whose UTC conversion overflows the supported datetime range return 422. Numeric epochs, naive timestamps, duplicate query parameters, unknown filter fields, invalid enum values, and evaluations predating account creation are rejected with 422.
 
 | GET path | Data | Additional query filters |
 | --- | --- | --- |
 | `/api/v1/health` | Process status and authentication mode | None; does not read or verify the dataset; metadata carries the demo reference timestamp |
-| `/api/v1/summary` | Fleet counts, four-state account/finding counts, environment counts | None beyond `at` |
+| `/api/v1/summary` | Fleet counts, four-state account/finding counts, environment counts; optional catalogue | `at`, `policy_version`, `catalog` |
 | `/api/v1/accounts` | Account record and compliance summary | `environment`, `lifecycle_status`, `compliance_status`; pagination |
-| `/api/v1/accounts/{account_id}` | Account, OU, compliance summary, five control findings | `at` |
+| `/api/v1/accounts/{account_id}` | Account, OU, compliance summary, selected-profile control findings | `at` |
 | `/api/v1/findings` | Phase 1 finding records | `account_id`, `environment`, `control_id`, `status`; pagination |
 | `/api/v1/deployments` | Simulated revision/deployment records | `account_id`, `environment`; pagination |
 | `/api/v1/drift` | Simulated desired/observed drift records | `account_id`, `environment`; pagination |
 | `/api/v1/exceptions` | Original exception plus evaluator-derived expiration state | `account_id`, `environment`; pagination |
 
-Environment values are `production`, `pre-production`, `testing`, `development`. Compliance states are `compliant`, `noncompliant`, `unknown`, `stale`. Control values are defined by the Phase 1 contract. Account IDs must match `sim-account-NNN`. A well-formed absent account produces 404 in detail or account-filtered endpoints; malformed IDs produce 422. Valid filters with no matches return an empty page.
+Environment values are `production`, `pre-production`, `testing`, `development`. Compliance states are `compliant`, `noncompliant`, `unknown`, `stale`. Control values are defined by the selected version/profile contract. Account IDs must match `sim-account-NNN`. A well-formed absent account produces 404 in detail or account-filtered endpoints; malformed IDs produce 422. Valid filters with no matches return an empty page.
 
 Health reports process availability, not datastore readiness. The evaluation time affects compliance and exception state only. Inventory, deployments, drift, and exception approval metadata remain the current fixture snapshot; `at` does not reconstruct historical account/deployment states or rerun drift detection. See [model semantics](GOVERNANCE_MODEL.md).
 
-Example summary `data` at the reference timestamp:
+Example V1 summary `data` at its reference timestamp:
 
 ```json
 {
@@ -106,7 +106,7 @@ Errors use `{"error":{"code":"invalid_request","message":"Request parameters are
 - `backend/api/routes.py`: versioned GET routes and filtering/pagination presentation.
 - `backend/api/models.py`: typed Pydantic queries/responses and Phase 1 JSON Schema validation of returned domain records. It does not define compliance rules.
 - `backend/service.py`: loads one request-owned snapshot, calls `governance.model.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
-- `backend/repository.py`: `GovernanceRepository` protocol and read-only `FixtureRepository`. Future DynamoDB storage must preserve a consistent request snapshot or introduce a separately designed query contract.
+- `backend/repository.py`: `GovernanceRepository` protocol and read-only `FixtureRepository`. The deployed `DynamoSnapshotRepository` and `DynamoCatalog` preserve immutable version/digest selection and strongly verify the read model.
 - `backend/auth.py`, `app.py`: identity/permission boundary, application factory, sanitized error handling. No cloud SDKs or network calls.
 
 The fixture adapter parses fresh JSON per request so caller mutations cannot affect subsequent requests. It validates the complete model and evaluates the small fleet for each data request. This favors correctness for ten accounts; fleet-scale storage, indexes, caching, timeouts, and snapshot consistency need later design. There are no write routes or background jobs.
@@ -126,10 +126,10 @@ Tests cover every route, Pydantic/Phase 1 contract validation, paging/filter com
 
 References: [FastAPI response validation](https://fastapi.tiangolo.com/tutorial/response-model/), [Mangum adapter](https://mangum.fastapiexpert.com/adapter/).
 
-## Optional policy-version reads
+## Policy-version reads and Current/History
 
-The interview source adds `policy_version=1.0.0|2.0.0` on data GETs and `catalog=true` on `/api/v1/summary`. Omit both for the legacy V1 data/metadata shape. If `at` is omitted, the selected server entry supplies its fixed timestamp. Selection resolves only a server-owned allowlist; raw snapshot IDs/paths/table names are not request inputs. Unknown versions return 404; missing/corrupt selected data returns a sanitized error without fallback. Health remains unchanged.
+Data GETs accept `policy_version=1.0.0|2.0.0`; `/api/v1/summary?catalog=true` advertises server-owned descriptors, `current` and `current_run`. Clients cannot supply raw table/partition IDs, file paths or arbitrary profiles. Unknown versions return 404; missing/corrupt selected data fails closed without substituting V1.
 
-Opt-in version metadata includes policy/profile/generator, content hash and observation-time map. Versioned summaries include the simulated journal and environment requirements. The same evaluator determines all findings. Local rehearsal uses an explicit `--local-demo --demo-catalog` on loopback. Lambda optionally uses `GOVERNANCE_VERSIONS_JSON` for lazy, pinned DynamoDB readers; it cannot select local files or demo identity. Registration/reader IAM and cloud publication are not performed here. See [the interview runbook](INTERVIEW_DEMO.md) for the publication boundary, future-version contract and deployment prerequisites.
+The deployed `GOVERNANCE_CATALOG_MODE=dynamodb` path reads one generation-checked server catalogue. Default requests follow Current when neither version nor time is supplied; explicit version/time reads retain deterministic historical semantics. Local/pinned compatibility remains V1 without a catalogue. The optional static `GOVERNANCE_VERSIONS_JSON` path is retained for compatibility, not the active deployment mechanism.
 
-Current-governance refinement: catalogue summaries advertise `current` and `current_run` from an explicit validated server marker. Local promotion/reset atomically moves that marker but retains registered historical snapshots. Legacy unparameterized API requests remain V1-compatible. Deployed optional registration uses `CURRENT_POLICY_VERSION`/`CURRENT_GOVERNANCE_RUN`; no deployed configuration is changed here. The read-only console always resolves Current afresh on page load or explicit refresh.
+Version metadata includes policy/profile/generator, immutable hash and observation times. Versioned summaries include the simulated journal and environment requirements. The same evaluator computes all findings. The local launcher explicitly selects a file catalogue with loopback-only demo identity; deployed Lambda cannot select it. V1/V2 are whole-governance snapshots, not independently versioned production policy records. See [data semantics](GOVERNANCE_MODEL.md), [delivery operations](GOVERNANCE_DELIVERY.md) and [live interview](INTERVIEW_DEMO.md).

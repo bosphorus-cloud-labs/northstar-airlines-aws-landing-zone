@@ -1,141 +1,68 @@
-# Phase 4A — secure single-account deployment foundation
+# Single-account AWS deployment guide
 
-Original Phase 4A scope: source and offline validation only; cloud access, deployment and source publication required separate authorization. The POC was subsequently deployed, and the owner now reports existing-app GitHub connection and main-branch creation complete. See the [current migration/release procedure](AMPLIFY_GITHUB_INTEGRATION.md). Stage D source preparation does not change AWS or start builds.
+The POC is deployed in eu-central-1. [Acceptance evidence](DEPLOYMENT_ACCEPTANCE.md) records the authorized changes and successful cloud checks. This guide describes the existing design and future operating procedures; it is not standing permission to deploy or tear down resources.
 
-## Scope and architecture
+## Actual scope
 
-All future resources target **one explicitly supplied personal account in eu-central-1**. This is application infrastructure, not an enterprise landing zone. The ten displayed accounts, findings, drift, deployments, and exceptions stay synthetic. No Organizations, Control Tower, AFT, VPC, NAT Gateway, Transit Gateway, firewall, public write API, Cognito identity pool, or browser AWS credentials are included.
+React/Vite on the existing GitHub-connected Amplify app → Cognito Authorization Code + S256 PKCE → HTTP API JWT authorizer → Python 3.13 ARM64 Lambda/Mangum → DynamoDB immutable snapshots and Current/History. CloudWatch provides bounded log retention. A separate GitHub OIDC publisher writes approved synthetic snapshots; browser and Lambda remain read-only.
 
-```mermaid
-flowchart LR
-  SPA[React on Amplify static hosting] -->|Code + S256 PKCE| Cognito[Cognito public SPA client]
-  SPA -->|Access token over HTTPS| API[HTTP API JWT authorizer]
-  API -->|Verified authorizer context| Lambda[Python 3.13 + Mangum]
-  Lambda -->|Scope + reader group; Query only| Data[DynamoDB pinned synthetic snapshot]
-  Operator[Separately authorized loader role] -->|Conditional writes; manifest last| Data
-```
+The isolated `terraform/poc/` root composes `poc_identity`, `poc_data`, `poc_compute`, `poc_http_api`, `poc_hosting` and optional `governance_delivery` modules. Region is fixed and `allowed_account_ids` restricts provider use. Enterprise roots do not share ownership, state or execution roles. No real member accounts, VPC/NAT, Transit Gateway, inspection firewall, Organizations, Control Tower, AFT, EventBridge processor or CodePipeline/SNS resources are deployed.
 
-`terraform/poc/` is the isolated deployable root. Reusable POC modules are `poc_identity`, `poc_data`, `poc_compute`, `poc_http_api`, and `poc_hosting`. Enterprise references remain outside this graph. Terraform variables supply the account, resource prefix, owner, Cognito domain prefix, optional existing role boundary, concurrency, and artifact path. Frankfurt is fixed. Provider `allowed_account_ids` prevents accidental deployment to another account when a later authorized provider operation verifies the caller; no discovery data sources are used.
+Terraform is constrained to >=1.14,<2; the POC locks AWS provider 6.71.0 for supported platforms. Module constraints permit compatible 6.x providers, but root upgrades require reviewed lockfile and full validation. `terraform validate` and mock-provider tests are offline checks; a normal plan/refresh accesses AWS and requires authorization.
 
-Terraform 1.14.6 was used locally; constraints are >=1.14,<2. AWS provider 6.71.0 is signed and locked; root constraints permit only 6.71 patches, while module constraints permit compatible 6.x updates. Review upgrades and the lockfile diff explicitly. `init -backend=false` downloads public registry plugins and never initializes AWS state. Schema validation and mock-provider test plans perform no AWS operations. A normal plan is **not** offline and is not authorized now.
+## Authentication and least privilege
 
-## Identity, trust, and permissions
+The public SPA client has no secret. Cognito provides invited users, TOTP and the custom `northstar-governance/read` scope. Terraform creates the reader group but does not manage user credentials, MFA secrets or memberships. API Gateway verifies JWT signature, issuer, audience/client binding, validity and scope. Lambda then checks the trusted API/stage, access-token identity and `governance-readers` membership.
 
-The SPA uses `oidc-client-ts` Authorization Code flow with PKCE enabled (S256), state/nonce handling and code exchange. No client secret exists. Tokens stay in memory; PKCE transaction state is temporarily stored in sessionStorage by the library. Reloads require sign-in again (the Cognito browser session can reduce repeated prompts). There is no silent renewal, browser AWS SDK, or direct DynamoDB access. The production entry point fails closed if public Cognito/API configuration is missing or `local` mode is requested. `npm run dev` still defaults to the existing loopback-only local demo.
+Tokens stay in memory; only PKCE transaction state uses sessionStorage. Reload/expiry requires sign-in again through Cognito SSO. The SPA always supplies S256 PKCE, but Cognito's app-client configuration does not universally require a challenge from every possible client. Logout/group removal does not instantly invalidate an already issued JWT; the ten-minute access-token lifetime bounds that delay.
 
-Cognito uses Lite/classic hosted UI, admin-created users only, required TOTP MFA, password policy, a public code-only app client, custom `northstar-governance/read` scope, a ten-minute access-token lifetime, and an initially empty `governance-readers` group. No users, passwords, invitations, MFA secrets, or group assignments are provisioned. A separately authorized operator must invite a viewer, complete verification/MFA, and explicitly grant the group. Default Cognito email delivery quotas and domain-prefix availability must be checked during authorized deployment, not assumed from offline tests.
+There is no function URL or browser AWS identity. Lambda invocation permission is restricted to the configured API/account/stage/GET path. Privileged direct invokers and account administrators remain trusted: the application consumes the gateway's verified context rather than pretending to independently verify arbitrary bearer headers. Local-demo mode is explicitly loopback-only and impossible in deployed composition.
 
-Cognito supports S256 PKCE but does not expose a user-pool-client setting that universally mandates a challenge. The application always sends one; do not claim Terraform enforces PKCE for every possible client request. The app disables implicit/password/client-credentials flows for its use and does not expose a fake JWT verifier.
+Callbacks, logout URLs and CORS use explicit approved HTTPS origins. Preflight returns no governance data. All eight data/health routes require JWT/read scope; no public write routes or exception-approval API exists. Logs exclude tokens, bodies, user emails and query strings.
 
-All eight GET routes, including health, require the HTTP API JWT authorizer and read scope. API Gateway verifies signature, issuer, audience/client binding and token validity. The Lambda layer then requires the configured API ID/stage, an AWS Lambda context, access-token use, matching issuer/client ID, a subject, read scope, and reader-group membership from `requestContext.authorizer.jwt.claims`. Plain HTTP headers cannot establish that trusted scope. Group claim string/list forms are normalized only after the verified-context boundary.
+## Storage, publication and recovery
 
-The deployed Mangum adapter strips the fixed `/poc` prefix when present in the HTTP API event path; the stage is still checked independently in the trusted context. Offline handler tests exercise both stage-prefixed and integration-relative paths. Actual gateway routing and claim serialization remain deployment acceptance gates.
+DynamoDB uses on-demand capacity, encryption, PITR and deletion protection, plus Terraform prevent-destroy. Snapshots live under `SNAPSHOT#<digest>`; ordered payload rows and a final manifest encode the approved inventory, evidence, policy/environment configuration and context. Strongly consistent bounded Query pages are decoded and digest-verified before evaluation. Missing/corrupt/partial data fails closed.
 
-This trust model depends on **IAM invocation isolation**: no function URL, no unauthenticated invoke, and a resource permission restricted to this gateway/account/stage/GET path. Browser users have no IAM credentials. Principals with direct Lambda invoke permission can forge event context; therefore future CI/runtime/operator IAM must not grant direct invoke to untrusted callers. An account administrator can change these protections and is outside this boundary. The application does not independently cryptographically reverify a JWT; it consumes the gateway's verified result, never an unverified Authorization header.
+`GOVERNANCE#CATALOG`/`STATE` records immutable revision descriptors/provenance, Current, generation and promotion history. The reader uses Query for snapshots and GetItem for the catalogue, never writes or Scan. The publisher has table-scoped Query/GetItem/PutItem with an explicit V1-write denial; it cannot provision infrastructure or delete records. Conditional immutability is enforced by reviewed code, not a DynamoDB WORM feature.
 
-Gateway CORS allows only exact approved Amplify branch/additional HTTPS origins (the original branch plus main when integration is enabled), GET/OPTIONS, and Authorization/Content-Type. Automatic unauthenticated preflight is a browser protocol response, not a data route. Write methods and arbitrary paths have no integration. Cross-origin cookies are not used. Sign-out clears tokens and query caches and ends the Cognito browser session; group removal or logout does not instantly revoke an already issued token at the HTTP JWT authorizer. The ten-minute lifetime bounds that delay; immediate revocation would require a separately designed mechanism.
+Normal publication/reselection uses [the protected OIDC workflow](GOVERNANCE_DELIVERY.md), not direct loading from a workstation. Manifest-last insertion and strong verification precede a generation-checked atomic selection update. Rollback/restoration reselects a registered revision without rewriting its rows or provenance. Lost responses must be resolved by strong read/history inspection, not blind retries or claims that Current stayed unchanged.
 
-## DynamoDB snapshot model and loading
+`scripts.seed_governance` remains the original baseline preparation/bootstrap utility. Its no-execute form is offline. Its explicit execute form requires a separately approved temporary loader principal and matching table confirmation. Do not rerun it against the working deployment or substitute its broader initial-loader scope for the data-CD role. Terraform and the API never seed records.
 
-DynamoDB uses on-demand capacity, encryption with the AWS-managed DynamoDB key, PITR, deletion protection, and a Terraform prevent-destroy guard. CloudWatch log groups use service-provided encryption and bounded retention (14 days by default). No customer-managed KMS keys or additional key charges are introduced by this design. Public data access is absent.
+## Lambda packaging and public frontend configuration
 
-The repository interface is unchanged. The deployed adapter performs strongly consistent, paginated Query calls for one `SNAPSHOT#<sha256>` partition. Each record is a small JSON payload item; ordered collection keys preserve the model's list order. A manifest records the digest, provenance and item count. The adapter validates the complete snapshot and digest before calling the existing Phase 1 evaluator. Missing, partial, corrupted or unseeded data fails closed; there is no fixture fallback. All evaluation still uses the explicit/fixed reference timestamp and preserves unknown/stale results and exceptions.
-
-The current manifest describes 78 payload items plus one publication marker. A new fixture/policy version yields a new immutable partition and a reviewed Lambda snapshot configuration change, not a mutable active pointer. Reads never need Scan, GetItem, writes, or table-wide access. IAM restricts the runtime to Query on the exact table and leading partition key. This small-fleet snapshot model is deliberately not a fleet-scale query/index design.
-
-Offline preparation is safe now:
+Build from Linux ARM64 Python 3.13 wheels, never the workstation virtual environment:
 
 ```sh
-.venv/bin/python -m scripts.seed_governance
-```
-
-It only writes ignored `artifacts/seed/snapshot.json`, validates the ten-account distribution and records, and prints the content digest. It does not create an SDK client. `mock-data/snapshot.v1.manifest.json` pins the root's expected digest; tests reject drift between the manifest and source fixtures.
-
-Only **after separate deployment and data-loading authorization**, use the short-lived table-specific loader policy exported as `seed_iam_policy`, not the runtime role. The loader's execution form is `python -m scripts.seed_governance --execute --table-name TABLE --confirm-table TABLE`. Do not run it in Phase 4A. It conditionally inserts each immutable row, accepts only byte-identical rows on retry, and publishes the manifest last. SDK retries are bounded; failed/partial runs can be safely retried. A conflicting row stops the load without overwriting. The role can technically issue other PutItem requests in that partition; immutability is code-enforced and tampering is digest-detected, not a DynamoDB WORM guarantee. Remove loader access after verification. No seed data is managed by Terraform or an API write endpoint.
-
-## Offline packaging and frontend configuration
-
-Build the Lambda package from Linux ARM64 Python 3.13 wheels, not the macOS `.venv`. Public PyPI downloads do not access AWS. After dependencies have been downloaded, assembly is fully offline:
-
-```sh
-.venv/bin/python -m pip download --platform manylinux2014_aarch64 --implementation cp \
+.venv/bin/python -m pip install --platform manylinux2014_aarch64 --implementation cp \
   --python-version 3.13 --abi cp313 --only-binary=:all: \
-  -r backend/requirements.txt --dest artifacts/lambda/wheels
-.venv/bin/python -m pip install --no-index --find-links artifacts/lambda/wheels \
-  --platform manylinux2014_aarch64 --implementation cp --python-version 3.13 --abi cp313 \
-  --only-binary=:all: --target artifacts/lambda/vendor -r backend/requirements.txt
-.venv/bin/python -m scripts.package_lambda
+  -r backend/requirements.txt --target artifacts/lambda/vendor
+.venv/bin/python -m scripts.package_lambda --output artifacts/lambda/governance-delivery.zip
 ```
 
-Use a fresh vendor directory for dependency changes to avoid retaining stale files. The packager requires the complete exact runtime dependency/version set, checks wheel architecture, rejects symlinks, fixes archive timestamps/order, includes a per-file hash manifest, and excludes fixtures, tests, Terraform, local environments and credentials. It includes the model schema and Python modules; deployed data must come from DynamoDB. Terraform hashes this local artifact and contains no build/seed provisioners. Rebuild after any source/dependency change. Linux wheel availability, ZIP integrity and mock events are checked offline; real Lambda imports/integration remain unverified until authorized cloud testing.
+Use an empty vendor directory for a new dependency set; the builder rejects duplicate/stale/non-Linux metadata and checks the complete pins. It assembles deterministic code/schema payloads, excludes fixtures/tests/local settings and omits the publisher. ZIPs and vendor files remain ignored. Package validation is not permission to update Lambda; code changes require a separate reviewed plan.
 
-`frontend_settings` outputs public `VITE_AUTH_MODE`, API base URL (including `/poc`), Cognito issuer/client/domain, and SPA origin. These are deployment configuration, not credentials. There is no reliance on the local Vite proxy in a hosted build. Cognito callback is exactly `<origin>/auth/callback`; logout is `<origin>/`.
+The existing `amplify.yml` builds `frontend/` with Node 24, `npm ci`, type/lint/tests and `dist` output. Terraform supplies six public API/Cognito/origin settings plus explicit catalogue mode and the monorepo root. No local Vite proxy exists in Amplify. App-wide automatic builds remain disabled; only the protected main branch has auto-build enabled, with PR previews disabled. A main source merge builds frontend assets only, never Terraform or data publication.
 
-After a future authorized deployment, save the **named** `frontend_settings` Terraform output as plain JSON (not the entire state/output wrapper). Then the following command only transforms that saved local file:
+For explicitly authorized manual/static consumers, `scripts.frontend_config` retains its six-setting `frontend_settings` contract and writes ignored `.env.production.local`. Hosted main instead consumes `github_frontend_settings` directly, including catalogue mode; do not feed that extended object to the six-setting converter. Never pass full state or secret-bearing outputs. Missing production configuration fails closed. [The historical existing-app migration](AMPLIFY_GITHUB_INTEGRATION.md) explains why the original app ID/resource address were preserved; it is not a procedure to rerun on the working app.
 
-```sh
-.venv/bin/python -m scripts.frontend_config --input artifacts/frontend-settings.json
-npm --prefix frontend run build
-```
+## State, IAM and future deployment authorization
 
-The transformer rejects unknown/secret fields and writes ignored `frontend/.env.production.local`. Vite bakes public values into the build. Do not commit that generated environment file. Without deployed settings, the production bundle still compiles but shows a configuration-required screen and makes no API calls. `npm run dev` remains the supported local-demo flow. Existing static-preview instructions from Phase 3 now require production Cognito settings; there is no production local-demo bypass.
+The private remote state backend is bootstrapped separately and uses encryption, versioning, restricted access and locking. Provider account restrictions do not verify backend bucket ownership; verify the state bucket independently. Scope state/lock permissions to the exact key and preserve state until retention/recovery requirements are resolved. Never commit backend credentials, state, local tfvars, saved plans, package ZIPs or generated settings.
 
-## Amplify hosting and repository connection
+State and saved plans can contain the GitHub repository-setup token. Preserve approved sensitive inputs through the operator's secure mechanism so a fresh plan does not introduce unrelated app drift. Never print full state/plan contents, put tokens in command history or upload them as Actions artifacts. Current OIDC/data-delivery configuration does not require a permanent AWS key in GitHub.
 
-The Terraform app/branch prepares manual static hosting with no repository token and auto-build disabled. An initial approved static ZIP deployment can use the compiled `frontend/dist` contents. No artifact upload or deployment job is started here. Branch variables alone cannot configure a prebuilt ZIP: generate/bake the public settings before building it.
+GitHub CI is unprivileged; only the protected data publication job has `id-token: write`. Trust pins the immutable owner/repository IDs, exact `governance-production` environment and `sts.amazonaws.com` audience. Main requires PR/CI; the explicitly documented single-owner approval model permits self-review while disabling administrator bypass. The default independent model is available for enterprise teams. Neither data-CD nor reader roles can run Terraform. Infrastructure deployment IAM/state access remains a separately authorized operator concern.
 
-`amplify.yml` is a future monorepo build specification, **not an executable GitHub deployment workflow**. The branch configuration includes `AMPLIFY_MONOREPO_APP_ROOT=frontend`; the build installs Node 24, locked npm dependencies, checks types/lint/tests, and builds `dist`. The root/SPA rewrite handles callback and client routes; security headers include no-referrer, HSTS, nosniff, frame denial and a regional Cognito/API CSP. Inline styles are intentionally permitted for React's dynamic chart styles; scripts remain same-origin.
+## Cost, operations and teardown
 
-The frontend test setup explicitly selects local mode for each isolated test; authentication tests override it. This prevents Amplify's production environment variables from changing fixture tests or requiring a real sign-in during builds. That setup is test-only and is excluded from the production bundle; production configuration still requires Cognito. The same suite is checked locally with nonfunctional Cognito/API build variables present.
+Low-cost defaults include HTTP API, ARM64/256 MB Lambda, bounded timeout/concurrency, gateway throttling, on-demand DynamoDB, static hosting and 14-day logs. They are not hard spending caps. API traffic, Lambda execution, DynamoDB strong reads/storage/PITR, retained history, CloudWatch logs, Cognito, Amplify builds/transfer and state versions may incur charges even with a small fleet. Review [AWS Pricing Calculator](https://calculator.aws/) and [service pricing](https://aws.amazon.com/pricing/) for current account-specific rates; no free-tier entitlement or fixed bill is promised.
 
-Creating a repository-connected Amplify app through the provider requires source-provider authorization (the resource supports token fields). This implementation intentionally does not put such a token in variables/state. A later authorized operator must connect/install the narrowly scoped Amplify GitHub App through the supported console/service flow. Changing an existing manual app's repository may require an authenticated UpdateApp flow or a replacement/import; confirm the actual service path before proceeding. Do not invent a token-free Terraform repository connection. The app ignores repository drift solely to avoid severing that operator-managed connection; document/import its ownership deliberately. If a replacement changes the app domain, update Cognito callbacks, API CORS, frontend origin and build settings together. Keep auto-build disabled until branch selection, approval and frontend-only deployment behavior are reviewed.
+Dedicated budgets/alerts, WAF, fleet-scale queries, durable security telemetry, real AWS Config/Security Hub collection and regional failover are not implemented. Catalogue/history limits stop publication rather than deleting evidence. Future versions require reviewed profiles and source-bound snapshots. Follow the existing interview fallback rather than repairing AWS during a presentation.
 
-## Terraform state bootstrap and future delivery
+Teardown requires separate authorization and a reviewed destroy plan. Preserve needed snapshots/state/backups first; disable builds/traffic and remove temporary publisher access according to the approved procedure. Cognito and DynamoDB have service deletion protection and Terraform lifecycle guards; deliberately review any removal of those protections. Respect branch/app, domain/client/pool, API/Lambda/IAM and retained-log dependencies. Never remove state before resource ownership and recovery requirements are resolved. No teardown or state manipulation is part of repository hygiene.
 
-The POC root declares a partial S3 backend; the bucket does **not** bootstrap itself. Before any remote initialization, a separately authorized operator must establish a private Frankfurt bucket with versioning, encryption, Public Access Block, TLS-only bucket policy, and least-privilege access. Verify the backend bucket's account/ownership separately: the application provider's account guard does not constrain the S3 backend. Scope ListBucket to the needed prefixes, Get/Put to the state object, and Get/Put/Delete to its lock object; state deletion permission is not needed for normal operation. Prefer dedicated state permissions and a customer-managed KMS key only if the extra IAM/cost/rotation requirements are accepted. Keep state separate from application data and enterprise reference state. Protect state backups and never publish them as CI artifacts.
+## Validation
 
-`backend.hcl.example` uses `encrypt=true` and native S3 `use_lockfile=true`; no deprecated DynamoDB state-lock table is added. Supply a real backend bucket/account only after explicit authorization. State migration, initialization against S3, normal plans/refresh, apply and destroy are cloud operations and are not authorized by this document. Local validation uses `-backend=false` exclusively.
-
-Future GitHub Actions OIDC should use a dedicated GitHub environment with required reviewers, `id-token: write` only for deployment jobs, audience `sts.amazonaws.com`, and exact repository/environment `sub` trust. Avoid PR/fork credentials, broad branch wildcards, long-lived keys, and direct Lambda invoke authority. Separate validation from privileged plan/apply; require a revision-bound reviewed plan, serialized state access and short artifact retention. Restrict deployment actions to this POC's named/tagged resources, IAM PassRole only to its Lambda role with service conditions, exact state keys, and approved permissions boundaries. IAM create/update/bootstrap permissions need a separate concrete review before granting; no broad deploy role or OIDC provider is created now. Amplify repository builds deploy frontend assets only, not Terraform or the loader. No executable GitHub Actions deployment workflow exists.
-
-## Cost controls, operations and teardown
-
-Low-cost defaults are HTTP API (not REST), ARM64/256 MB Lambda, 20-second timeout, reserved concurrency 2, gateway throttle 5 requests/s with burst 10, on-demand DynamoDB, small immutable data, Lite Cognito/TOTP, static Amplify hosting, and 14-day logs. A new personal account may lack sufficient regional Lambda concurrency quota to reserve 2 while retaining AWS's required unreserved pool. Check that only after authorization; request quota or consciously select the documented `-1` opt-out rather than claiming offline validation proves quota availability.
-
-Costs include API requests (including some denied traffic), Lambda requests/GB-seconds, DynamoDB reads/writes/storage/PITR, CloudWatch ingestion/storage, Cognito MAUs/email delivery, Amplify builds/storage/transfer, and S3 state/version storage. Encryption does not make these services free. As an illustrative workload, 1,000 dashboard refreshes cause about 6,000 API calls plus details, repeated partition queries and evaluation; use the actual snapshot item sizes to estimate read units. Multiply those quantities by current Frankfurt service rates and include every retained snapshot/version. No fixed invoice or free-tier entitlement is promised. Before deployment, set an operator-approved budget/alerts and review billing during demos; throttles are not a hard spend cap.
-
-Use [AWS Pricing Calculator](https://calculator.aws/), [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/), [Lambda pricing](https://aws.amazon.com/lambda/pricing/), [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/), [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/), [Cognito pricing](https://aws.amazon.com/cognito/pricing/) and [Amplify pricing](https://aws.amazon.com/amplify/pricing/) for account-specific rates and credits. Do not enable SMS, dedicated networking, provisioned concurrency or extra KMS keys by assumption.
-
-For recovery, preserve the immutable fixture inputs/digest, rebuild a reviewed artifact, retry interrupted seed loads, and select a known-good snapshot through reviewed Terraform configuration. PITR is a future restore workflow, not an automatic recovery action. Logs deliberately exclude tokens/claims, bodies, user emails and query strings. No alarms, WAF, high-availability regional failover or durable security audit pipeline is implemented; HTTP API endpoints are public network addresses protected by authentication, not private VPC endpoints. The public static SPA contains no governance data or secrets and is safe to serve before sign-in; only API data is protected.
-
-Teardown requires separate explicit authorization and a reviewed destroy plan. First disable frontend builds/traffic and revoke temporary loader/CI access; export needed synthetic evidence/state and choose retention. The Cognito pool and DynamoDB table have both service deletion protection and Terraform prevent-destroy guards. Authorized teardown must deliberately remove the lifecycle guards and disable service protection in reviewed steps before destruction; do not bypass them silently. Remove the Amplify branch/app, API, Lambda, IAM role/policy and logs according to retention needs; handle retained backups/snapshots explicitly. Keep the private state bucket until all application resources and recovery requirements are resolved. No teardown commands were executed.
-
-## Offline acceptance checks
-
-```sh
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check backend governance scripts tests
-.venv/bin/ruff format --check backend governance scripts tests
-.venv/bin/python -m compileall -q backend governance scripts tests
-.venv/bin/python -m pip check
-terraform fmt -check -recursive terraform
-terraform -chdir=terraform/poc init -backend=false -input=false
-terraform -chdir=terraform/poc validate
-# Requires the local artifact, mock_provider aws, and command=plan only:
-terraform -chdir=terraform/poc test
-npm --prefix frontend run api:check
-npm --prefix frontend run typecheck
-npm --prefix frontend run lint
-npm --prefix frontend run format:check
-npm --prefix frontend test
-npm --prefix frontend run build
-git diff --check
-```
-
-SDK test clients are injected/blocked. OIDC tests mock the client library and never contact Cognito; they verify configuration, callback denial/success, memory tokens, missing-session denial and deployed URL/header construction. Terraform tests mock the provider and have no apply runs. Packaging tests check reproducibility and reject macOS wheels. These checks do not prove real service quotas, callback/MFA UX, gateway claim serialization, GitHub authorization, deployment IAM, Linux execution or costs in the actual account. Those are explicit acceptance gates for a later authorized deployment. See [the adversarial review](AWS_DEPLOYMENT_REVIEW.md) for findings and the exact proposed resource inventory.
-
-Sources: [HTTP API JWT authorizers](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-jwt-authorizer.html), [Cognito authorization endpoint/PKCE](https://docs.aws.amazon.com/cognito/latest/developerguide/authorization-endpoint.html), [public SPA client guidance](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-client-apps.html), [manual Amplify deployments](https://docs.aws.amazon.com/amplify/latest/userguide/manual-deploys.html), [Amplify UpdateApp](https://docs.aws.amazon.com/amplify/latest/APIReference/API_UpdateApp.html), [AWS provider releases](https://releases.hashicorp.com/terraform-provider-aws/), [Lambda Python packaging](https://docs.aws.amazon.com/lambda/latest/dg/python-package.html).
-
-## Staged existing-app GitHub migration
-
-AWS rejects repository association while a manually deployed branch exists. Source now supports separate branch retirement, existing-app repository connection, main creation/allowlists and frontend release. See [the staged migration procedure](AMPLIFY_GITHUB_INTEGRATION.md). Stage A intentionally deletes only the manual branch after confirmation; no app/backend replacement is permitted. The main frontend has an explicit V1-compatible mode while the Lambda upgrade remains a separate task. Stage A was completed and verified, and the owner reports repository connection and main creation are complete. Stage D source release preparation performs no AWS changes or builds; V2 publication remains separate.
+Use the [README](../README.md) and CI workflow for Python/frontend checks. In a clean checkout without ignored live settings, run Terraform formatting, `init -backend=false -lockfile=readonly`, validate and the existing `command=plan` mock tests with an ignored test ZIP. Use `terraform/simulation/` for actual provider-free planning/parity. Do not use a normal POC plan as an offline check or run apply/destroy to validate the simulation. [Security review](AWS_DEPLOYMENT_REVIEW.md) and [acceptance evidence](DEPLOYMENT_ACCEPTANCE.md) distinguish local/mock tests from real deployed verification.

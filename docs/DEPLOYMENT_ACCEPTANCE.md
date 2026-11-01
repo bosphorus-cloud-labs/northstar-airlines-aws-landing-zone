@@ -13,7 +13,7 @@ This records actual cloud execution separately from the synthetic account rollou
 | V2 publication | Real OIDC conditional publication, strong digest verification; generation 2 | [publication](https://github.com/bosphorus-cloud-labs/northstar-airlines-aws-landing-zone/actions/runs/41312091632) |
 | Rollback | Approved registered selection to V1; generation 3; both digests retained | [rollback](https://github.com/bosphorus-cloud-labs/northstar-airlines-aws-landing-zone/actions/runs/41312693235) |
 | Restore V2 | Real approval/OIDC succeeded; V2 Current at generation 4, both digests intact | [restoration](https://github.com/bosphorus-cloud-labs/northstar-airlines-aws-landing-zone/actions/runs/41313209411) |
-| Main-only Amplify auto-build | Enabled only on existing main branch; app-wide auto-build remains disabled | One-field in-place Terraform update; source-merge build verification reported with the final delivery |
+| Main-only Amplify auto-build | Enabled only on existing main branch; app-wide auto-build remains disabled | One-field update; automatic Amplify job 3 passed build/deploy/verify for main `1595f1adca47a542259b9ba70c66a555c3ea2676` after [PR #12](https://github.com/bosphorus-cloud-labs/northstar-airlines-aws-landing-zone/pull/12) |
 
 Source bound to the published snapshots: `ecf7b98bcd10978e11fbbeae67c200f2aa412726`. V1 source provenance here records verification/bootstrap of the original baseline, not its original deployment commit. Restoration uses the existing `rollback` action to reselect registered V2; it does not publish a new V2 digest.
 
