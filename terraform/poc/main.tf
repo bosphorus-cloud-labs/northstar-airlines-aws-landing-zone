@@ -12,17 +12,21 @@ locals {
   }
 }
 module "hosting" {
-  source = "../modules/poc_hosting"
-  name   = var.name
-  tags   = local.tags
+  source                = "../modules/poc_hosting"
+  name                  = var.name
+  tags                  = local.tags
+  github_repository_url = local.repository_connection_enabled ? "https://github.com/bosphorus-cloud-labs/northstar-airlines-aws-landing-zone" : null
+  github_access_token   = var.github_access_token
+  github_build_spec     = local.repository_connection_enabled ? file("${path.module}/../../amplify.yml") : null
 }
 module "identity" {
-  source        = "../modules/poc_identity"
-  name          = var.name
-  tags          = local.tags
-  callback_url  = "${local.origin}/auth/callback"
-  logout_url    = "${local.origin}/"
-  domain_prefix = var.cognito_domain_prefix
+  source             = "../modules/poc_identity"
+  name               = var.name
+  tags               = local.tags
+  callback_url       = "${local.origin}/auth/callback"
+  logout_url         = "${local.origin}/"
+  additional_origins = local.approved_additional_origins
+  domain_prefix      = var.cognito_domain_prefix
 }
 module "data" {
   source = "../modules/poc_data"
@@ -36,6 +40,7 @@ module "http" {
   issuer             = module.identity.issuer
   client_id          = module.identity.client_id
   allowed_origin     = local.origin
+  additional_origins = local.approved_additional_origins
   log_retention_days = var.log_retention_days
 }
 module "compute" {
@@ -77,7 +82,13 @@ resource "aws_lambda_permission" "gateway" {
   source_account = var.aws_account_id
   source_arn     = "${module.http.execution_arn}/poc/GET/api/v1/*"
 }
+# Preserve the legacy branch's identity when introducing its retirement switch.
+moved {
+  from = aws_amplify_branch.poc
+  to   = aws_amplify_branch.poc[0]
+}
 resource "aws_amplify_branch" "poc" {
+  count                 = var.hosting_migration_stage == "legacy" ? 1 : 0
   app_id                = module.hosting.app_id
   branch_name           = "poc"
   framework             = "React"

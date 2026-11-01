@@ -47,8 +47,8 @@ resource "aws_cognito_user_pool_client" "spa" {
   allowed_oauth_scopes                 = ["openid", "email", "profile", "${aws_cognito_resource_server.governance.identifier}/read"]
   supported_identity_providers         = ["COGNITO"]
   explicit_auth_flows                  = ["ALLOW_REFRESH_TOKEN_AUTH"]
-  callback_urls                        = [var.callback_url]
-  logout_urls                          = [var.logout_url]
+  callback_urls                        = distinct(concat([var.callback_url], [for origin in var.additional_origins : "${origin}/auth/callback"]))
+  logout_urls                          = distinct(concat([var.logout_url], [for origin in var.additional_origins : "${origin}/"]))
   prevent_user_existence_errors        = "ENABLED"
   enable_token_revocation              = true
   access_token_validity                = 10

@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { request, useDataset, ApiError } from "./api/client";
+import { governanceApiMode } from "./api/capabilities";
 import { AccountDetail, Accounts } from "./pages/Accounts";
 import { Compliance } from "./pages/Compliance";
 import { Deployments, Drift, Exceptions } from "./pages/Operations";
@@ -40,10 +41,15 @@ const navigation = [
 ];
 export function App() {
   const [requested, setSelection] = useState("current");
+  const baselineMode = governanceApiMode() === "baseline-v1";
   const catalog = useQuery({
-    queryKey: ["version-catalog"],
+    queryKey: ["version-catalog", baselineMode],
     queryFn: ({ signal }) =>
-      request("/api/v1/summary", signal, { catalog: "true" }),
+      request(
+        "/api/v1/summary",
+        signal,
+        baselineMode ? {} : { catalog: "true" },
+      ),
     retry: false,
     staleTime: 30000,
   });
@@ -56,7 +62,8 @@ export function App() {
       ? catalog.data.data.current
       : DEFAULT_SELECTION;
   const currentUnavailable =
-    catalog.isError || (catalog.isSuccess && !("current" in catalog.data.data));
+    catalog.isError ||
+    (!baselineMode && catalog.isSuccess && !("current" in catalog.data.data));
   const currentRun =
     catalog.data && "current_run" in catalog.data.data
       ? catalog.data.data.current_run
@@ -73,6 +80,7 @@ export function App() {
   return (
     <SelectionContext.Provider value={selection}>
       <Workspace
+        baselineMode={baselineMode}
         versions={versions}
         change={setSelection}
         currentMode={currentMode}
@@ -88,6 +96,7 @@ export function App() {
   );
 }
 function Workspace({
+  baselineMode,
   versions,
   change,
   catalogError,
@@ -95,6 +104,7 @@ function Workspace({
   currentMode,
   currentRun,
 }: {
+  baselineMode: boolean;
   versions: Selection[];
   change: (value: string) => void;
   currentMode: boolean;
@@ -298,31 +308,52 @@ function Workspace({
           </span>
         </div>
         <main id="main-content">
+          {baselineMode && (
+            <div className="info-strip" role="status">
+              <p>
+                <strong>V1 backend compatibility mode.</strong> Showing the
+                API's fixed baseline evaluation. Current governance markers, V2
+                rollout history and historical snapshot selection remain
+                unavailable until the separate backend upgrade. This mode never
+                substitutes data after an authentication or API error.
+              </p>
+            </div>
+          )}
           <div className="evaluation-toolbar">
             <label className="policy-selector">
-              Historical snapshot
+              {baselineMode ? "Baseline evaluation" : "Historical snapshot"}
               <select
-                aria-label="Historical snapshot"
+                disabled={baselineMode}
+                aria-label={
+                  baselineMode ? "Baseline evaluation" : "Historical snapshot"
+                }
                 value={currentMode ? "current" : selection.policy_version}
                 onChange={(event) => change(event.target.value)}
               >
-                <option value="current">Current governance</option>
-                {versions.map((v) => (
-                  <option
-                    key={v.snapshot_id ?? v.policy_version}
-                    value={v.policy_version}
-                  >
-                    Policy {v.policy_version} ·{" "}
-                    {new Date(v.evaluated_at)
-                      .toISOString()
-                      .slice(0, 16)
-                      .replace("T", " ")}{" "}
-                    UTC · {v.snapshot_id?.slice(0, 8) ?? "baseline"}
-                  </option>
-                ))}
+                <option value="current">
+                  {baselineMode
+                    ? "Baseline policy 1.0.0"
+                    : "Current governance"}
+                </option>
+                {!baselineMode &&
+                  versions.map((v) => (
+                    <option
+                      key={v.snapshot_id ?? v.policy_version}
+                      value={v.policy_version}
+                    >
+                      Policy {v.policy_version} ·{" "}
+                      {new Date(v.evaluated_at)
+                        .toISOString()
+                        .slice(0, 16)
+                        .replace("T", " ")}{" "}
+                      UTC · {v.snapshot_id?.slice(0, 8) ?? "baseline"}
+                    </option>
+                  ))}
               </select>
               <small>
-                Read-only history
+                {baselineMode
+                  ? "V1 compatibility · history unavailable"
+                  : "Read-only history"}
                 {catalogError ? " · current marker unavailable" : ""}
               </small>
             </label>
@@ -359,10 +390,12 @@ function Workspace({
           <div className="governance-state-header" aria-live="polite">
             <strong>
               {catalogError && currentMode
-                ? "Current state unavailable"
+                ? baselineMode
+                  ? "Baseline unavailable"
+                  : "Current state unavailable"
                 : selection.ready === false
                   ? "Resolving current governance"
-                  : `${currentMode ? "CURRENT GOVERNANCE" : "HISTORICAL EVALUATION"} · Policy revision ${selection.policy_version}`}
+                  : `${baselineMode ? "BASELINE EVALUATION" : currentMode ? "CURRENT GOVERNANCE" : "HISTORICAL EVALUATION"} · Policy revision ${selection.policy_version}`}
             </strong>
             {selection.ready !== false && (
               <span>
@@ -454,11 +487,16 @@ function Workspace({
           )}
           {catalogError && currentMode ? (
             <div className="error-state" role="alert">
-              <h2>Current governance could not be resolved</h2>
+              <h2>
+                {baselineMode
+                  ? "Baseline evaluation could not be loaded"
+                  : "Current governance could not be resolved"}
+              </h2>
               <p>{catalogMessage}</p>
               <p>
-                Refresh or explicitly choose a historical snapshot. Historical
-                data is not substituted for CURRENT.
+                {baselineMode
+                  ? "Refresh after checking API access. No alternate data source is used."
+                  : "Refresh or explicitly choose a historical snapshot. Historical data is not substituted for CURRENT."}
               </p>
               <button
                 className="button primary"
