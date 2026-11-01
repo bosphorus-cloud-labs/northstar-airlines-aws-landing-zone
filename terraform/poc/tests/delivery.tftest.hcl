@@ -36,8 +36,17 @@ run "publisher_and_reader_boundaries" {
     error_message = "Runtime must never acquire DynamoDB writes or deployment authority."
   }
   assert {
-    condition     = jsondecode(module.delivery[0].trust_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:bosphorus-cloud-labs/northstar-airlines-aws-landing-zone:environment:governance-production"
-    error_message = "OIDC must be scoped to the exact repository and protected environment."
+    condition     = jsondecode(module.delivery[0].trust_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:bosphorus-cloud-labs@319390912/northstar-airlines-aws-landing-zone@1440849538:environment:governance-production"
+    error_message = "OIDC must pin immutable owner/repository IDs and the exact protected environment."
+  }
+  assert {
+    condition = (
+      jsondecode(module.delivery[0].trust_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:aud"] == "sts.amazonaws.com" &&
+      toset(keys(jsondecode(module.delivery[0].trust_policy).Statement[0].Condition)) == toset(["StringEquals"]) &&
+      jsondecode(module.delivery[0].trust_policy).Statement[0].Action == "sts:AssumeRoleWithWebIdentity" &&
+      jsondecode(module.delivery[0].trust_policy).Statement[0].Principal.Federated == var.github_oidc_provider_arn
+    )
+    error_message = "Only the configured GitHub provider, exact STS audience and exact subject may assume the publisher."
   }
 }
 run "catalogue_requires_reader_iam" {
