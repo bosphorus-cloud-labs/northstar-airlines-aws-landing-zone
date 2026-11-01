@@ -1,5 +1,7 @@
 # Phase 5 — policy lifecycle interview demonstration
 
+For the simplified **one-command, visual five-minute demo**, use [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md). The commands below remain the advanced step-by-step explanation. No live publication is performed by either workflow.
+
 The project owner confirms the existing AWS-hosted Version 1 dashboard works. This phase neither inspects nor changes it. The Python CLI is a local simulation: it performs no AWS SDK client creation, credential lookup, account provisioning, AFT execution, Terraform subprocess, database write or dashboard publication. It is separate from the read-only application.
 
 The optional Terraform companion below performs **real local Terraform validation and planning**, not deployment. It has no providers, resources or data sources. The Python lifecycle, AFT execution records and compliance observations remain simulated. It is isolated from the deployed POC.
@@ -143,7 +145,7 @@ Checksums detect accidental editing and approvals bind exact inputs. **They are 
 
 Default `validate()`, `validate_model()` and `evaluate()` continue to use strict V1 contracts. Only the CLI explicitly selects `profile="policy-v2"`. The additive profile retains V1 record shapes/schema version and extends policy/control constraints; policy revision `2.0.0` is independent of record schema `1.0.0`. The inherited per-record source `northstar-synthetic-v1` identifies the synthetic record protocol, not the policy revision. Run/envelope/journal source `northstar-policy-rollout-v1` separately identifies this generator.
 
-`load_model()` still reads exactly four root V1 environment files; nested `governance/environments/v2/` is opt-in. V1 fixture files and the pinned DynamoDB snapshot digest do not change. No API route, repository default, frontend, Terraform, authentication, seed loader or production configuration is changed. The current default V1 API/DynamoDB validators deliberately reject a V2 candidate; this output is not directly publishable into the existing stack.
+`load_model()` still reads exactly four root V1 environment files; nested `governance/environments/v2/` is opt-in. V1 fixture files and the pinned DynamoDB snapshot digest do not change. The advanced CLI does not change the V1 default, authentication, seed loader or production configuration. The later [interview simplification](INTERVIEW_DEMO.md) adds opt-in source support for registered versioned readers and a frontend selector, plus an offline adapter that adds hashed context to a completed candidate. Raw CLI output is still not directly publishable; live IAM/configuration, publication and application deployment remain separately authorized steps.
 
 To connect safely later, under a separate reviewed task:
 

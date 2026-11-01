@@ -1,3 +1,4 @@
+import { DEFAULT_SELECTION, useSelection, type Selection } from "./selection";
 import { runtimeConfig } from "../auth/config";
 import { accessToken } from "../auth/session";
 import { useQuery } from "@tanstack/react-query";
@@ -31,9 +32,17 @@ export async function request<P extends ApiPath>(
   signal: AbortSignal,
   params: Record<string, string | number> = {},
   accountId?: string,
+  selection: Selection = DEFAULT_SELECTION,
 ): Promise<ResponseFor<P>> {
   const query = new URLSearchParams(
-    path === "/api/v1/health" ? {} : { at: REFERENCE_AT },
+    path === "/api/v1/health"
+      ? {}
+      : {
+          at: selection.evaluated_at,
+          ...(selection.snapshot_id || selection.policy_version !== "1.0.0"
+            ? { policy_version: selection.policy_version }
+            : {}),
+        },
   );
   for (const [key, value] of Object.entries(params))
     query.set(key, String(value));
@@ -100,7 +109,12 @@ export async function request<P extends ApiPath>(
     metadata?.api_version !== "v1" ||
     metadata.simulated !== true ||
     metadata.source !== "northstar-synthetic-v1" ||
-    metadata.evaluated_at !== REFERENCE_AT
+    metadata.evaluated_at !== selection.evaluated_at ||
+    ((selection.snapshot_id || selection.policy_version !== "1.0.0") &&
+      (!("policy_version" in metadata) ||
+        metadata.policy_version !== selection.policy_version ||
+        !("snapshot_id" in metadata) ||
+        metadata.snapshot_id !== selection.snapshot_id))
   ) {
     throw new ApiError(
       0,
@@ -119,12 +133,19 @@ type ListPath =
 async function allPages<P extends ListPath>(
   path: P,
   signal: AbortSignal,
+  selection: Selection,
 ): Promise<ResponseFor<P>["data"]> {
   const rows: unknown[] = [];
   let offset = 0;
   let total: number | undefined;
   for (let count = 0; count < 100; count++) {
-    const result = await request(path, signal, { limit: 100, offset });
+    const result = await request(
+      path,
+      signal,
+      { limit: 100, offset },
+      undefined,
+      selection,
+    );
     if (
       !Array.isArray(result.data) ||
       !result.pagination ||
@@ -182,15 +203,15 @@ function completeCounts(counts: Models["Counts"]): Required<Models["Counts"]> {
   };
 }
 
-async function loadDataset(signal: AbortSignal) {
+async function loadDataset(signal: AbortSignal, selection: Selection) {
   const [summary, accounts, findings, deployments, drift, exceptions] =
     await Promise.all([
-      request("/api/v1/summary", signal),
-      allPages("/api/v1/accounts", signal),
-      allPages("/api/v1/findings", signal),
-      allPages("/api/v1/deployments", signal),
-      allPages("/api/v1/drift", signal),
-      allPages("/api/v1/exceptions", signal),
+      request("/api/v1/summary", signal, {}, undefined, selection),
+      allPages("/api/v1/accounts", signal, selection),
+      allPages("/api/v1/findings", signal, selection),
+      allPages("/api/v1/deployments", signal, selection),
+      allPages("/api/v1/drift", signal, selection),
+      allPages("/api/v1/exceptions", signal, selection),
     ]);
   const account_counts = completeCounts(summary.data.account_counts);
   const finding_counts = completeCounts(summary.data.finding_counts);
@@ -254,20 +275,29 @@ async function loadDataset(signal: AbortSignal) {
 }
 export type Dataset = Awaited<ReturnType<typeof loadDataset>>;
 export function useDataset() {
+  const selection = useSelection();
   return useQuery({
-    queryKey: ["governance", REFERENCE_AT],
-    queryFn: ({ signal }) => loadDataset(signal),
+    queryKey: ["governance", selection],
+    enabled: selection.ready !== false,
+    queryFn: ({ signal }) => loadDataset(signal, selection),
     staleTime: 60000,
     retry: false,
     refetchOnWindowFocus: false,
   });
 }
 export function useAccount(accountId: string) {
+  const selection = useSelection();
   return useQuery({
-    queryKey: ["account", accountId, REFERENCE_AT],
+    queryKey: ["account", accountId, selection],
     queryFn: ({ signal }) =>
-      request("/api/v1/accounts/{account_id}", signal, {}, accountId),
-    enabled: Boolean(accountId),
+      request(
+        "/api/v1/accounts/{account_id}",
+        signal,
+        {},
+        accountId,
+        selection,
+      ),
+    enabled: Boolean(accountId) && selection.ready !== false,
     staleTime: 60000,
     retry: false,
     refetchOnWindowFocus: false,

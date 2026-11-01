@@ -202,7 +202,17 @@ export function AccountDetail() {
                         <Badge status={finding.status} />
                       </td>
                       <td>
-                        <Evidence reason={finding.reason} />
+                        <Evidence
+                          reason={finding.reason}
+                          observedAt={
+                            finding.evidence_id &&
+                            "evidence_timestamps" in response.metadata
+                              ? response.metadata.evidence_timestamps[
+                                  finding.evidence_id
+                                ]
+                              : undefined
+                          }
+                        />
                       </td>
                       <td>
                         {finding.exceptions.length ? (

@@ -110,7 +110,7 @@ export interface components {
      * Control
      * @enum {string}
      */
-    Control: "deployment-approval" | "baseline-encryption" | "public-access" | "logging" | "security-monitoring";
+    Control: "deployment-approval" | "baseline-encryption" | "public-access" | "logging" | "security-monitoring" | "audit-log-integrity";
     /** Counts */
     Counts: {
       /**
@@ -218,24 +218,36 @@ export interface components {
     };
     /** Envelope[AccountDetail] */
     Envelope_AccountDetail_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       data: components["schemas"]["AccountDetail"];
     };
     /** Envelope[Health] */
     Envelope_Health_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       data: components["schemas"]["Health"];
     };
-    /** Envelope[Summary] */
-    Envelope_Summary_: {
-      metadata: components["schemas"]["Metadata"];
-      data: components["schemas"]["Summary"];
+    /** Envelope[Union[Summary, VersionSummary]] */
+    Envelope_Union_Summary__VersionSummary__: {
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
+      /** Data */
+      data: components["schemas"]["Summary"] | components["schemas"]["VersionSummary"];
     };
     /**
      * Environment
      * @enum {string}
      */
     Environment: "production" | "pre-production" | "testing" | "development";
+    /** EnvironmentRequirement */
+    EnvironmentRequirement: {
+      control_id: components["schemas"]["Control"];
+      /** Expected */
+      expected: boolean;
+      /** Max Age Hours */
+      max_age_hours: number;
+    };
     /** ErrorDetail */
     ErrorDetail: {
       /** Code */
@@ -414,38 +426,65 @@ export interface components {
     };
     /** Page[AccountView] */
     Page_AccountView_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       /** Data */
       data: components["schemas"]["AccountView"][];
       pagination: components["schemas"]["PageInfo"];
     };
     /** Page[Deployment] */
     Page_Deployment_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       /** Data */
       data: components["schemas"]["Deployment"][];
       pagination: components["schemas"]["PageInfo"];
     };
     /** Page[Drift] */
     Page_Drift_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       /** Data */
       data: components["schemas"]["Drift"][];
       pagination: components["schemas"]["PageInfo"];
     };
     /** Page[ExceptionView] */
     Page_ExceptionView_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       /** Data */
       data: components["schemas"]["ExceptionView"][];
       pagination: components["schemas"]["PageInfo"];
     };
     /** Page[Finding] */
     Page_Finding_: {
-      metadata: components["schemas"]["Metadata"];
+      /** Metadata */
+      metadata: components["schemas"]["Metadata"] | components["schemas"]["VersionMetadata"];
       /** Data */
       data: components["schemas"]["Finding"][];
       pagination: components["schemas"]["PageInfo"];
+    };
+    /** RolloutEvent */
+    RolloutEvent: {
+      /** Sequence */
+      sequence: number;
+      /** At */
+      at: string;
+      /** Action */
+      action: string;
+      /** Detail */
+      detail: string;
+      /** Account Id */
+      account_id: string | null;
+      /** Actor */
+      actor: string;
+      /** Source */
+      source: string;
+      /**
+       * Simulated
+       * @constant
+       */
+      simulated: true;
     };
     /**
      * Status
@@ -463,6 +502,78 @@ export interface components {
       /** Environment Counts */
       environment_counts: {
         [key: string]: number;
+      };
+    };
+    /** VersionDescriptor */
+    VersionDescriptor: {
+      /** Policy Version */
+      policy_version: string;
+      /** Profile */
+      profile: string;
+      /** Evaluated At */
+      evaluated_at: string;
+      /** Snapshot Id */
+      snapshot_id: string | null;
+      /** Generator */
+      generator: string;
+    };
+    /** VersionMetadata */
+    VersionMetadata: {
+      /** Policy Version */
+      policy_version: string;
+      /** Profile */
+      profile: string;
+      /** Evaluated At */
+      evaluated_at: string;
+      /** Snapshot Id */
+      snapshot_id: string | null;
+      /** Generator */
+      generator: string;
+      /**
+       * Api Version
+       * @default v1
+       * @constant
+       */
+      api_version?: "v1";
+      /**
+       * Source
+       * @default northstar-synthetic-v1
+       * @constant
+       */
+      source?: "northstar-synthetic-v1";
+      /**
+       * Simulated
+       * @default true
+       * @constant
+       */
+      simulated?: true;
+      /** Evidence Timestamps */
+      evidence_timestamps: {
+        [key: string]: string;
+      };
+    };
+    /** VersionSummary */
+    VersionSummary: {
+      /** Account Count */
+      account_count: number;
+      /** Finding Count */
+      finding_count: number;
+      account_counts: components["schemas"]["Counts"];
+      finding_counts: components["schemas"]["Counts"];
+      /** Environment Counts */
+      environment_counts: {
+        [key: string]: number;
+      };
+      current: components["schemas"]["VersionDescriptor"];
+      /** Current Run */
+      current_run: string | null;
+      /** Versions */
+      versions: components["schemas"]["VersionDescriptor"][];
+      /** Journal */
+      journal: components["schemas"]["RolloutEvent"][];
+      /** Environment Requirements */
+      environment_requirements: {
+        [key: string]: components["schemas"]["EnvironmentRequirement"][];
       };
     };
   };
@@ -530,14 +641,16 @@ export interface operations {
   summary_api_v1_summary_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
+        catalog?: boolean;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["Envelope_Summary_"];
+          "application/json": components["schemas"]["Envelope_Union_Summary__VersionSummary__"];
         };
       };
       /** @description Bad Request */
@@ -582,7 +695,8 @@ export interface operations {
   accounts_api_v1_accounts_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
         limit?: number;
         offset?: number;
         environment?: components["schemas"]["Environment"] | null;
@@ -639,7 +753,8 @@ export interface operations {
   account_detail_api_v1_accounts__account_id__get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
       };
       path: {
         account_id: string;
@@ -694,7 +809,8 @@ export interface operations {
   findings_api_v1_findings_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
         limit?: number;
         offset?: number;
         account_id?: string | null;
@@ -752,7 +868,8 @@ export interface operations {
   deployments_api_v1_deployments_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
         limit?: number;
         offset?: number;
         account_id?: string | null;
@@ -808,7 +925,8 @@ export interface operations {
   drift_api_v1_drift_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
         limit?: number;
         offset?: number;
         account_id?: string | null;
@@ -864,7 +982,8 @@ export interface operations {
   exceptions_api_v1_exceptions_get: {
     parameters: {
       query?: {
-        at?: string;
+        at?: string | null;
+        policy_version?: string | null;
         limit?: number;
         offset?: number;
         account_id?: string | null;

@@ -70,3 +70,13 @@ Phase 1 defines ten synthetic accounts, one root with four environment OUs, and 
 - [Account provisioning and enrollment methods](https://docs.aws.amazon.com/controltower/latest/userguide/methods-of-provisioning.html)
 - [AFT prerequisites and purpose](https://docs.aws.amazon.com/controltower/latest/userguide/aft-overview.html)
 - [Updating existing accounts with AFT](https://docs.aws.amazon.com/controltower/latest/userguide/aft-update-account.html)
+
+## Read-only versioned interview view
+
+The [one-command interview workflow](INTERVIEW_DEMO.md) adds a server-owned version catalogue on the existing summary route. All data GETs accept a semantic policy version; repository selection stays server-side. V1 remains the default, while V2 uses a distinct content-addressed snapshot including its simulated journal/reference metadata. Optional Lambda configuration registers only pinned DynamoDB readers; the local launcher explicitly supplies an immutable file catalogue to the loopback demo server. Neither path grants browser or Lambda writes.
+
+React scopes caches and metadata checks to the selected version/hash/time. Local rehearsal publishes no cloud data. Existing POC Terraform, Cognito and live V1 remain unchanged; versioned AWS IAM/configuration, actual publication and code deployment require separate review/authorization. Only V1/V2 policy profiles exist today; future versions use the same envelope with explicitly registered contracts/scenarios.
+
+## Minimal governance CI boundary
+
+The [PR validation workflow and interview audit](CI_CD_DEMO.md) reuse the provider-free root and existing evaluator/CLI. Real formatting, validation, planning, parity and Python tests run before the explicitly simulated approval/rollout report. Only synthetic review artifacts are uploaded; no AWS credentials, cloud backend, apply/destroy, production environment, publication, or auto-merge is configured. The local console updates only when the local launcher runs. Hosted dashboard updates still require separate approval/deployment/publication. CodePipeline manual approval/SNS notification are documented enterprise integration points only, not implemented components.

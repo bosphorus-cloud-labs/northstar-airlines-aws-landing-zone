@@ -11,7 +11,11 @@ const fixtures = responses as Record<string, unknown>;
 const mockFetch = vi.fn<typeof fetch>();
 function respond(input: RequestInfo | URL): Response {
   const url = new URL(String(input), "http://127.0.0.1");
-  const response = fixtures[url.pathname];
+  const response =
+    fixtures[
+      url.pathname +
+        (url.searchParams.get("catalog") === "true" ? "?catalog=true" : "")
+    ];
   return new Response(
     JSON.stringify(response ?? { error: { code: "account_not_found" } }),
     {
@@ -69,7 +73,7 @@ describe("Governance console", () => {
     for (const [nav, title] of [
       ["Accounts", "Account inventory"],
       ["Compliance", "Policy compliance"],
-      ["Deployments", "Deployment history"],
+      ["Deployments", "Governance deployments"],
       ["Configuration Drift", "Configuration drift"],
       ["Governance Exceptions", "Governance exceptions"],
       ["Overview", "Governance overview"],
@@ -392,7 +396,9 @@ describe("Governance console", () => {
     renderApp();
     await screen.findByRole("heading", { name: "Account compliance posture" });
     const initial = mockFetch.mock.calls.length;
-    await user.click(screen.getByRole("button", { name: "Refresh snapshot" }));
+    await user.click(
+      screen.getByRole("button", { name: "Refresh current state" }),
+    );
     await waitFor(() =>
       expect(mockFetch.mock.calls.length).toBeGreaterThan(initial),
     );

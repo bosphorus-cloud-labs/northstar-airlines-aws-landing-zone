@@ -125,3 +125,11 @@ git diff --check
 Tests cover every route, Pydantic/Phase 1 contract validation, paging/filter combinations, invalid and absent IDs, default denial, demo peer/host/token restrictions, permission denial, metadata, exception expiration, evaluator parity, deterministic UTC-equivalent responses, safe internal errors, repository isolation, CLI defaults, OpenAPI, and fail-closed Mangum invocation. Existing Phase 1 tests run in the same suite.
 
 References: [FastAPI response validation](https://fastapi.tiangolo.com/tutorial/response-model/), [Mangum adapter](https://mangum.fastapiexpert.com/adapter/).
+
+## Optional policy-version reads
+
+The interview source adds `policy_version=1.0.0|2.0.0` on data GETs and `catalog=true` on `/api/v1/summary`. Omit both for the legacy V1 data/metadata shape. If `at` is omitted, the selected server entry supplies its fixed timestamp. Selection resolves only a server-owned allowlist; raw snapshot IDs/paths/table names are not request inputs. Unknown versions return 404; missing/corrupt selected data returns a sanitized error without fallback. Health remains unchanged.
+
+Opt-in version metadata includes policy/profile/generator, content hash and observation-time map. Versioned summaries include the simulated journal and environment requirements. The same evaluator determines all findings. Local rehearsal uses an explicit `--local-demo --demo-catalog` on loopback. Lambda optionally uses `GOVERNANCE_VERSIONS_JSON` for lazy, pinned DynamoDB readers; it cannot select local files or demo identity. Registration/reader IAM and cloud publication are not performed here. See [the interview runbook](INTERVIEW_DEMO.md) for the publication boundary, future-version contract and deployment prerequisites.
+
+Current-governance refinement: catalogue summaries advertise `current` and `current_run` from an explicit validated server marker. Local promotion/reset atomically moves that marker but retains registered historical snapshots. Legacy unparameterized API requests remain V1-compatible. Deployed optional registration uses `CURRENT_POLICY_VERSION`/`CURRENT_GOVERNANCE_RUN`; no deployed configuration is changed here. The read-only console always resolves Current afresh on page load or explicit refresh.

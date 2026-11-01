@@ -10,6 +10,7 @@ from backend.api.routes import router
 from backend.auth import Authenticator, DenyAuthenticator, LocalDemoAuthenticator, authorize_read
 from backend.repository import FixtureRepository, GovernanceRepository
 from backend.service import AccountNotFound, GovernanceService, InvalidEvaluationTime
+from backend.versions import UnknownVersion
 
 
 def error(status: int, code: str, message: str) -> JSONResponse:
@@ -25,6 +26,7 @@ def create_app(
     local_demo: bool = False,
     repository: GovernanceRepository | None = None,
     authenticator: Authenticator | None = None,
+    catalog=None,
 ) -> FastAPI:
     if local_demo and authenticator is not None:
         raise ValueError("Choose local-demo mode or an external authenticator")
@@ -47,7 +49,7 @@ def create_app(
         "local-demo" if local_demo else "external" if authenticator is not None else "disabled"
     )
     app.state.service = GovernanceService(
-        repository if repository is not None else FixtureRepository()
+        repository if repository is not None else FixtureRepository(), catalog=catalog
     )
 
     @app.middleware("http")
@@ -88,6 +90,10 @@ def create_app(
     @app.exception_handler(InvalidEvaluationTime)
     async def invalid_time(request: Request, exc: InvalidEvaluationTime):
         return error(422, "invalid_evaluation_time", "Evaluation predates the dataset")
+
+    @app.exception_handler(UnknownVersion)
+    async def unknown_version(request: Request, exc: UnknownVersion):
+        return error(404, "unknown_version", "Policy snapshot is not available")
 
     app.include_router(router)
     return app

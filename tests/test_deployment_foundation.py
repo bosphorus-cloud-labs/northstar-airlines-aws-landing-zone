@@ -384,6 +384,7 @@ class PackagingAndTerraformTests(unittest.TestCase):
             with zipfile.ZipFile(root / "a.zip") as archive:
                 self.assertIn("backend/lambda_handler.py", archive.namelist())
                 self.assertIn("governance/contracts/v1.schema.json", archive.namelist())
+                self.assertIn("governance/contracts/policy-v2.profile.json", archive.namelist())
                 self.assertFalse(
                     any(n.startswith(("mock-data/", "tests/", ".aws/")) for n in archive.namelist())
                 )

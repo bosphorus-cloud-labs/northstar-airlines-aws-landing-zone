@@ -42,6 +42,16 @@ export function Compliance() {
           result to compliant.
         </p>
       </div>
+      <div className="info-strip">
+        <p>
+          <strong>
+            Desired policy, distribution and compliance are separate.
+          </strong>{" "}
+          Successful configuration distribution does not prove controls passed.
+          Only matching, fresh evidence can pass; missing/stale evidence and
+          original violations remain visible.
+        </p>
+      </div>
       <QueryGate query={query}>
         {(data) => {
           const rows = data.findings.filter(
@@ -99,6 +109,7 @@ export function Compliance() {
                 columns={[
                   "Control / Account",
                   "Environment",
+                  "Desired / observed state",
                   "Result",
                   "Evidence freshness",
                   "Exceptions",
@@ -122,10 +133,28 @@ export function Compliance() {
                       )}
                     </td>
                     <td>
+                      <strong>{String(f.desired_value)}</strong>
+                      <small>desired under policy {f.policy_version}</small>
+                      <span>
+                        {f.observed_value === null
+                          ? "Not observed"
+                          : String(f.observed_value)}
+                      </span>
+                      <small>recorded evidence value</small>
+                    </td>
+                    <td>
                       <Badge status={f.status} />
                     </td>
                     <td>
-                      <Evidence reason={f.reason} />
+                      <Evidence
+                        reason={f.reason}
+                        observedAt={
+                          f.evidence_id &&
+                          "evidence_timestamps" in data.metadata
+                            ? data.metadata.evidence_timestamps[f.evidence_id]
+                            : undefined
+                        }
+                      />
                       <small className="mono">
                         {f.evidence_id ?? "No observation"}
                       </small>

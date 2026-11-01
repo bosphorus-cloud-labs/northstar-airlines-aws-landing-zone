@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, NavLink, Route, Routes, useLocation } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { REFERENCE_AT, useDataset } from "./api/client";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { request, useDataset, ApiError } from "./api/client";
 import { AccountDetail, Accounts } from "./pages/Accounts";
 import { Compliance } from "./pages/Compliance";
 import { Deployments, Drift, Exceptions } from "./pages/Operations";
@@ -24,6 +24,12 @@ import { Overview } from "./pages/Overview";
 import { ConsoleBoundary } from "./components/ConsoleBoundary";
 import { Empty } from "./components/ui";
 import { useSession } from "./auth/context";
+import {
+  DEFAULT_SELECTION,
+  SelectionContext,
+  useSelection,
+  type Selection,
+} from "./api/selection";
 const navigation = [
   { to: "/", label: "Overview", icon: LayoutDashboard },
   { to: "/accounts", label: "Accounts", icon: Layers3 },
@@ -33,11 +39,89 @@ const navigation = [
   { to: "/exceptions", label: "Governance Exceptions", icon: ShieldQuestion },
 ];
 export function App() {
+  const [requested, setSelection] = useState("current");
+  const catalog = useQuery({
+    queryKey: ["version-catalog"],
+    queryFn: ({ signal }) =>
+      request("/api/v1/summary", signal, { catalog: "true" }),
+    retry: false,
+    staleTime: 30000,
+  });
+  const versions =
+    catalog.data && "versions" in catalog.data.data
+      ? catalog.data.data.versions
+      : [DEFAULT_SELECTION];
+  const current =
+    catalog.data && "current" in catalog.data.data
+      ? catalog.data.data.current
+      : DEFAULT_SELECTION;
+  const currentUnavailable =
+    catalog.isError || (catalog.isSuccess && !("current" in catalog.data.data));
+  const currentRun =
+    catalog.data && "current_run" in catalog.data.data
+      ? catalog.data.data.current_run
+      : null;
+  const currentMode =
+    requested === "current" ||
+    !versions.some((v) => v.policy_version === requested);
+  const selection = {
+    ...(currentMode
+      ? current
+      : (versions.find((v) => v.policy_version === requested) ?? current)),
+    ready: !catalog.isPending && (!currentUnavailable || !currentMode),
+  };
+  return (
+    <SelectionContext.Provider value={selection}>
+      <Workspace
+        versions={versions}
+        change={setSelection}
+        currentMode={currentMode}
+        currentRun={currentRun}
+        catalogError={currentUnavailable}
+        catalogMessage={
+          catalog.error instanceof ApiError
+            ? catalog.error.message
+            : "The server did not return a current governance marker."
+        }
+      />
+    </SelectionContext.Provider>
+  );
+}
+function Workspace({
+  versions,
+  change,
+  catalogError,
+  catalogMessage,
+  currentMode,
+  currentRun,
+}: {
+  versions: Selection[];
+  change: (value: string) => void;
+  currentMode: boolean;
+  currentRun: string | null;
+  catalogError: boolean;
+  catalogMessage: string;
+}) {
+  const selection = useSelection();
   const session = useSession();
   const [menu, setMenu] = useState(false);
   const location = useLocation();
   const client = useQueryClient();
   const query = useDataset();
+  const journal =
+    query.data && "journal" in query.data.summary
+      ? query.data.summary.journal
+      : [];
+  const environmentProfiles =
+    query.data && "environment_requirements" in query.data.summary
+      ? query.data.summary.environment_requirements
+      : null;
+  const latestDeployment = query.data
+    ? [...query.data.deployments].sort(
+        (a, b) =>
+          b.started_at.localeCompare(a.started_at) || b.id.localeCompare(a.id),
+      )[0]
+    : undefined;
   const title =
     navigation.find((item) => item.to === location.pathname)?.label ??
     (location.pathname.startsWith("/accounts/")
@@ -215,54 +299,206 @@ export function App() {
         </div>
         <main id="main-content">
           <div className="evaluation-toolbar">
+            <label className="policy-selector">
+              Historical snapshot
+              <select
+                aria-label="Historical snapshot"
+                value={currentMode ? "current" : selection.policy_version}
+                onChange={(event) => change(event.target.value)}
+              >
+                <option value="current">Current governance</option>
+                {versions.map((v) => (
+                  <option
+                    key={v.snapshot_id ?? v.policy_version}
+                    value={v.policy_version}
+                  >
+                    Policy {v.policy_version} ·{" "}
+                    {new Date(v.evaluated_at)
+                      .toISOString()
+                      .slice(0, 16)
+                      .replace("T", " ")}{" "}
+                    UTC · {v.snapshot_id?.slice(0, 8) ?? "baseline"}
+                  </option>
+                ))}
+              </select>
+              <small>
+                Read-only history
+                {catalogError ? " · current marker unavailable" : ""}
+              </small>
+            </label>
             <span>
               <Clock3 size={14} />
               Reference evaluation{" "}
               <strong>
-                {new Intl.DateTimeFormat("en-GB", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "UTC",
-                  hour12: false,
-                }).format(new Date(REFERENCE_AT))}{" "}
+                {selection.ready === false
+                  ? "Resolving…"
+                  : new Intl.DateTimeFormat("en-GB", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "UTC",
+                      hour12: false,
+                    }).format(new Date(selection.evaluated_at))}{" "}
                 UTC
               </strong>
             </span>
             <button
               className="button refresh-button"
               disabled={query.isFetching}
-              onClick={() => void client.invalidateQueries()}
+              onClick={() => {
+                change("current");
+                void client.invalidateQueries();
+              }}
             >
               <RefreshCw size={14} className={query.isFetching ? "spin" : ""} />
-              Refresh snapshot
+              Refresh current state
             </button>
           </div>
-          <ConsoleBoundary key={location.pathname}>
-            <Routes>
-              <Route path="/" element={<Overview />} />
-              <Route path="/accounts" element={<Accounts />} />
-              <Route path="/accounts/:accountId" element={<AccountDetail />} />
-              <Route path="/compliance" element={<Compliance />} />
-              <Route path="/deployments" element={<Deployments />} />
-              <Route path="/drift" element={<Drift />} />
-              <Route path="/exceptions" element={<Exceptions />} />
-              <Route
-                path="*"
-                element={
-                  <>
-                    <h1>Page not found</h1>
-                    <Empty message="This page is not part of the governance workspace." />
-                    <Link className="text-link" to="/">
-                      Return to overview <ArrowUpRight size={15} />
-                    </Link>
-                  </>
-                }
-              />
-            </Routes>
-          </ConsoleBoundary>
+          <div className="governance-state-header" aria-live="polite">
+            <strong>
+              {catalogError && currentMode
+                ? "Current state unavailable"
+                : selection.ready === false
+                  ? "Resolving current governance"
+                  : `${currentMode ? "CURRENT GOVERNANCE" : "HISTORICAL EVALUATION"} · Policy revision ${selection.policy_version}`}
+            </strong>
+            {selection.ready !== false && (
+              <span>
+                Latest deployment run:{" "}
+                {(currentMode && currentRun) ||
+                  latestDeployment?.correlation_id ||
+                  "Baseline inventory"}
+              </span>
+            )}
+            {!currentMode && (
+              <small>
+                Historical comparison only. No rollback or deployment is
+                performed.
+              </small>
+            )}
+          </div>
+          {journal.length > 0 && (
+            <details className="rollout-story" open>
+              <summary>
+                SIMULATED policy rollout · Policy {selection.policy_version} ·{" "}
+                {journal.length} recorded stages
+              </summary>
+              <div className="rollout-stages">
+                {[
+                  "policy.validated",
+                  "policy.approved",
+                  "canary.passed",
+                  "rollout.blocked",
+                  "rollout.completed",
+                  "account.activated",
+                ].map((action) => {
+                  const stage = journal.find((e) => e.action === action);
+                  return (
+                    <span
+                      key={action}
+                      className={
+                        stage
+                          ? action === "rollout.blocked"
+                            ? "stage-warning"
+                            : "stage-complete"
+                          : ""
+                      }
+                    >
+                      {action.replaceAll(".", " ")}
+                      {stage && (
+                        <small>
+                          {new Date(stage.at).toISOString().slice(11, 16)} UTC
+                        </small>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+              <p>
+                Real Terraform planning verified the desired configuration.
+                Approval, AFT distribution, failure/retry, and evidence are
+                simulated. Successful distribution does not imply compliance.
+              </p>
+            </details>
+          )}
+          {environmentProfiles && (
+            <details className="environment-profiles">
+              <summary>
+                Environment-specific governance · central baseline inherited
+              </summary>
+              <div className="rollout-stages">
+                {Object.entries(environmentProfiles).map(
+                  ([environment, requirements]) => {
+                    const approval = requirements?.find(
+                      (r) => r.control_id === "deployment-approval",
+                    );
+                    return (
+                      <span key={environment}>
+                        {environment}
+                        <small>
+                          Approval configuration:{" "}
+                          {approval?.expected ? "required" : "not required"}
+                        </small>
+                        <small>
+                          Approval evidence age: {approval?.max_age_hours}h ·{" "}
+                          {requirements?.length} controls
+                        </small>
+                      </span>
+                    );
+                  },
+                )}
+              </div>
+            </details>
+          )}
+          {catalogError && currentMode ? (
+            <div className="error-state" role="alert">
+              <h2>Current governance could not be resolved</h2>
+              <p>{catalogMessage}</p>
+              <p>
+                Refresh or explicitly choose a historical snapshot. Historical
+                data is not substituted for CURRENT.
+              </p>
+              <button
+                className="button primary"
+                onClick={() => void client.invalidateQueries()}
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <ConsoleBoundary
+              key={`${selection.policy_version}|${location.pathname}`}
+            >
+              <div key={selection.policy_version}>
+                <Routes>
+                  <Route path="/" element={<Overview />} />
+                  <Route path="/accounts" element={<Accounts />} />
+                  <Route
+                    path="/accounts/:accountId"
+                    element={<AccountDetail />}
+                  />
+                  <Route path="/compliance" element={<Compliance />} />
+                  <Route path="/deployments" element={<Deployments />} />
+                  <Route path="/drift" element={<Drift />} />
+                  <Route path="/exceptions" element={<Exceptions />} />
+                  <Route
+                    path="*"
+                    element={
+                      <>
+                        <h1>Page not found</h1>
+                        <Empty message="This page is not part of the governance workspace." />
+                        <Link className="text-link" to="/">
+                          Return to overview <ArrowUpRight size={15} />
+                        </Link>
+                      </>
+                    }
+                  />
+                </Routes>
+              </div>
+            </ConsoleBoundary>
+          )}
           <footer className="workspace-footer">
             <span>
               NorthStar Airlines <i /> Governance Console

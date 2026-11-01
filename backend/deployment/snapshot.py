@@ -4,7 +4,7 @@ import hashlib
 import json
 
 from backend.repository import GovernanceSnapshot
-from governance.model.contracts import validate_model
+from governance.model.contracts import timestamp, validate_model
 
 
 def canonical(value: object) -> str:
@@ -12,11 +12,57 @@ def canonical(value: object) -> str:
 
 
 def document(snapshot: GovernanceSnapshot) -> dict:
-    return {
+    value = {
         "fleet": snapshot.fleet,
         "policy": snapshot.policy,
         "environments": snapshot.environments,
     }
+    if snapshot.context is not None:
+        value["context"] = snapshot.context
+    return value
+
+
+def validate_snapshot(snapshot):
+    context = snapshot.context
+    profile = "v1" if context is None else context["profile"]
+    if context is not None:
+        if (
+            set(context)
+            != {
+                "format_version",
+                "profile",
+                "policy_version",
+                "evaluated_at",
+                "generator",
+                "simulated",
+                "journal",
+                "proposal_digest",
+            }
+            or context["format_version"] != "1.0.0"
+            or context["simulated"] is not True
+            or context["policy_version"] != snapshot.policy["version"]
+            or context["generator"] != "northstar-policy-rollout-v1"
+            or profile != "policy-v2"
+        ):
+            raise ValueError("Invalid versioned snapshot context")
+        clock = timestamp(context["evaluated_at"])
+        if any(
+            timestamp(e["at"]) > clock or e.get("simulated") is not True for e in context["journal"]
+        ):
+            raise ValueError("Invalid simulated journal")
+    validate_model(snapshot.fleet, snapshot.policy, snapshot.environments, profile=profile)
+    return profile
+
+
+def from_document(value):
+    if set(value) not in (
+        {"fleet", "policy", "environments"},
+        {"fleet", "policy", "environments", "context"},
+    ):
+        raise ValueError("Invalid snapshot document")
+    result = GovernanceSnapshot(**value)
+    validate_snapshot(result)
+    return result
 
 
 def digest(snapshot: GovernanceSnapshot) -> str:
@@ -24,7 +70,7 @@ def digest(snapshot: GovernanceSnapshot) -> str:
 
 
 def encode(snapshot: GovernanceSnapshot) -> tuple[str, list[dict], dict]:
-    validate_model(snapshot.fleet, snapshot.policy, snapshot.environments)
+    validate_snapshot(snapshot)
     version = digest(snapshot)
     key = f"SNAPSHOT#{version}"
     rows = []
@@ -48,6 +94,14 @@ def encode(snapshot: GovernanceSnapshot) -> tuple[str, list[dict], dict]:
                 "pk": {"S": key},
                 "sk": {"S": f"environment/{index:06}"},
                 "payload": {"S": canonical(env)},
+            }
+        )
+    if snapshot.context is not None:
+        rows.append(
+            {
+                "pk": {"S": key},
+                "sk": {"S": "context"},
+                "payload": {"S": canonical(snapshot.context)},
             }
         )
     manifest = {
@@ -85,11 +139,14 @@ def decode(rows: list[dict], expected: str) -> GovernanceSnapshot:
     fleet["schema_version"] = manifest["fleet_schema_version"]
     envs = []
     policy = None
+    context = None
     for key, row in sorted(indexed.items()):
         value = json.loads(row["payload"]["S"])
         if key == "MANIFEST":
             continue
-        if key == "policy":
+        if key == "context":
+            context = value
+        elif key == "policy":
             policy = value
         elif key.startswith("environment/"):
             envs.append(value)
@@ -98,8 +155,8 @@ def decode(rows: list[dict], expected: str) -> GovernanceSnapshot:
             fleet[collection].append(value)
         else:
             raise ValueError("Unexpected snapshot item")
-    snapshot = GovernanceSnapshot(fleet, policy, envs)
-    validate_model(snapshot.fleet, snapshot.policy, snapshot.environments)
+    snapshot = GovernanceSnapshot(fleet, policy, envs, context)
+    validate_snapshot(snapshot)
     if digest(snapshot) != expected:
         raise ValueError("Snapshot digest mismatch")
     return snapshot

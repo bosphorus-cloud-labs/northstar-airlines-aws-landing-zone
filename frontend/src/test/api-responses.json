@@ -1640,5 +1640,163 @@
         }
       ]
     }
+  },
+  "/api/v1/summary?catalog=true": {
+    "metadata": {
+      "api_version": "v1",
+      "source": "northstar-synthetic-v1",
+      "simulated": true,
+      "evaluated_at": "2026-10-31T12:00:00Z"
+    },
+    "data": {
+      "account_count": 10,
+      "finding_count": 50,
+      "account_counts": {
+        "compliant": 3,
+        "noncompliant": 3,
+        "unknown": 2,
+        "stale": 2
+      },
+      "finding_counts": {
+        "compliant": 31,
+        "noncompliant": 3,
+        "unknown": 6,
+        "stale": 10
+      },
+      "environment_counts": {
+        "production": 3,
+        "pre-production": 2,
+        "testing": 2,
+        "development": 3
+      },
+      "current": {
+        "policy_version": "1.0.0",
+        "profile": "v1",
+        "evaluated_at": "2026-10-31T12:00:00Z",
+        "snapshot_id": null,
+        "generator": "northstar-synthetic-v1"
+      },
+      "current_run": null,
+      "versions": [
+        {
+          "policy_version": "1.0.0",
+          "profile": "v1",
+          "evaluated_at": "2026-10-31T12:00:00Z",
+          "snapshot_id": null,
+          "generator": "northstar-synthetic-v1"
+        }
+      ],
+      "journal": [],
+      "environment_requirements": {
+        "development": [
+          {
+            "control_id": "deployment-approval",
+            "expected": false,
+            "max_age_hours": 168
+          },
+          {
+            "control_id": "baseline-encryption",
+            "expected": true,
+            "max_age_hours": 168
+          },
+          {
+            "control_id": "public-access",
+            "expected": true,
+            "max_age_hours": 168
+          },
+          {
+            "control_id": "logging",
+            "expected": true,
+            "max_age_hours": 168
+          },
+          {
+            "control_id": "security-monitoring",
+            "expected": true,
+            "max_age_hours": 168
+          }
+        ],
+        "pre-production": [
+          {
+            "control_id": "deployment-approval",
+            "expected": true,
+            "max_age_hours": 48
+          },
+          {
+            "control_id": "baseline-encryption",
+            "expected": true,
+            "max_age_hours": 48
+          },
+          {
+            "control_id": "public-access",
+            "expected": true,
+            "max_age_hours": 48
+          },
+          {
+            "control_id": "logging",
+            "expected": true,
+            "max_age_hours": 48
+          },
+          {
+            "control_id": "security-monitoring",
+            "expected": true,
+            "max_age_hours": 48
+          }
+        ],
+        "production": [
+          {
+            "control_id": "deployment-approval",
+            "expected": true,
+            "max_age_hours": 24
+          },
+          {
+            "control_id": "baseline-encryption",
+            "expected": true,
+            "max_age_hours": 24
+          },
+          {
+            "control_id": "public-access",
+            "expected": true,
+            "max_age_hours": 24
+          },
+          {
+            "control_id": "logging",
+            "expected": true,
+            "max_age_hours": 24
+          },
+          {
+            "control_id": "security-monitoring",
+            "expected": true,
+            "max_age_hours": 24
+          }
+        ],
+        "testing": [
+          {
+            "control_id": "deployment-approval",
+            "expected": false,
+            "max_age_hours": 72
+          },
+          {
+            "control_id": "baseline-encryption",
+            "expected": true,
+            "max_age_hours": 72
+          },
+          {
+            "control_id": "public-access",
+            "expected": true,
+            "max_age_hours": 72
+          },
+          {
+            "control_id": "logging",
+            "expected": true,
+            "max_age_hours": 72
+          },
+          {
+            "control_id": "security-monitoring",
+            "expected": true,
+            "max_age_hours": 72
+          }
+        ]
+      }
+    }
   }
 }

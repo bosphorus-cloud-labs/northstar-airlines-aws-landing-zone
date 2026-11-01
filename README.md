@@ -2,7 +2,7 @@
 
 A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a single-account governance dashboard and clearly labeled multi-account simulation.
 
-**Current status:** Version 1 is AWS-hosted, as confirmed by the project owner; Phase 5 does not inspect or change that deployment. Phases 1–4A provide the local application and deployment foundation. Phase 5 adds an isolated offline CLI for a Version 2 policy proposal, simulated approval, canary rollout, failure/retry and account onboarding. No executable GitHub deployment workflow or automatic publication path is introduced.
+**Current status:** Version 1 is AWS-hosted, as confirmed by the project owner; Phase 5 does not inspect or change that deployment. Phases 1–4A provide the local application and deployment foundation. Phase 5 adds an isolated offline CLI for a Version 2 policy proposal, simulated approval, canary rollout, failure/retry and account onboarding. A PR-only governance validation workflow is now defined in source; no production deployment or automatic publication path is introduced.
 
 ## Objectives
 
@@ -40,14 +40,14 @@ governance/simulation/     Offline policy-rollout CLI, scenario and run contract
 mock-data/                 Synthetic fixtures with explicit provenance
 tests/                     Cross-component and acceptance tests
 docs/                      Architecture, milestones, and operating guidance
-.github/workflows/         Planned GitHub Actions automation
+.github/workflows/         Governance PR validation only; no cloud deployment
 ```
 
 Empty directories contain `.gitkeep` placeholders so Git preserves the structure.
 
 ## Local development
 
-Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform is constrained to >=1.14,<2 (tested 1.14.6), with AWS provider 6.71.0 locked for the isolated POC root. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
 
@@ -102,23 +102,17 @@ git diff --check
 git status --short --branch
 ```
 
-## Phase 5 — offline policy lifecycle demonstration
+## Five-minute interview demonstration
 
-The CLI uses the existing evaluator and ten-account V1 fixtures, proposes a sixth detective control in policy `2.0.0`, requires a simulated independent approval, and performs ordered canary/fleet attempts. Generated results stay under ignored `artifacts/policy-rollout/`; the hosted dashboard, Terraform, API and DynamoDB data are unchanged.
+Version-aware source integration is ready locally; the hosted V1 application remains unchanged. From the repository root, after the documented Python/Node/Terraform prerequisites are installed:
 
 ```sh
-.venv/bin/python -m governance.simulation.rollout plan
-.venv/bin/python -m governance.simulation.rollout approve --approver sim-security-reviewer
-.venv/bin/python -m governance.simulation.rollout rollout --fail-account sim-account-005
-# The preceding command intentionally exits 2: a simulated failure stops the rollout.
-.venv/bin/python -m governance.simulation.rollout rollout
-.venv/bin/python -m governance.simulation.rollout onboard
-.venv/bin/python -m governance.simulation.rollout status
+./demo.sh v2
 ```
 
-Use a new `--run-dir artifacts/policy-rollout/NAME` on every command for another demonstration. Final results contain eleven accounts and 66 findings: **43 compliant, 4 noncompliant, 9 unknown, 10 stale**. Distribution success does not imply workload compliance. Two existing inactive accounts remain deferred. See the [interview runbook and safe future integration requirements](docs/POLICY_ROLLOUT_DEMO.md).
+The launcher performs real provider-free Terraform checks/planning, then simulated approval, canary, failure/retry and onboarding. For the five-minute before/after story, start `./demo.sh v1` before the interview; then run `./demo.sh v2` once in another Terminal and refresh the same browser once. Owned servers are reused. It starts loopback-only servers; open `http://127.0.0.1:5173` to see **CURRENT governance** automatically. Use **Historical snapshot** only for comparison. V2 has eleven accounts and 66 findings: 43 compliant, 4 noncompliant, 9 unknown and 10 stale. The browser and API remain read-only. `./demo.sh reset` returns the local current marker to baseline policy 1.0.0 while keeping policy 2.0.0 readable in History; `--prepare-only` generates artifacts without starting servers.
 
-The optional [provider-free Terraform companion](terraform/simulation/README.md) uses a reusable module to calculate baseline/environment desired settings for the same frozen ten-account proposal. Real fmt/init/validate/V1/V2 plans and a full Python parity check are in the runbook's five-minute walkthrough. There are no providers, resources or data sources, and no apply; deployment records and compliance evidence remain simulated. The deployed POC root is not used.
+See the [five-minute screen-by-screen runbook and safe AWS publication prerequisites](docs/INTERVIEW_DEMO.md). All publication packages stay local. Separate authorization is required to publish a distinct DynamoDB snapshot, extend the reader allowlist, and deploy the updated application. The [advanced Phase 5 CLI/Terraform walkthrough](docs/POLICY_ROLLOUT_DEMO.md) remains available. Future versions require reviewed policy/profile/scenario registration; no V3 results are invented.
 
 ## Secure deployment foundation
 
@@ -130,7 +124,7 @@ No AWS credentials, account discovery, remote state initialization, normal Terra
 
 ## Security and delivery model
 
-Future CI will run formatting, linting, tests, Terraform validation, policy/security checks, and secret scanning before deployment review. GitHub OIDC and least-privilege roles will replace static AWS access keys. Cloud changes require explicit authorization and a protected approval gate; enterprise reference paths must be excluded from POC deployments.
+The governance CI workflow runs Python checks, provider-free Terraform validation/planning, parity checks and synthetic rollout reporting on relevant pull requests. Hosted execution is pending an authorized push/PR; it has no AWS deployment permissions. See [the short CI/CD interview runbook and integration audit](docs/CI_CD_DEMO.md). Additional security scanning and production delivery remain future work. GitHub OIDC and least-privilege roles will replace static AWS access keys. Cloud changes require explicit authorization and a protected approval gate; enterprise reference paths must be excluded from POC deployments.
 
 Do not access AWS credentials, create cloud resources, run Terraform apply/destroy, or push changes without explicit authorization. No such actions are needed for local foundation work.
 

@@ -11,6 +11,7 @@ class GovernanceSnapshot:
     fleet: dict
     policy: dict
     environments: list[dict]
+    context: dict | None = None
 
 
 class GovernanceRepository(Protocol):

@@ -17,6 +17,7 @@ export const controlNames: Record<string, string> = {
   "baseline-encryption": "Baseline encryption",
   "public-access": "Public access restrictions",
   logging: "Audit logging",
+  "audit-log-integrity": "Audit log integrity validation",
   "security-monitoring": "Security monitoring",
 };
 export const label = (value: string) =>
