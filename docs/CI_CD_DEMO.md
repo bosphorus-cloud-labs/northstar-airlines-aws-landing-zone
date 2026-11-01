@@ -11,7 +11,7 @@ The workflow covers PR changes to the governance/module/simulation/backend/tests
 Do this in advance, not during the five minutes. Keep the branch; do not merge main yourself. All outstanding console changes must be reviewed/committed too, not only the workflow.
 
 ```sh
-# Confirm the output says codex/interview-demo. Stop if it says main.
+# Confirm the output says feat/governance-operations-ci. Stop if it says main.
 git status --short --branch
 # Safe comment-only Terraform edit: demonstrates PR delivery, not a new security control.
 printf '\n# Interview example: reviewed policy changes stay provider-free.\n' >> terraform/modules/simulated_governance/main.tf
@@ -23,8 +23,8 @@ git add -A
 git diff --cached --check
 git diff --cached --stat
 git commit -m "feat: integrate governance CI and interview demonstration"
-git push -u origin codex/interview-demo
-gh pr create --base main --head codex/interview-demo --title "Governance CI and interview demo" --body "Offline Terraform validation, parity checks and simulated rollout reporting. No AWS deployment or publication."
+git push -u origin feat/governance-operations-ci
+gh pr create --base main --head feat/governance-operations-ci --title "Governance CI and interview demo" --body "Offline Terraform validation, parity checks and simulated rollout reporting. No AWS deployment or publication."
 ```
 
 `gh` requires the GitHub CLI and GitHub sign-in (no AWS identity). Without it, use the compare/PR link printed by `git push`, choose base **main**, and create the PR in GitHub. These commands are instructions for a later authorized action; they have **not** been executed here.

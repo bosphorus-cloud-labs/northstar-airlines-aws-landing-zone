@@ -14,7 +14,7 @@ Prerequisites: Python 3.13 `.venv` with `requirements-dev.txt`, Node 24 with fro
 
 Leave this Terminal running and open **http://127.0.0.1:5173**. The Current view shows baseline policy 1.0.0 and ten accounts. Open a second Terminal in the repository root for the single interview command. This is the **same API and React application** throughout the demonstration. `v1`/`v2` are policy scenario aliases, not app releases.
 
-The launcher records ownership of its loopback-only servers. A subsequent demo reuses those servers only when their recorded processes are alive. It never kills unrelated port occupants. If ports 8000/5173 are already occupied by an unverified service, stop/restart the appropriate local service yourself before rehearsal; the launcher fails safely. Some agent sandboxes require permission to bind loopback ports. There is no cloud fallback or automatic deployment hidden in the launcher.
+The launcher records ownership of its loopback-only servers. A subsequent demo reuses those servers only when their recorded processes are alive. It never kills unrelated port occupants. If ports 8000/5173 are already occupied by an unverified service, stop/restart the appropriate local service yourself before rehearsal; the launcher fails safely. There is no cloud fallback or automatic deployment hidden in the launcher.
 
 ## Five minutes: one command, one browser refresh
 

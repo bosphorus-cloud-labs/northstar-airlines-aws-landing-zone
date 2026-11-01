@@ -12,7 +12,6 @@ name: Governance validation (no AWS deployment)
       - 'scripts/**'
       - 'requirements-dev.txt'
       - 'demo.sh'
-      - 'AGENTS.md'
       - '.github/workflows/governance-ci.yml'
   workflow_dispatch:
 

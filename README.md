@@ -47,7 +47,7 @@ Empty directories contain `.gitkeep` placeholders so Git preserves the structure
 
 ## Local development
 
-Read [AGENTS.md](AGENTS.md) before making changes. The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
 
 The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform is constrained to >=1.14,<2 (tested 1.14.6), with AWS provider 6.71.0 locked for the isolated POC root. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
 
