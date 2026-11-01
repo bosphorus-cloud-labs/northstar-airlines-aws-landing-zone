@@ -1,78 +1,60 @@
 # NorthStar Airlines AWS Landing Zone Governance
 
-A governance proof of concept for an Emirates Senior Technical Engineer – Public Cloud interview. It combines a documented enterprise landing-zone model with a single-account governance dashboard and clearly labeled multi-account simulation.
+An Emirates Senior Technical Engineer – Public Cloud case study: a real, authenticated AWS governance console in one Frankfurt account, displaying explicitly synthetic multi-account governance evidence.
 
-**Current status:** Version 1 is AWS-hosted, as confirmed by the project owner; Phase 5 does not inspect or change that deployment. Phases 1–4A provide the local application and deployment foundation. Phase 5 adds an isolated offline CLI for a Version 2 policy proposal, simulated approval, canary rollout, failure/retry and account onboarding. A PR-only governance validation workflow is now defined in source; no production deployment or automatic publication path is introduced.
+**Deployment status:** The end-to-end GitHub OIDC delivery path is live. V2 is Current at generation 4 after approved V1 rollback and V2 restoration; immutable V1 remains in History. Main-only Amplify frontend auto-build is configured separately from protected data publication. See [deployment evidence](docs/DEPLOYMENT_ACCEPTANCE.md).
 
-## Objectives
+[Open the authenticated governance console](https://main.d1eetlse86595h.amplifyapp.com/). Use the invited Cognito reader account. Access tokens stay in memory; after reload or expiry, sign in again through Cognito SSO. Never share passwords/tokens in repository files or interview recordings.
 
-Demonstrate enterprise account governance, reusable Terraform design, controlled delivery, and operational visibility across existing and newly provisioned accounts. The planned application will show account inventory, compliance evidence, deployment history, failures, and governance exceptions. The design covers drift, recovery, expiring exceptions, and staged fleet updates.
+## What the case study demonstrates
 
-## Architecture and scope
+- Central versioned policy with inherited baseline and Production, Pre-Production, Testing and Development requirements.
+- Real reusable, provider-free Terraform validation/planning and full parity with the Python rollout model.
+- Simulated validation/approval, Development canary, failure/retry, controlled waves and account onboarding.
+- Real GitHub PR/CI, protected manual approval, short-lived AWS OIDC identity, conditional DynamoDB publication and verified Current promotion.
+- One read-only application showing inventory, compliance, deployment outcomes, configuration drift and expiring exceptions; immutable History and approved selection rollback.
 
-| Layer | Planned single-account POC | Enterprise reference only |
-| --- | --- | --- |
-| User interface | React + TypeScript + Vite on Amplify Hosting | Organization-wide governance visibility |
-| Identity and API | Cognito; API Gateway; Python 3.13 Lambda | Federated enterprise access and scoped integration roles |
-| Data and events | DynamoDB; EventBridge; synthetic account/finding fixtures | Inventory and evidence from authorized account integrations |
-| Infrastructure | Terraform for approved POC resources in Frankfurt (`eu-central-1`) | Organizations, Control Tower, Account Factory, AFT, central policies |
-| Delivery | GitHub Actions validation and approval-gated deployment | Documented CodePipeline/CodeBuild/AFT integration |
+The dashboard displays synthetic evidence, not real AWS account compliance. V1 has ten accounts and 50 findings (31 compliant, 3 noncompliant, 6 unknown, 10 stale). V2 adds audit-log integrity validation and an eleventh account, producing 66 findings (43 compliant, 4 noncompliant, 9 unknown, 10 stale). Successful simulated distribution never implies universal compliance.
 
-Planned POC request flow: browser → Cognito authentication → API Gateway authorization → Lambda → DynamoDB. EventBridge will support asynchronous governance events and simulation updates. Browser code must never receive AWS deployment credentials or direct database access.
-
-The POC uses one personal AWS account. Accounts shown in the simulated fleet do not represent real member accounts. Synthetic findings are demonstration data, never evidence that AWS controls were evaluated. Any later real observation must identify its source, timestamp, and account and remain distinguishable from simulation.
-
-Control Tower Account Factory provisions/enrolls accounts; AFT orchestrates Terraform account provisioning and customizations; central Organizations pipelines own policy attachments; the application reads their reported outcomes. The application does not act as an account factory or Terraform deployment engine. See [architecture and responsibility boundaries](docs/ARCHITECTURE.md).
-
-Organizations, Control Tower, AFT, Transit Gateway, Palo Alto firewalls, and enterprise landing-zone infrastructure will **not** be deployed for this POC.
-
-## Repository layout
+## Architecture and ownership
 
 ```text
-frontend/                  React/TypeScript/Vite Governance Console
-backend/                   Local FastAPI API, service, fixture repository, ASGI adapter
-terraform/modules/         Reusable infrastructure modules
-terraform/poc/             Single-account POC roots
-terraform/enterprise/      Reference-only enterprise examples
-governance/policies/       Versioned governance definitions
-governance/environments/   Non-secret environment configuration
-governance/simulation/     Offline policy-rollout CLI, scenario and run contract
-mock-data/                 Synthetic fixtures with explicit provenance
-tests/                     Cross-component and acceptance tests
-docs/                      Architecture, milestones, and operating guidance
-.github/workflows/         Governance PR validation only; no cloud deployment
+Git feature branch → PR → unprivileged GitHub Actions CI → merge to protected main
+  → manual CD + actual governance-production approval → short-lived OIDC publisher
+  → conditional immutable DynamoDB rows + manifest → strong digest verification
+  → atomic generation-checked Current/History catalogue
+  → read-only Lambda + API Gateway JWT ← Cognito-authenticated React on Amplify
 ```
 
-Empty directories contain `.gitkeep` placeholders so Git preserves the structure.
+Terraform provisions the POC infrastructure separately; data CD cannot run Terraform or deploy application code. Amplify builds frontend source from GitHub; a policy snapshot promotion requires no frontend rebuild. Browser and Lambda cannot write DynamoDB. Local demo identity cannot be enabled in deployed Lambda.
 
-## Local development
+Control Tower Account Factory provisions/enrolls accounts. AFT handles account requests/customizations. Central Organizations pipelines own SCPs and attachments. This application reads reported governance outcomes. **Control Tower, Organizations, AFT, Transit Gateway, Palo Alto and enterprise infrastructure are reference architecture only. EventBridge processing and CodePipeline/CodeBuild/SNS integration are not deployed.** See [architecture](docs/ARCHITECTURE.md).
 
-The implementation sequence and acceptance criteria are in the [implementation plan](docs/IMPLEMENTATION_PLAN.md).
+## Five-minute interview
 
-The local toolchain is Node.js 24 (tested 24.19.0) and Python 3.13 with an isolated virtual environment. Terraform is constrained to >=1.14,<2 (tested 1.14.6), with AWS provider 6.71.0 locked for the isolated POC root. The offline model uses Python 3.13 and pinned dependencies in `requirements-dev.txt`; see the commands below. The local API uses the same Python environment; commands follow below.
+Follow [the screen-by-screen interview runbook](docs/INTERVIEW_DEMO.md). Prepare completed CI/CD links in advance; never wait for CI or approve cloud changes during the five-minute presentation. Show live Current/History, rollout failures/retry, account-specific findings and onboarding. [CI/CD commands and integration audit](docs/CI_CD_DEMO.md) explain the real delivery path and enterprise approval model.
 
-Local development will default to deterministic mock data without AWS credentials or live AWS API calls. The API currently reads local fixtures; no DynamoDB or event runtime is required. Keep secrets in ignored local files; commit only sanitized configuration examples. Commit Terraform provider lockfiles, but never state, saved plans, or sensitive variable files.
+The offline fallback is independent of live AWS:
 
-Offline governance model (no AWS access):
+```sh
+./demo.sh v1       # Prepare before presenting; loopback servers only.
+./demo.sh v2       # One interview command, then refresh the local browser.
+./demo.sh reset    # Local Current → V1; retain historical artifacts.
+```
+
+Open http://127.0.0.1:5173. The launcher performs real provider-free Terraform checks, then simulated operations. It never publishes DynamoDB records or changes the hosted console. Future policy profiles require reviewed contract/scenario registration; V3 results are not invented.
+
+## Local development and validation
+
+Python 3.13, Node.js 24 (tested 24.19.0), Terraform >=1.14,<2 (tested 1.14.6), and locked AWS provider 6.71.0:
 
 ```sh
 python3.13 -m venv .venv
 .venv/bin/python -m pip install -r requirements-dev.txt
-.venv/bin/python -m unittest discover -s tests -v
-.venv/bin/python -m governance.model.evaluate --at 2026-10-31T12:00:00Z
-```
-
-See [data contracts and policy semantics](docs/GOVERNANCE_MODEL.md) for validation rules, simulation limits, environment differences, and the expected ten-account summary. At the reference timestamp, 50 control evaluations produce 31 compliant, 3 noncompliant, 6 unknown, and 10 stale results. Approved exceptions never convert failures into passes. JSON policy definitions are offline intent, not deployed SCPs.
-
-Local API (explicit demo identity bypass; trusted workstation only):
-
-```sh
 .venv/bin/python -m backend --local-demo
 ```
 
-The launcher binds `127.0.0.1:8000`. Open [Swagger UI](http://127.0.0.1:8000/docs) or request [fleet summary](http://127.0.0.1:8000/api/v1/summary). Without `--local-demo`, all routes are denied by default. Demo mode rejects bearer tokens and non-loopback clients; it is not production authentication and must not be exposed publicly. The console uses an explicitly scoped loopback-only Vite proxy for local development. The Lambda adapter stays fail-closed unless all deployment settings and a verified gateway identity are present; no local-demo flag can enable it. See [backend API guide](docs/BACKEND_API.md) for routes, response examples, authentication boundaries, pagination, timestamps, and limitations.
-
-In a second terminal from the repository root, run the frontend while the API continues running:
+In another terminal:
 
 ```sh
 cd frontend
@@ -80,11 +62,14 @@ npm ci
 npm run dev
 ```
 
-Open [NorthStar Governance Console](http://127.0.0.1:5173). The fixed reference time is visible on every page. No fallback mock data is used if the backend is unavailable. See the [frontend guide](docs/FRONTEND.md) for architecture, generated contracts, page behavior, tests, preview, and limitations.
-
-Frontend checks (from `frontend/`):
+FastAPI binds 127.0.0.1:8000; [Swagger](http://127.0.0.1:8000/docs) is available only in authorized local-demo mode. Vite's loopback proxy is for local development; Amplify uses the explicit Terraform-exported API/Cognito settings. Without local-demo or verified deployed identity, access is denied.
 
 ```sh
+.venv/bin/python -m unittest discover -s tests -v
+.venv/bin/ruff check backend governance scripts tests terraform/poc/tests/*.py
+.venv/bin/ruff format --check backend governance scripts tests terraform/poc/tests/*.py
+terraform fmt -check -recursive terraform
+# From frontend/:
 npm run api:check
 npm run typecheck
 npm run lint
@@ -93,43 +78,12 @@ npm test
 npm run build
 ```
 
-Repository checks (from the repository root):
+See [data contracts](docs/GOVERNANCE_MODEL.md), [backend API](docs/BACKEND_API.md), [frontend](docs/FRONTEND.md), [delivery operations](docs/GOVERNANCE_DELIVERY.md), [deployment foundation](docs/AWS_DEPLOYMENT_FOUNDATION.md) and [implementation milestones](docs/IMPLEMENTATION_PLAN.md).
 
-```sh
-.venv/bin/ruff check backend governance tests
-.venv/bin/ruff format --check backend governance tests
-git diff --check
-git status --short --branch
-```
+## Repository and security boundaries
 
-## Five-minute interview demonstration
+`frontend/` and `backend/` implement the read-only console; `governance/` owns contracts, environment intent, evaluation and simulation; `mock-data/` is synthetic. `terraform/simulation/` consumes the shared pure module. `terraform/poc/` manages only the single-account POC; `terraform/enterprise/` remains reference-only. `.github/workflows/` separates credential-free CI and protected data CD.
 
-Version-aware source integration is ready locally; the hosted V1 application remains unchanged. From the repository root, after the documented Python/Node/Terraform prerequisites are installed:
+This public single-owner POC explicitly permits the owner to approve their own environment deployment, with administrator bypass disabled, strict required CI and main-only deployment. No independent PR approval is claimed. The default independent-review gate remains available for enterprise use. OIDC trust pins immutable owner/repository IDs and the exact protected environment; no permanent AWS keys are stored in GitHub.
 
-```sh
-./demo.sh v2
-```
-
-The launcher performs real provider-free Terraform checks/planning, then simulated approval, canary, failure/retry and onboarding. For the five-minute before/after story, start `./demo.sh v1` before the interview; then run `./demo.sh v2` once in another Terminal and refresh the same browser once. Owned servers are reused. It starts loopback-only servers; open `http://127.0.0.1:5173` to see **CURRENT governance** automatically. Use **Historical snapshot** only for comparison. V2 has eleven accounts and 66 findings: 43 compliant, 4 noncompliant, 9 unknown and 10 stale. The browser and API remain read-only. `./demo.sh reset` returns the local current marker to baseline policy 1.0.0 while keeping policy 2.0.0 readable in History; `--prepare-only` generates artifacts without starting servers.
-
-See the [five-minute screen-by-screen runbook and safe AWS publication prerequisites](docs/INTERVIEW_DEMO.md). All publication packages stay local. Separate authorization is required to publish a distinct DynamoDB snapshot, extend the reader allowlist, and deploy the updated application. The [advanced Phase 5 CLI/Terraform walkthrough](docs/POLICY_ROLLOUT_DEMO.md) remains available. Future versions require reviewed policy/profile/scenario registration; no V3 results are invented.
-
-## Secure deployment foundation
-
-See [Phase 4A deployment guide](docs/AWS_DEPLOYMENT_FOUNDATION.md) for Terraform module boundaries, Cognito/PKCE and IAM trust, DynamoDB snapshot loading, Linux ARM64 packaging, public frontend settings, state bootstrap, costs, repository integration and teardown. Offline seed preparation is `.venv/bin/python -m scripts.seed_governance`; it never connects to AWS by default.
-
-Development remains `npm run dev` with the loopback API. Production builds require the public Cognito/API configuration exported by Terraform and do not use the local proxy. Without that configuration, the compiled bundle shows a configuration-required screen and makes no API calls.
-
-No AWS credentials, account discovery, remote state initialization, normal Terraform plans, apply/destroy, seeding execution, or hosting deployment is authorized by Phase 4A. The only Terraform test plan uses a mock provider.
-
-## Security and delivery model
-
-The governance CI workflow runs Python checks, provider-free Terraform validation/planning, parity checks and synthetic rollout reporting on relevant pull requests. Hosted execution is pending an authorized push/PR; it has no AWS deployment permissions. See [the short CI/CD interview runbook and integration audit](docs/CI_CD_DEMO.md). Additional security scanning and production delivery remain future work. GitHub OIDC and least-privilege roles will replace static AWS access keys. Cloud changes require explicit authorization and a protected approval gate; enterprise reference paths must be excluded from POC deployments.
-
-Do not access AWS credentials, create cloud resources, run Terraform apply/destroy, or push changes without explicit authorization. No such actions are needed for local foundation work.
-
-Designs will address the AWS Well-Architected pillars: operational excellence through audit trails and runbooks; security through scoped access; reliability through idempotency and recovery; performance efficiency through bounded queries; cost optimization through budgets and retention; sustainability through appropriately sized, on-demand services. These are design goals, not claims of a completed review.
-
-## Controlled governance delivery
-
-The [delivery implementation and deployment gates](docs/GOVERNANCE_DELIVERY.md) connect credential-free CI, separately approved OIDC publication, strongly verified immutable snapshots and a read-only DynamoDB Current/history catalogue. V1 is preserved. The same frontend retains baseline compatibility and polls Current in full catalogue mode. Source implementation and tests are not a claim of a completed cloud release: new IAM/backend activation, protected environment setup and actual publication/rollback/dashboard acceptance remain separately authorized gates.
+Never commit credentials, sensitive tfvars, state, saved plans, local settings, ZIPs or generated builds. Cloud writes, infrastructure changes and teardown require explicit authorization and scope inspection. POC and enterprise deployments must never share execution roles/state. Conditional publication is application-enforced immutability, not WORM storage; trusted administrators remain a security boundary. Retention budgets, alerts, real account integrations and operational hardening beyond this bounded POC remain explicit limitations.
