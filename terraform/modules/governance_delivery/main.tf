@@ -9,6 +9,8 @@ resource "aws_iam_openid_connect_provider" "github" {
 locals {
   oidc_arn = var.existing_oidc_provider_arn != null ? var.existing_oidc_provider_arn : aws_iam_openid_connect_provider.github[0].arn
 }
+# GitHub immutable subject: pin both owner/repository IDs and exact environment.
+# Verified with GET /repos/{owner}/{repo}/actions/oidc/customization/sub.
 resource "aws_iam_role" "publisher" {
   name                 = "${var.name}-github-publisher"
   max_session_duration = 3600
@@ -16,7 +18,7 @@ resource "aws_iam_role" "publisher" {
     Effect = "Allow", Principal = { Federated = local.oidc_arn }, Action = "sts:AssumeRoleWithWebIdentity",
     Condition = { StringEquals = {
       "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com",
-      "token.actions.githubusercontent.com:sub" = "repo:bosphorus-cloud-labs/northstar-airlines-aws-landing-zone:environment:governance-production"
+      "token.actions.githubusercontent.com:sub" = "repo:bosphorus-cloud-labs@319390912/northstar-airlines-aws-landing-zone@1440849538:environment:governance-production"
     } }
   }] })
   tags = var.tags
