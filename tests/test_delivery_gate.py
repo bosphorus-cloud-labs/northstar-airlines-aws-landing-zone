@@ -72,6 +72,69 @@ class DeliveryGateTests(unittest.TestCase):
             self.sha,
         )
 
+    def single_owner(self):
+        owner = REPOSITORY.split("/")[0]
+        self.env.update(GOVERNANCE_APPROVAL_MODEL="single-owner-poc", GITHUB_ACTOR=owner)
+        self.data[f"repos/{REPOSITORY}"] = {
+            "owner": {"login": owner, "type": "User"},
+            "default_branch": "main",
+        }
+        self.data[f"repos/{REPOSITORY}/branches/main"] = {"protected": True}
+        rule = self.data[self.environment]["protection_rules"][0]
+        rule.update(
+            prevent_self_review=False, reviewers=[{"type": "User", "reviewer": {"login": owner}}]
+        )
+        self.data[self.pulls][0]["user"]["login"] = owner
+        self.data[self.reviews] = []
+
+    def test_explicit_single_owner_model_does_not_fabricate_pr_reviews(self):
+        self.single_owner()
+        result = verify(self.sha, self.digest, get=self.data.__getitem__, env=self.env)
+        self.assertEqual(result["approval_model"], "single-owner-poc")
+        self.assertEqual(self.data[self.reviews], [])
+
+    def test_single_owner_rejects_wrong_actor_unprotected_main_or_admin_bypass(self):
+        self.single_owner()
+        for change in ("actor", "protection", "bypass", "reviewer", "missing_pr", "failed_ci"):
+            data, env = copy.deepcopy(self.data), dict(self.env)
+            if change == "actor":
+                env["GITHUB_ACTOR"] = "outsider"
+            if change == "protection":
+                data[f"repos/{REPOSITORY}/branches/main"]["protected"] = False
+            if change == "bypass":
+                data[self.environment]["can_admins_bypass"] = True
+            if change == "reviewer":
+                data[self.environment]["protection_rules"][0]["reviewers"] = []
+            if change == "missing_pr":
+                data[self.pulls] = []
+            if change == "failed_ci":
+                data[self.runs]["workflow_runs"][0]["conclusion"] = "failure"
+            with self.subTest(change=change), self.assertRaises(ValueError):
+                verify(self.sha, self.digest, get=data.__getitem__, env=env)
+
+    def test_single_owner_cannot_skip_outstanding_changes_requested(self):
+        self.single_owner()
+        self.data[self.reviews] = [
+            {
+                "state": "CHANGES_REQUESTED",
+                "author_association": "COLLABORATOR",
+                "submitted_at": "2026-10-31T23:59:00Z",
+                "commit_id": "c" * 40,
+                "user": {"login": "reviewer"},
+            }
+        ]
+        with self.assertRaises(ValueError):
+            verify(self.sha, self.digest, get=self.data.__getitem__, env=self.env)
+
+    def test_unknown_approval_model_is_rejected(self):
+        with self.assertRaises(ValueError):
+            verify(
+                self.sha,
+                self.digest,
+                get=self.data.__getitem__,
+                env={**self.env, "GOVERNANCE_APPROVAL_MODEL": "bypass"},
+            )
+
     def test_wrong_ref_commit_or_event_cannot_enter_cd(self):
         for key, value in [
             ("GITHUB_REF", "refs/heads/feature"),

@@ -1,7 +1,12 @@
 """Offline delivery failure, CAS, history, authorization and reader integration tests."""
 
 import copy
+import json
+import subprocess
+import sys
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
@@ -88,6 +93,36 @@ class GovernanceDeliveryTests(unittest.TestCase):
                 "manifest": manifest,
             },
         }
+
+    def test_release_check_cli_is_offline_and_rejects_mismatched_source_or_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "release.json"
+            path.write_text(json.dumps(self.release))
+            for commit, digest_value, expected in [
+                (self.commit, self.target, 0),
+                ("d" * 40, self.target, 1),
+                (self.commit, "e" * 64, 1),
+            ]:
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        "-m",
+                        "scripts.governance_release",
+                        "check",
+                        "--source-commit",
+                        commit,
+                        "--approved-digest",
+                        digest_value,
+                        "--release",
+                        str(path),
+                    ],
+                    capture_output=True,
+                    text=True,
+                    env={"PATH": "/usr/bin:/bin", "AWS_EC2_METADATA_DISABLED": "true"},
+                )
+                self.assertEqual(result.returncode, expected)
+                if expected == 0:
+                    self.assertEqual(json.loads(result.stdout)["snapshot_id"], self.target)
 
     def setUp(self):
         self.client = MemoryDynamo([*self.baseline_rows, self.baseline_manifest])
