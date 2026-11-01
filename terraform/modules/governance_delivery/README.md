@@ -1,6 +1,6 @@
 # Protected synthetic-data publisher
 
-Optional module composed only by the POC root. Creates a GitHub OIDC provider (or uses an explicitly supplied existing ARN), role and inline table policy. Trust is restricted to the exact NorthStar repository, `sts.amazonaws.com` audience and `governance-production` environment. GitHub must enforce independent approval and main-only deployment rules; IAM's environment subject does not itself prove CI/review status.
+Optional module composed only by the POC root. Creates a GitHub OIDC provider (or uses an explicitly supplied existing ARN), role and inline table policy. Trust is restricted to the exact NorthStar repository, `sts.amazonaws.com` audience and `governance-production` environment. GitHub must enforce the configured real approval model and main-only deployment rules; IAM's environment subject does not itself prove CI/review status. The deployed single-owner POC permits owner self-review with administrator bypass disabled; default independent approval remains available for enterprise teams.
 
 Publisher actions: Query/GetItem/PutItem on the existing table's snapshot/catalogue partitions, with an explicit PutItem deny for the pinned V1 partition. No deletes, scans, Lambda/IAM/Amplify modifications or Terraform deployment permissions. Conditions/idempotence/digest checks are enforced by reviewed publisher code; this is not DynamoDB WORM. Runtime gets separate read-only Query/GetItem permissions. No AWS client is constructed on module import and Terraform never inserts data.
 

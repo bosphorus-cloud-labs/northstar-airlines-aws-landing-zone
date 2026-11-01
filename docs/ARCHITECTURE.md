@@ -17,7 +17,17 @@ AFT requires an existing Control Tower landing zone. Its account customizations 
 
 Central policy pipelines and account customization pipelines have separate resource ownership, state, and execution roles. Two states must never manage the same attachment or resource. Respect the supported lifecycle of Control Tower-managed resources.
 
-## Implemented local console
+## Proposed enterprise landing zone — not deployed
+
+The management account would own Organizations and Control Tower. Dedicated security/audit and log-archive accounts would centralize audit storage, AWS Config and Security Hub aggregation under reviewed delegated-administration permissions. Environment OUs would separate Production, Pre-Production, Testing and Development, with central preventive policies and environment-specific customization requirements.
+
+A separate network/inspection account would provide Transit Gateway routing and resilient Palo Alto inspection appliances for approved connected VPCs. Traffic symmetry, routing isolation, failover, licensing, capacity and cost require a production design review. No inspection VPC, Transit Gateway, firewall or enterprise account exists in this POC.
+
+Authorized collectors would map Config/Security Hub results and deployment events into provenance-bearing evidence. They are future integrations: this console does not collect real findings or enforce controls across AWS accounts. Account Factory, AFT and central policy pipelines keep the separate ownership shown above.
+
+V1/V2 identify whole-governance snapshots for demonstration. Production policy records need independent revisions, owners, scope, approval history and deployment outcomes; that richer policy lifecycle is outside the current contracts.
+
+## Console and local development
 
 React/TypeScript/Vite routes provide overview, inventory and details, compliance, deployments, drift, and exceptions. Generated OpenAPI types connect a read-only client to FastAPI via a loopback-only Vite proxy. Backend results are the sole runtime source; no frontend evaluator or fallback fixtures exist. TanStack Query handles loading, errors, cancellation, caching, and refresh. All data requests use the fixed reference timestamp and verify simulation provenance.
 
@@ -63,7 +73,7 @@ Enterprise documentation will map these controls to CodePipeline/CodeBuild and A
 
 ## Open decisions
 
-Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Node.js 24 and the local Vite/API development strategy are established. Select Terraform versions when infrastructure implementation is authorized. The POC infrastructure and exact immutable GitHub OIDC trust are deployed. Real account evidence integrations remain outside this synthetic POC.
+Phase 1 defines ten synthetic accounts, one root with four environment OUs, and five representative controls. Confirm dashboard personas, future exception workflow scope, cost ceiling, retention, domain needs, and teardown expectations. Node.js 24 and the local Vite/API development strategy are established. Terraform >=1.14,<2 and the locked AWS provider 6.71.0 define the current toolchain. The POC infrastructure and exact immutable GitHub OIDC trust are deployed. Real account evidence integrations remain outside this synthetic POC.
 
 ## AWS reference documentation
 

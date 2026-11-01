@@ -18,9 +18,13 @@ def validate(path, content):
             part in {".aws", ".terraform", "node_modules", ".venv", "artifacts", "dist"}
             for part in p.parts
         )
-        or p.suffix in {".zip", ".tfplan", ".tfstate"}
+        or p.suffix in {".zip", ".tfplan", ".tfstate", ".plan", ".pem", ".key", ".p12", ".pfx"}
         or ".tfstate." in p.name
+        or ".tfplan." in p.name
+        or p.name in {"tfplan", "plan.out", "credentials", "id_rsa", "id_ed25519"}
+        or p.name.startswith("credentials.")
         or (p.suffix == ".tfvars" and not p.name.endswith(".example.tfvars"))
+        or (p.name.endswith(".tfvars.json") and not p.name.endswith(".example.tfvars.json"))
         or (p.name.startswith(".env") and not p.name.endswith(".example"))
     ):
         raise ValueError(f"Local/generated/sensitive path must not be tracked: {path}")

@@ -1,6 +1,6 @@
 # JWT HTTP read API boundary
 
-Reference implementation only until deployment is explicitly authorized. AWS provider >=6.71,<7 and Terraform >=1.14,<2; provider/account/region configuration is owned by the POC root.
+Used by the deployed single-account POC; future resource changes still require explicit authorization. AWS provider >=6.71,<7 and Terraform >=1.14,<2; provider/account/region configuration is owned by the POC root.
 
 Inputs: `name/tags, issuer/client_id, allowed_origin, log_retention_days`, plus optional `additional_origins = []`. Outputs: `api_id/authorizer_id/execution_arn/url`, `allowed_origins`. See `variables.tf` and `outputs.tf` for the exact typed interface.
 

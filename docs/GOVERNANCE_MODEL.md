@@ -1,8 +1,10 @@
-# Governance model v1
+# Governance data contracts and evaluation
 
-Implemented: offline JSON contracts, environment definitions, ten synthetic accounts, and a Python 3.13 evaluator. The Phase 2 [local API](BACKEND_API.md) exposes this model to the Phase 3 [React console](FRONTEND.md). Phase 4A adds [deployment source and a DynamoDB adapter](AWS_DEPLOYMENT_FOUNDATION.md). The owner confirms the V1 application is AWS-hosted; Phase 5 leaves that deployment untouched. The model describes policy intent, not deployed Organizations policies or verified AWS compliance.
+JSON contracts, environment definitions and the Python 3.13 evaluator underpin both local fixtures and the deployed read-only API. The model describes governance intent and synthetic evidence, not deployed Organizations policies or verified AWS compliance. [Deployment evidence](DEPLOYMENT_ACCEPTANCE.md) records the separate real publication/runtime path.
 
-Phase 5 adds an explicit `policy-v2` contract profile and [offline rollout CLI](POLICY_ROLLOUT_DEMO.md), reusing this evaluator with `profile="policy-v2"`. All defaults, V1 schema/fixtures, API contracts and pinned DynamoDB snapshot remain V1. Record schema/source versions are independent of policy revision; V2 adds one control without changing record shapes. Nested V2 environment files are not loaded by the V1 fixture reader. Updated CLI results require a separately reviewed integration and cannot be loaded directly through the existing V1 codec/loader.
+V1 uses ten accounts and five controls. The explicit `policy-v2` profile adds a sixth control and a simulated eleventh account through the [rollout CLI](POLICY_ROLLOUT_DEMO.md). V1 fixture defaults and the pinned V1 digest remain unchanged; deployed Current selects V2. Record schema/source versions are independent of policy revision, and nested V2 environment files are opt-in. Raw CLI exports must pass the versioned publication adapter and integrity checks before protected cloud publication.
+
+V1/V2 are simplified whole-governance snapshot labels. Production policies would each need independent revisions, owners, target scope, approval history and deployment records rather than one version covering the complete fleet/evidence bundle.
 
 ## Execute locally
 
@@ -95,4 +97,4 @@ Total: **50 controls: 31 compliant, 3 noncompliant, 6 unknown, 10 stale**. Accou
 
 ## Limits and next steps
 
-The fixtures are snapshots, not an event-sourced history. Cross-record validation does not reconstruct a complete state machine or verify cryptographic approvals. Drift records are supplied examples, not AWS scans. The evaluator uses coarse booleans and one policy version; service/resource-specific checks and migrations need future contracts. No exception mutation API, authorization system, durable audit store, scheduler, or automated remediation has been added. Future backend work must enforce those boundaries separately.
+The fixtures are snapshots, not an event-sourced history. Cross-record validation does not reconstruct a complete state machine or verify cryptographic approvals. Drift records are supplied examples, not AWS scans. The evaluator uses coarse booleans and one policy version; service/resource-specific checks and migrations need future contracts. The evaluator does not authenticate approvers, collect real evidence, mutate exceptions or schedule remediation. Application authentication and catalogue publication audit are separate implemented boundaries; independent policy lifecycle and real AWS Config/Security Hub collection remain future work.

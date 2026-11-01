@@ -1,6 +1,6 @@
 # NorthStar Governance Console
 
-Phase 3 implements a local React/TypeScript/Vite console over the existing read-only FastAPI API. The browser has no alternative mock-data source, AWS SDK, credentials, deployment role, or mutation operations. Phase 4A adds Cognito/PKCE sign-in and Terraform deployment source; no hosting resources or deployment workflow have been executed. See [deployment foundation](AWS_DEPLOYMENT_FOUNDATION.md).
+The React/TypeScript/Vite console runs locally against FastAPI and on the existing Amplify application with Cognito Authorization Code + PKCE. The browser has no alternative mock-data source, AWS SDK, credentials, deployment role or mutation operations. The deployed API reads the verified DynamoDB Current/History catalogue; see [deployment evidence](DEPLOYMENT_ACCEPTANCE.md) and [security boundaries](../SECURITY.md).
 
 ## Start locally
 
@@ -48,15 +48,15 @@ Accounts and findings retain their deterministic API order. Deployments sort by 
 `backend OpenAPI → generated TypeScript contracts → typed GET client → TanStack Query cache → React routes`.
 
 - `src/api/schema.d.ts` is generated from the real FastAPI OpenAPI document. No HTTP server or AWS access is required to regenerate it.
-- `src/api/client.ts` uses the generated route/response types. Every data request supplies `2026-10-31T12:00:00Z`; the displayed reference time derives from this constant. No wall-clock time affects evaluation.
+- `src/api/client.ts` uses the generated route/response types. Every data request is pinned to its selected policy version, snapshot digest and reference evaluation timestamp. V1 uses 2026-10-31T12:00:00Z and V2 uses 2026-10-31T12:28:00Z. No wall-clock time affects evaluation.
 - The client accepts only v1, `northstar-synthetic-v1`, `simulated: true`, and the matching evaluation timestamp. Missing summary counts, status/environment distributions inconsistent with returned records, duplicate account/finding IDs, or incomplete/malformed pagination cause visible errors rather than fabricated zeros or a partial fleet. HTTP error bodies and internal exceptions are not displayed verbatim.
 - Each dataset refresh retrieves the summary and all pages of accounts, findings, deployments, drift, and exceptions. API pages are bounded at 100 records, with a 100-page guard per collection. Details use the account-detail endpoint. Requests have a 15-second timeout and cancellation on abandoned queries.
-- Query caching lasts one minute, with explicit refresh, no automatic retries, and no background window-focus refresh. Browser credentials are omitted. No local storage contains evidence or credentials.
+- Dataset caching lasts one minute, with explicit refresh, no automatic retries and no window-focus refresh. The Current catalogue polls every 30 seconds while the page is active; historical selection remains a read-only comparison. Browser credentials are omitted. No local storage contains evidence or credentials.
 - Compliance statuses and exception expiration states come directly from the backend. The browser only joins records for display and aggregates already-returned counts; it never implements the evaluator, grants exceptions, or changes a failed result to compliant.
 
-A refresh is not a transaction across the six endpoints. This is consistent for the immutable local fixture dataset; a future changing datastore needs server-side snapshot/version semantics. This console intentionally loads a small fleet in memory; enterprise pagination and search will need indexed server queries/cursors. Real observations require separately reviewed contracts instead of changing the simulation indicator.
+A refresh is not a transaction across the six endpoints. Each read is bound to the same immutable version/digest/time, with client reconciliation of totals and provenance; a Current promotion cannot silently mix revisions within that selected dataset. This console intentionally loads a small fleet in memory; enterprise pagination and search will need indexed server queries/cursors. Real observations require separately reviewed contracts instead of changing the simulation indicator.
 
-The API exposes evidence IDs and reason classifications, but not raw evidence observation timestamps. The UI therefore says “Fresh at evaluation”, “Evidence expired”, or “No evidence recorded” from those reasons; it does not invent an observation time. Deployment, drift, and exception records remain snapshot data, not historical reconstructions at `at`.
+The API exposes evidence IDs and reason classifications; versioned metadata also provides recorded evidence observation times. The UI distinguishes freshness at evaluation from missing/stale evidence and shows recorded timestamps where available; it does not invent observations. Deployment, drift, and exception records remain snapshot data, not historical reconstructions at `at`.
 
 ## Contract generation and tests
 
@@ -85,20 +85,20 @@ The generation script also captures test-only API responses using FastAPI TestCl
 
 Frontend tests cover all six routes, account details, loading, HTTP/network/authorization errors and retry, API rendering, provenance/timestamp rejection, filters, UI and API pagination, incomplete data, exceptions preserving violations, simulation indicators, refresh, and keyboard navigation. Browser QA checks the live proxy on desktop and mobile; unit tests alone do not certify visual accessibility.
 
-Dependencies are exact-pinned with an included npm lockfile. Development-only overrides pin minimatch 11.0.1 and Undici 6.29.1 to address transitive advisories; Node 24 satisfies their runtime requirements. Revisit these overrides when upstream tools adopt patched versions, and rerun contract generation, linting, tests, and npm audit after updates. No dependency installation scripts need broad approval; the optional macOS fsevents watcher can remain unapproved because Vite runs without it.
+Dependencies are exact-pinned with an included npm lockfile. Development-only overrides pin minimatch 11.0.1 and Undici 6.29.1 to address transitive advisories; Node 24 satisfies their runtime requirements. Revisit these overrides when upstream tools adopt patched versions, and rerun contract generation, linting, tests, and npm audit after updates.
 
-## Remaining deployment work
+## Deployment and remaining limits
 
-The production build is validated as a static bundle, not deployed. Phase 4A prepares Amplify SPA rewrites, absolute API routing, Cognito Code + PKCE, and verified gateway identity checks in source. Real sign-in/MFA/gateway integration, durable telemetry, and deployed accessibility/security verification remain future acceptance gates. The local proxy and identity bypass must not be used as production authentication. See [architecture](ARCHITECTURE.md) and [backend boundaries](BACKEND_API.md).
+Amplify builds the frontend from protected main; Terraform supplies public API/Cognito settings and exact origins. Actual sign-in, API data, Current/History and main-only auto-build were verified in [deployment acceptance](DEPLOYMENT_ACCEPTANCE.md). The local proxy/identity bypass cannot be used for deployed authentication. Automated accessibility certification, durable frontend telemetry and fleet-scale server queries remain future work.
 
 ## Read-only policy selector
 
 The interview source reads the version catalogue from the API summary and renders options dynamically. Each dataset/detail query is scoped by policy version, immutable hash and evaluation time, and validates returned identity before displaying data. Switching resets page filters and does not show another version's data during loading/error. A failed V2 load is visible; return to V1 explicitly. Catalogue-unavailable legacy APIs remain V1-only. Authentication and deployed configuration are unchanged.
 
-The UI shows simulated rollout stages and environment-specific requirements from API responses, plus evidence observation timestamps. The generated V1/V2 fixtures are test-only, not a frontend fallback. Hosted availability requires the separately approved backend/frontend deployment and data registration described in [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md).
+The UI shows simulated rollout stages and environment-specific requirements from API responses, plus evidence observation timestamps. The generated V1/V2 fixtures are test-only, not a frontend fallback. Hosted Current/History is deployed; [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md) provides the live demonstration and local fallback.
 
 The operations-console refinement follows the server-owned Current marker by default, with no persisted policy selection. History is explicitly labeled Historical evaluation with revision/time/hash options; it is not an application-version switch. A fresh page opens Current, and Refresh current state returns to the latest marker. The console does not show baseline data as Current when marker resolution fails. Deployments prioritizes target/approval/stage/retry outcomes and explicitly separates successful distribution from compliance evidence.
 
 ## Hosting migration compatibility
 
-`VITE_GOVERNANCE_API_MODE=baseline-v1` is an explicit temporary mode for the deployed V1 backend: it requests the normal fixed-time baseline summary without catalogue/version parameters, clearly labels baseline-only data and disables history. It retains Cognito authentication and all API error/provenance checks. It never catches authorization errors to substitute data. Default `catalog` retains full Current/History/V2 behavior; changing the main build setting after a separate backend upgrade enables those existing features. See the [hosting migration procedure](AMPLIFY_GITHUB_INTEGRATION.md).
+`VITE_GOVERNANCE_API_MODE=baseline-v1` is an explicit temporary mode for the deployed V1 backend: it requests the normal fixed-time baseline summary without catalogue/version parameters, clearly labels baseline-only data and disables history. It retains Cognito authentication and all API error/provenance checks. It never catches authorization errors to substitute data. Default `catalog` retains full Current/History/V2 behavior; the active hosted main branch uses `catalog`. Retain baseline mode for explicit compatibility testing, not as an error fallback. See the [hosting migration procedure](AMPLIFY_GITHUB_INTEGRATION.md).

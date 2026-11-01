@@ -199,11 +199,27 @@ class DeliveryGateTests(unittest.TestCase):
         from scripts.check_source_security import validate
 
         validate("terraform/poc/settings.example.tfvars", b'owner = "synthetic"')
+        validate("terraform/poc/settings.example.tfvars.json", b'{"owner":"synthetic"}')
+        validate("frontend/.env.example", b"VITE_COGNITO_CLIENT_ID=REPLACE")
         for path in [
             "artifacts/release.json",
             "terraform/poc/settings.auto.tfvars",
             "function.zip",
             "state.tfstate",
+            "terraform/poc/settings.auto.tfvars.json",
+            "saved.tfplan.json",
+            "snapshot.tfstate.backup",
+            "release.plan",
+            "tfplan",
+            "plan.out",
+            "credentials",
+            "credentials.json",
+            "id_rsa",
+            "id_ed25519",
+            "signing.pem",
+            "signing.key",
+            "identity.p12",
+            "identity.pfx",
         ]:
             with self.assertRaises(ValueError):
                 validate(path, b"synthetic")

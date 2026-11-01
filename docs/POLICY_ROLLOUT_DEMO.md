@@ -75,7 +75,7 @@ Expected: successful targets are not repeated. Eight existing active accounts su
 .venv/bin/python -m governance.simulation.rollout status --run-dir "$RUN"
 ```
 
-Open `$RUN/report.json` for the deployment/compliance results and original V1 findings, `$RUN/candidate-snapshot.json` for the candidate read model, and `$RUN/findings.json` for evaluator results. These exports demonstrate what the read-only application would report after a separately reviewed integration. The hosted dashboard is **not updated**. The original V1 snapshot remains available and unchanged. The ten-account Terraform plans represent frozen existing-account desired configuration; the eleventh-account lifecycle is a separate, explicitly simulated onboarding step.
+Open `$RUN/report.json` for the deployment/compliance results and original V1 findings, `$RUN/candidate-snapshot.json` for the candidate read model, and `$RUN/findings.json` for evaluator results. These exports use the same read model consumed by the implemented protected publication path. The hosted dashboard is **not updated**. The original V1 snapshot remains available and unchanged. The ten-account Terraform plans represent frozen existing-account desired configuration; the eleventh-account lifecycle is a separate, explicitly simulated onboarding step.
 
 ## Demonstration story and policy meaning
 
@@ -134,28 +134,20 @@ The CLI writes four ignored files only:
 
 - `state.json`: checksum-protected authoritative run state, frozen inputs, simulated approval, current candidate and ordered journal; validated by `governance/simulation/run.schema.json` plus the domain contracts.
 - `report.json`: V1 findings/account summaries, V2 counts/account summaries, evaluation time, rollout outcomes and audit trail.
-- `candidate-snapshot.json`: explicit `policy-v2` profile, simulation metadata, content digest and `{fleet, policy, environments}` payload for future integration review.
+- `candidate-snapshot.json`: explicit `policy-v2` profile, simulation metadata, content digest and `{fleet, policy, environments}` payload for publication validation/review.
 - `findings.json`: current V2 findings produced by the existing evaluator.
 
 The output root is restricted to `artifacts/policy-rollout/`, including symlink resolution. Source fixtures, Terraform and live configuration cannot be output targets. Individual files are atomically replaced, with state written last; the four-file export is not a transactional storage system. After an interrupted export, regenerate derivatives from the authoritative state with an idempotent applicable command. There is no multi-process lock, distributed execution or event-consumer infrastructure.
 
 Checksums detect accidental editing and approvals bind exact inputs. **They are not signatures, authenticated identity, tamper-proof audit or real authorization.** A local file owner can rewrite files and checksums. Synthetic `sim-` reviewer names do not authenticate people. A production workflow requires real identity, protected approvals and durable audit/concurrency design.
 
-## Compatibility and future read-only dashboard integration
+## Compatibility and protected dashboard integration
 
-Default `validate()`, `validate_model()` and `evaluate()` continue to use strict V1 contracts. Only the CLI explicitly selects `profile="policy-v2"`. The additive profile retains V1 record shapes/schema version and extends policy/control constraints; policy revision `2.0.0` is independent of record schema `1.0.0`. The inherited per-record source `northstar-synthetic-v1` identifies the synthetic record protocol, not the policy revision. Run/envelope/journal source `northstar-policy-rollout-v1` separately identifies this generator.
+Default `validate()`, `validate_model()` and `evaluate()` remain strict V1 contracts; the rollout CLI explicitly selects `profile="policy-v2"`. V1 source fixtures and the pinned digest are preserved. Schema/source version identifies the synthetic record protocol, while profile/policy revision/generator identifies the scenario. The raw CLI exports are not directly publishable.
 
-`load_model()` still reads exactly four root V1 environment files; nested `governance/environments/v2/` is opt-in. V1 fixture files and the pinned DynamoDB snapshot digest do not change. The advanced CLI does not change the V1 default, authentication, seed loader or production configuration. The later [interview simplification](INTERVIEW_DEMO.md) adds opt-in source support for registered versioned readers and a frontend selector, plus an offline adapter that adds hashed context to a completed candidate. Raw CLI output is still not directly publishable; live IAM/configuration, publication and application deployment remain separately authorized steps.
+The implemented publication adapter validates the completed frozen run and real Terraform-plan parity, binds it to an exact clean Git commit, and creates a distinct immutable envelope/context. Protected GitHub OIDC CD conditionally loads the approved snapshot, verifies it strongly and updates the generation-checked Current/History catalogue. Deployed API/React readers select that registered version; local CLI/launcher commands never contact AWS or publish data. See [delivery contracts](GOVERNANCE_DELIVERY.md) and [actual execution evidence](DEPLOYMENT_ACCEPTANCE.md).
 
-To connect safely later, under a separate reviewed task:
-
-1. Define a versioned read-model/API contract that accepts the sixth control and requested policy revision, preserves simulation generator metadata and original violations, and exposes rollout journal/deferral/approval states. Keep V1 available and default; regenerate TypeScript contracts and test fixtures. Do not overload the current fixed reference timestamp silently.
-2. Add an explicit opt-in repository/service snapshot selection for the V2 profile, including DynamoDB codec validation. Adapt the reviewed candidate into a new immutable snapshot partition with the complete manifest/digest. The current loader reads V1 fixtures only; do not replace those files or bypass its checks.
-3. Authorize a separate operator/publisher identity to load only the approved candidate partition, verify it is complete, and test it with a separate staging configuration before a reviewed promotion. Preserve the V1 snapshot/configuration for rollback. No data loading or promotion occurs in Phase 5.
-4. Update the dashboard to display policy revision, selected snapshot/evaluation time, run provenance, failed/deferred attempts and original findings. Retain Cognito/gateway/server authorization. The browser and read-only Lambda must gain no write/deployment authority; approval and execution remain outside the dashboard.
-5. Test V1/V2 isolation, failure/partial-load behavior, provenance and rollback before any authorized cloud change. Define real approval identity, retry/concurrency and audit retention before replacing the CLI's simulated workflow with automation.
-
-This is an interview lifecycle demonstration, not a deployer, fleet-scale orchestrator, actual AFT integration or evidence collector. Control Tower/Account Factory, AFT account customizations and central Organizations policy ownership remain separate enterprise responsibilities.
+V1/V2 represent whole-governance snapshots, not independently versioned production policies. Future policies/profiles require reviewed contract/scenario registration and a new version/digest. Real Config/Security Hub evidence, AFT distribution and central Organizations enforcement remain separate production integrations. The browser and reader Lambda retain no write/deployment authority.
 
 ## Validation
 

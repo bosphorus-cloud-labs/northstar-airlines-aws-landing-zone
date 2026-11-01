@@ -1,56 +1,21 @@
 # Single-account POC root
 
-Source-only deployment foundation for one explicitly supplied AWS account in eu-central-1. Nothing is deployed by checking out or validating this root. See the [deployment guide](../../docs/AWS_DEPLOYMENT_FOUNDATION.md) before running any Terraform command.
+This root manages the existing Frankfurt application, not an enterprise landing zone. [Deployment evidence](../../docs/DEPLOYMENT_ACCEPTANCE.md) records the 29 managed resources and authorized changes; [the operating guide](../../docs/AWS_DEPLOYMENT_FOUNDATION.md) covers state, packaging, security, costs and teardown. Never run apply/destroy/import or modify state as a validation step.
 
-`terraform init -backend=false`, `terraform validate`, formatting and the mock-provider command=plan tests are the only permitted Terraform operations in Phase 4A. Registry downloads are public; no AWS credentials or endpoints are involved. A normal plan/refresh, remote state initialization, apply and destroy require separate authorization.
+## Configuration and safety
 
-Build the local Linux ARM64 ZIP before mock plan tests. Copy neither real account details nor credentials into source. `settings.example.tfvars` and `backend.hcl.example` deliberately contain non-deployable placeholders. `frontend_settings` exports public SPA configuration; `seed_iam_policy` is for a separate short-lived loader, never the runtime/browser. No enterprise resources, provisioners or automatic data loads are present.
+`settings.example.tfvars` and `backend.hcl.example` contain placeholders only. Actual settings, state, saved plans, credentials and packages stay ignored/private. Defaults support unmigrated/manual callers; do not substitute them for the working deployment's explicit settings.
+
+The migrated application uses `enable_github_hosting=true`, `hosting_migration_stage=create_main`, `github_baseline_compatibility=false` and `github_auto_build_enabled=true`. Dynamic reads use `enable_governance_delivery=true` and `governance_catalog_enabled=true`. Preserve the reviewed Lambda package and account/domain/owner settings. Future changes need their own fresh scoped plan and authorization; do not rerun the completed hosting checkpoints.
 
 ## Additional approved origins
 
-`additional_origins` is a `list(string)` defaulting to `[]`. The existing manually hosted `poc` origin, its callback/logout URLs and its build settings remain unchanged. The root passes this same list to identity and HTTP modules: each origin adds a Cognito `/auth/callback` URL, a logout `/` URL and one exact CORS origin. Existing module callers can keep the singular `callback_url`, `logout_url` and `allowed_origin` inputs unchanged.
+`additional_origins` is a list of explicit lowercase HTTPS DNS origins, default `[]`. Paths, ports, wildcards, user information, query strings, fragments and trailing slashes are rejected. The root coordinates each added origin across Cognito `/auth/callback`, logout `/` and API CORS; duplicates are removed. Existing singular module inputs remain supported.
 
-Use only approved origins you control. Validation accepts lowercase HTTPS DNS names and rejects HTTP, IP/localhost, wildcards, paths, trailing slash, ports (including :443), user information, query strings, fragments and null list elements. Duplicate entries are removed. This allowlist does not create another Amplify application, grant users access or bypass JWT/scope checks. Removing an additional origin later revokes that origin's configured redirects/CORS; it does not delete an app.
+The main origin is derived from the existing Amplify app, avoiding a circular dependency with branch build settings. The original poc URLs remain retained for compatibility despite retirement of that hosting branch. An additional origin/domain is an identity/CORS change, not permission to create an app or weaken wildcard restrictions.
 
-Offline checks (no AWS API calls; existing local provider and Lambda package required):
+## Offline validation
 
-```sh
-terraform fmt -check terraform/poc terraform/modules/poc_identity terraform/modules/poc_http_api
-terraform -chdir=terraform/poc init -backend=false
-terraform -chdir=terraform/poc validate
-# Every test run uses command=plan and the mock AWS provider, never apply.
-mkdir -p artifacts/validation
-terraform -chdir=terraform/poc test -json -verbose -filter=tests/origins.tftest.hcl > artifacts/validation/origins.jsonl
-python terraform/poc/tests/check_origin_plans.py artifacts/validation/origins.jsonl
-```
+Use a clean checkout without ignored live tfvars/backend cache. `terraform fmt`, `init -backend=false -lockfile=readonly`, `validate`, and the existing mock-provider `command=plan` tests do not deploy resources. Tests require an ignored local ZIP path; CI creates a deliberately nondeployable mock ZIP for this purpose. A normal POC plan/refresh is credentialed, not offline. Real provider-free governance plans belong in `terraform/simulation/`.
 
-The mock plan comparison checks the same resource addresses and all planned configuration, allowing differences only in the existing Cognito SPA client's `callback_urls`/`logout_urls` and existing HTTP API's `cors_configuration.allow_origins`. This is not a live-state migration plan or proof of AWS deployment compatibility. Mock plans start with empty synthetic state, so their create actions do not describe changes to the deployed POC.
-
-After separate authorization, add the approved additional HTTPS origin to an ignored deployment tfvars file, with no trailing slash:
-
-```hcl
-additional_origins = ["https://approved.example.com"] # Replace this example with the approved additional origin.
-```
-
-Alternatively, after normal approved state initialization, prepare a review plan using the existing authorized settings plus the exact origin (do not execute as part of this offline task):
-
-```sh
-terraform -chdir=terraform/poc plan -var-file=settings.tfvars \
-  -var='additional_origins=["https://approved.example.com"]' \
-  -out=../../artifacts/dual-origin.tfplan
-terraform -chdir=terraform/poc show -no-color ../../artifacts/dual-origin.tfplan
-```
-
-Replace the example hostname with the approved additional origin before use. Review for exactly two in-place resource updates: `module.identity.aws_cognito_user_pool_client.spa` (callback/logout lists) and `module.http.aws_apigatewayv2_api.governance` (CORS origins). Stop if any other change, replacement, creation or destruction appears; investigate state/source drift without targeted applies. Those dual-origin-only commands require separate authorization; the existing-app integration investigation is described below.
-
-The generic allowlist above supports other approved origins but does not provision them. For this project's GitHub integration, use the existing-app option below: its main branch origin is added automatically, so do not duplicate it manually in `additional_origins`.
-
-## Staged migration to GitHub hosting
-
-See [the migration procedure](../../docs/AMPLIFY_GITHUB_INTEGRATION.md). AWS requires deleting the old manual branch before connecting the existing app. `hosting_migration_stage` advances through `legacy`, `retire_manual`, `connect_repository`, `create_main` with separate verified plans/applies. The app is never recreated. Stage A was completed and verified; the owner reports repository connection and main creation are complete. Local settings are now at create_main. Do not rerun retirement during source release preparation.
-
-Main builds default off. Its six public connection settings are supplemented by explicit `VITE_GOVERNANCE_API_MODE=baseline-v1` for the currently deployed V1 backend. Full V2/catalogue source remains available after the separately authorized backend upgrade. Credentials, resource changes and source publication require separate authorization.
-
-## Optional governance delivery foundation
-
-`enable_governance_delivery=false` preserves the pinned-reader default. Enabling it creates only a data publisher OIDC provider/role/policy and extends runtime read permissions. `governance_catalog_enabled` must stay false until the existing baseline catalogue is bootstrapped/verified. The separate [deployment gates](../../docs/GOVERNANCE_DELIVERY.md) describe the real 3-create/2-update plan, package preparation, environment approval and later reader/frontend activation. No Terraform resource inserts snapshot data and CD has no Terraform deployment permissions.
+Retain the provider lockfile and review upgrades with all tests. POC/enterprise roots must not share state/roles, and the browser/data-CD workflow cannot execute this root. See [historical hosting migration](../../docs/AMPLIFY_GITHUB_INTEGRATION.md) and [protected data delivery](../../docs/GOVERNANCE_DELIVERY.md).
