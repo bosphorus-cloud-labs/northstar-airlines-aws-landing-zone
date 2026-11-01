@@ -1,16 +1,16 @@
 # Policy lifecycle simulation
 
-For the simplified **one-command, visual five-minute demo**, use [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md). The commands below remain the advanced step-by-step explanation. No live publication is performed by either workflow.
+For the one-command workflow, see [Local Demonstration](LOCAL_DEMONSTRATION.md). The commands below describe each Terraform and rollout step. Neither local workflow publishes data to AWS.
 
 The Python CLI runs independently of the AWS-hosted console. It is a local simulation: it performs no AWS SDK client creation, credential lookup, account provisioning, AFT execution, Terraform subprocess, database write or dashboard publication. It is separate from the read-only application.
 
 The optional Terraform companion below performs **real local Terraform validation and planning**, not deployment. It has no providers, resources or data sources. The Python lifecycle, AFT execution records and compliance observations remain simulated. It is isolated from the deployed POC.
 
-## Five-minute Terraform and rollout walkthrough
+## Terraform and rollout walkthrough
 
 Prerequisites: existing Python development environment and Terraform >=1.14,<2 (tested 1.14.6). Run from the repository root. Choose a fresh run name; `plan` refuses to overwrite an existing run. All artifacts remain ignored. No AWS credentials or network access to AWS are needed.
 
-**Minute 1 — freeze a simulated proposal; inspect real Terraform desired settings.**
+### Freeze the proposal
 
 ```sh
 RUN=artifacts/policy-rollout/tf-demo
@@ -23,7 +23,7 @@ terraform -chdir=terraform/simulation validate
 
 Expected: CLI prints `SIMULATED ONLY`, phase `planned` and unchanged V1 counts. Fmt exits 0, init succeeds without installing a provider, validate prints `The configuration is valid.` The reusable module combines central baseline and environment requirements for each account. Terraform reads the same frozen proposal as the CLI, not a separate mock fleet.
 
-**Minute 2 — real V1 and V2 output-only plans and full parity checks.**
+### Plan and verify desired configuration
 
 ```sh
 terraform -chdir=terraform/simulation plan -input=false -refresh=false \
@@ -49,9 +49,9 @@ Expected: Terraform shows `Changes to Outputs: + governance_desired` and no reso
 | Testing | 5 / 6 | false | 72h |
 | Development | 5 / 6 | false | 168h |
 
-It compares every account, OU, lifecycle, target revision, baseline, expected value, control category and freshness limit. Wrong proposal/version/configuration or any provider/resource-bearing plan is rejected. The final line says `NO RESOURCES / NO DEPLOYMENT / NO COMPLIANCE MEASUREMENT`. These are **real Terraform plans of synthetic desired configuration**, not deployed AWS policies, AFT executions or measured AWS compliance. Python remains the source of compliance evaluation; Terraform does not fabricate observed state. This optional verifier leaves the existing CLI behavior unchanged and is not an authenticated/enforced deployment gate.
+It compares every account, OU, lifecycle, target revision, baseline, expected value, control category and freshness limit. Wrong proposal/version/configuration or any provider/resource-bearing plan is rejected. The final line says `NO RESOURCES / NO DEPLOYMENT / NO COMPLIANCE MEASUREMENT`. These are **real Terraform plans of synthetic desired configuration**, not deployed AWS policies, AFT executions or measured AWS compliance. Python remains the source of compliance evaluation; Terraform does not fabricate observed state. The verifier checks configuration consistency; it does not authenticate approvers or authorize deployment.
 
-**Minute 3 — simulated approval, canary and failure.**
+### Simulate approval and canary rollout
 
 ```sh
 .venv/bin/python -m governance.simulation.rollout approve --run-dir "$RUN" --approver sim-security-reviewer
@@ -60,7 +60,7 @@ It compares every account, OU, lifecycle, target revision, baseline, expected va
 
 Expected: approval references the same proposal digest verified from the Terraform plans. `canary.passed` for Development account 009 precedes fleet waves; a simulated failed customization on account 005 produces `rollout.blocked`, phase `blocked` and exit **2**, before Production. This is simulated deployment reporting, not a Terraform apply. Do not chain the next command behind `&&` after that intentional exit.
 
-**Minute 4 — simulated recovery and new-account onboarding.**
+### Retry and onboard an account
 
 ```sh
 .venv/bin/python -m governance.simulation.rollout rollout --run-dir "$RUN"
@@ -69,7 +69,7 @@ Expected: approval references the same proposal digest verified from the Terrafo
 
 Expected: successful targets are not repeated. Eight existing active accounts succeed, two inactive accounts remain deferred, then account 011 passes six simulated controls. Before onboarding, V2 counts are `37 / 4 / 9 / 10`; after onboarding they are `43 / 4 / 9 / 10` (compliant/noncompliant/unknown/stale).
 
-**Minute 5 — explain application reporting and the live boundary.**
+### Inspect results
 
 ```sh
 .venv/bin/python -m governance.simulation.rollout status --run-dir "$RUN"
@@ -77,13 +77,13 @@ Expected: successful targets are not repeated. Eight existing active accounts su
 
 Open `$RUN/report.json` for the deployment/compliance results and original V1 findings, `$RUN/candidate-snapshot.json` for the candidate read model, and `$RUN/findings.json` for evaluator results. These exports use the same read model consumed by the implemented protected publication path. The hosted dashboard is **not updated**. The original V1 snapshot remains available and unchanged. The ten-account Terraform plans represent frozen existing-account desired configuration; the eleventh-account lifecycle is a separate, explicitly simulated onboarding step.
 
-## Demonstration story and policy meaning
+## Scenario and policy semantics
 
 NorthStar starts with ten synthetic accounts and baseline policy `1.0.0`. The security team proposes `2.0.0`, adding one detective requirement: **CloudTrail log-file integrity validation enabled** (`audit-log-integrity`). It applies to all four environments, with the existing 24/48/72/168-hour evidence freshness windows. The five previous requirements, environment-specific deployment approvals and organization-wide baseline remain unchanged.
 
 This is simulated configuration evidence, not actual CloudTrail inspection, verified log integrity, a deployed SCP or a real Organizations policy. Enabling CloudTrail's feature allows digest delivery; separately validating those digests is another operation. See [AWS's distinction between enabling and validating](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-log-file-validation-intro.html).
 
-The interview sequence is:
+The policy rollout sequence is:
 
 1. **Propose and validate:** show the unchanged V1 baseline (31 compliant, 3 noncompliant, 6 unknown, 10 stale control findings). Actual offline schema/reference checks validate the V2 proposal and preserve previous requirements. Candidate V2 desired assignments do not imply observed deployment; old fresh V1 observations initially yield revision-mismatch/unknown under V2. The frozen V1 findings remain visible alongside them.
 2. **Approve:** an explicitly named synthetic reviewer, separate from the proposer, approves the exact digest of the baseline, V2 policy/environments, scenario, canary and evaluation start. No rollout is allowed before this step.

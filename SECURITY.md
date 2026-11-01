@@ -1,6 +1,6 @@
 # Security boundaries and vulnerability reporting
 
-This is a public, single-owner interview POC, not a certified enterprise security platform. Account inventory, evidence, Terraform/AFT distribution and compliance findings are synthetic. Real deployment/approval evidence is recorded separately in [deployment acceptance](docs/DEPLOYMENT_ACCEPTANCE.md).
+This is a public, single-owner POC, not a certified enterprise security platform. Account inventory, evidence, Terraform/AFT distribution and compliance findings are synthetic. Real deployment/approval evidence is recorded separately in [deployment acceptance](docs/DEPLOYMENT_ACCEPTANCE.md).
 
 ## Report safely
 
