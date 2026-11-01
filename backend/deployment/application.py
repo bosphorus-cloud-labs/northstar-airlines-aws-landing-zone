@@ -5,6 +5,7 @@ import os
 from backend.app import create_app
 from backend.deployment.dynamodb import DynamoSnapshotRepository
 from backend.deployment.identity import GatewayIdentity
+from backend.versions import deployment_catalog
 
 
 def deployed_app(config=None):
@@ -20,9 +21,11 @@ def deployed_app(config=None):
     if not all(config.get(name) for name in required):
         # Missing deployment config must never fall back to local fixtures or demo identity.
         return create_app(local_demo=False)
+    repository = DynamoSnapshotRepository(config["GOVERNANCE_TABLE"], config["SNAPSHOT_ID"])
     return create_app(
         local_demo=False,
-        repository=DynamoSnapshotRepository(config["GOVERNANCE_TABLE"], config["SNAPSHOT_ID"]),
+        repository=repository,
+        catalog=deployment_catalog(config, repository),
         authenticator=GatewayIdentity(
             config["GATEWAY_API_ID"],
             config["GATEWAY_STAGE"],

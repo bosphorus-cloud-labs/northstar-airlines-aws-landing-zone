@@ -1,0 +1,122 @@
+name: Governance validation (no AWS deployment)
+
+"on":
+  pull_request:
+    paths:
+      - 'terraform/simulation/**'
+      - 'terraform/modules/simulated_governance/**'
+      - 'governance/**'
+      - 'mock-data/**'
+      - 'backend/**'
+      - 'tests/**'
+      - 'scripts/**'
+      - 'requirements-dev.txt'
+      - 'demo.sh'
+      - 'AGENTS.md'
+      - '.github/workflows/governance-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: governance-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  governance:
+    name: Governance checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      CHECKPOINT_DISABLE: '1'
+      TF_IN_AUTOMATION: '1'
+      TF_INPUT: '0'
+      AWS_EC2_METADATA_DISABLED: 'true'
+    steps:
+      - name: Checkout proposed revision (read-only)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Python 3.13
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Terraform 1.14.6 (no credentials or wrapper)
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: '1.14.6'
+          terraform_wrapper: false
+      - name: Install pinned development dependencies
+        run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r requirements-dev.txt
+          mkdir -p artifacts/ci
+      - name: Guard offline Terraform boundary before any planning
+        run: .venv/bin/python -m scripts.ci_governance preflight
+      - name: Python lint and governance/backend tests (real offline checks)
+        run: |
+          .venv/bin/ruff check backend governance scripts tests
+          .venv/bin/ruff format --check backend governance scripts tests
+          .venv/bin/python -m pip check
+          .venv/bin/python -m unittest discover -s tests -v 2>&1 | tee artifacts/ci/python-tests.txt
+      - name: Freeze synthetic policy proposal
+        run: .venv/bin/python -m governance.simulation.rollout plan --run-dir artifacts/policy-rollout/ci
+      - name: REAL Terraform formatting
+        run: |
+          terraform fmt -check -recursive terraform/simulation
+          terraform fmt -check -recursive terraform/modules/simulated_governance
+      - name: REAL Terraform initialization and validation (provider-free)
+        run: |
+          terraform -chdir=terraform/simulation init -backend=false -input=false -no-color
+          terraform -chdir=terraform/simulation validate -no-color
+      - name: REAL Terraform plan and full simulation parity
+        run: |
+          terraform -chdir=terraform/simulation plan -input=false -refresh=false -no-color \
+            -var=run_directory=../../artifacts/policy-rollout/ci \
+            -out=../../artifacts/policy-rollout/ci/v2.tfplan | tee artifacts/ci/terraform-plan.txt
+          terraform -chdir=terraform/simulation show -json \
+            ../../artifacts/policy-rollout/ci/v2.tfplan > artifacts/policy-rollout/ci/v2.plan.json
+          .venv/bin/python -m governance.simulation.terraform_plan \
+            --run-dir artifacts/policy-rollout/ci \
+            --plan-json artifacts/policy-rollout/ci/v2.plan.json
+      - name: SIMULATED approval, canary, failure/retry and onboarding (no deployment)
+        run: |
+          .venv/bin/python -m governance.simulation.rollout approve \
+            --run-dir artifacts/policy-rollout/ci --approver sim-security-reviewer | tee artifacts/ci/simulation.txt
+          set +e
+          .venv/bin/python -m governance.simulation.rollout rollout \
+            --run-dir artifacts/policy-rollout/ci --fail-account sim-account-005 >> artifacts/ci/simulation.txt
+          rollout_exit=$?
+          set -e
+          if [ "$rollout_exit" -ne 2 ]; then
+            cat artifacts/ci/simulation.txt
+            echo "Expected the controlled simulated failure (exit 2); failing CI."
+            exit 1
+          fi
+          .venv/bin/python -m governance.simulation.rollout rollout \
+            --run-dir artifacts/policy-rollout/ci >> artifacts/ci/simulation.txt
+          .venv/bin/python -m governance.simulation.rollout onboard \
+            --run-dir artifacts/policy-rollout/ci >> artifacts/ci/simulation.txt
+          cat artifacts/ci/simulation.txt
+      - name: Publish job summary (synthetic results only)
+        run: |
+          .venv/bin/python -m scripts.ci_governance summary
+          cat artifacts/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain review artifacts (no state, binary plan or publication package)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: governance-review-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            artifacts/ci/python-tests.txt
+            artifacts/ci/terraform-plan.txt
+            artifacts/ci/simulation.txt
+            artifacts/ci/summary.md
+            artifacts/policy-rollout/ci/report.json
+            artifacts/policy-rollout/ci/findings.json

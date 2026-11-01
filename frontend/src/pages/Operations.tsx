@@ -1,6 +1,7 @@
 import { GitCompareArrows, Info, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { RolloutHistory } from "../components/RolloutHistory";
 import { useDataset } from "../api/client";
 import {
   Badge,
@@ -21,8 +22,8 @@ export function Deployments() {
   return (
     <>
       <PageHeader
-        title="Deployment history"
-        description="Trace simulated Terraform and AFT revisions, outcomes, and failure context."
+        title="Governance deployments"
+        description="Review policy rollout targets, approval, stages, failures, retries and final outcomes."
       />
       <div className="info-strip">
         <Info size={17} />
@@ -49,98 +50,101 @@ export function Deployments() {
                 b.id.localeCompare(a.id),
             );
           return (
-            <Panel
-              title="Pipeline executions"
-              action={
-                <span className="simulation-mini">SIMULATED HISTORY</span>
-              }
-            >
-              <div className="filters">
-                <Select
-                  title="Environment"
-                  value={environment}
-                  onChange={setEnvironment}
-                  options={environments}
-                  all="All environments"
-                />
-                <Select
-                  title="Execution status"
-                  value={status}
-                  onChange={(v) => setParams(v ? { status: v } : {})}
-                  options={["succeeded", "failed", "pending"]}
-                  all="All statuses"
-                />
-                <Select
-                  title="Pipeline"
-                  value={tool}
-                  onChange={setTool}
-                  options={["terraform", "aft"]}
-                  all="All pipelines"
-                />
-              </div>
-              <PaginatedTable
-                key={`${environment}|${status}|${tool}`}
-                rows={rows}
-                noun="executions"
-                columns={[
-                  "Execution / Account",
-                  "Pipeline",
-                  "Desired → Observed revision",
-                  "Status",
-                  "Started (UTC) / Context",
-                ]}
-                render={(d) => (
-                  <tr key={d.id}>
-                    <td>
-                      <strong className="mono">{d.id}</strong>
-                      <Link
-                        className="secondary-link"
-                        to={`/accounts/${d.account_id}`}
-                      >
-                        {accountName(data.accounts, d.account_id)}
-                      </Link>
-                      <small className="mono">{d.account_id}</small>
-                    </td>
-                    <td>
-                      <span className="tool-label">
-                        {d.tool === "aft" ? "AFT" : "Terraform"}
-                      </span>
-                      <small>Simulated</small>
-                    </td>
-                    <td>
-                      <div className="revision-pair">
-                        <code>{d.desired_revision}</code>
-                        <span>↓ observed</span>
-                        <code
-                          className={
-                            d.observed_revision !== d.desired_revision
-                              ? "warning-text"
-                              : ""
-                          }
+            <>
+              <RolloutHistory data={data} />
+              <Panel
+                title="Pipeline executions"
+                action={
+                  <span className="simulation-mini">SIMULATED HISTORY</span>
+                }
+              >
+                <div className="filters">
+                  <Select
+                    title="Environment"
+                    value={environment}
+                    onChange={setEnvironment}
+                    options={environments}
+                    all="All environments"
+                  />
+                  <Select
+                    title="Execution status"
+                    value={status}
+                    onChange={(v) => setParams(v ? { status: v } : {})}
+                    options={["succeeded", "failed", "pending"]}
+                    all="All statuses"
+                  />
+                  <Select
+                    title="Pipeline"
+                    value={tool}
+                    onChange={setTool}
+                    options={["terraform", "aft"]}
+                    all="All pipelines"
+                  />
+                </div>
+                <PaginatedTable
+                  key={`${environment}|${status}|${tool}`}
+                  rows={rows}
+                  noun="executions"
+                  columns={[
+                    "Execution / Account",
+                    "Pipeline",
+                    "Desired → Observed revision",
+                    "Status",
+                    "Started (UTC) / Context",
+                  ]}
+                  render={(d) => (
+                    <tr key={d.id}>
+                      <td>
+                        <strong className="mono">{d.id}</strong>
+                        <Link
+                          className="secondary-link"
+                          to={`/accounts/${d.account_id}`}
                         >
-                          {d.observed_revision ?? "Not observed"}
-                        </code>
-                      </div>
-                    </td>
-                    <td>
-                      <Badge status={d.status} />
-                    </td>
-                    <td>
-                      {date(d.started_at)}
-                      <small
-                        className={d.failure_reason ? "failure-reason" : ""}
-                      >
-                        {d.failure_reason ??
-                          (d.completed_at
-                            ? `Completed ${date(d.completed_at)}`
-                            : "Awaiting completion")}
-                      </small>
-                      <small className="mono">{d.correlation_id}</small>
-                    </td>
-                  </tr>
-                )}
-              />
-            </Panel>
+                          {accountName(data.accounts, d.account_id)}
+                        </Link>
+                        <small className="mono">{d.account_id}</small>
+                      </td>
+                      <td>
+                        <span className="tool-label">
+                          {d.tool === "aft" ? "AFT" : "Terraform"}
+                        </span>
+                        <small>Simulated</small>
+                      </td>
+                      <td>
+                        <div className="revision-pair">
+                          <code>{d.desired_revision}</code>
+                          <span>↓ observed</span>
+                          <code
+                            className={
+                              d.observed_revision !== d.desired_revision
+                                ? "warning-text"
+                                : ""
+                            }
+                          >
+                            {d.observed_revision ?? "Not observed"}
+                          </code>
+                        </div>
+                      </td>
+                      <td>
+                        <Badge status={d.status} />
+                      </td>
+                      <td>
+                        {date(d.started_at)}
+                        <small
+                          className={d.failure_reason ? "failure-reason" : ""}
+                        >
+                          {d.failure_reason ??
+                            (d.completed_at
+                              ? `Completed ${date(d.completed_at)}`
+                              : "Awaiting completion")}
+                        </small>
+                        <small className="mono">{d.correlation_id}</small>
+                      </td>
+                    </tr>
+                  )}
+                />
+              </Panel>
+            </>
           );
         }}
       </QueryGate>
@@ -160,8 +164,9 @@ export function Drift() {
         <GitCompareArrows size={18} />
         <p>
           <strong>Observed is not desired.</strong> Drift records are supplied
-          simulation snapshots; this console does not scan or remediate AWS
-          resources.
+          simulation snapshots, distinct from successful configuration
+          distribution. Compliance also requires fresh, matching evidence. This
+          console does not scan or remediate AWS resources.
         </p>
       </div>
       <QueryGate query={query}>

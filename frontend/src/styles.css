@@ -1917,3 +1917,127 @@ th {
     display: block;
   }
 }
+
+.policy-selector {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  color: #24364e;
+  font-weight: 600;
+}
+.policy-selector select {
+  padding: 0.55rem;
+  border: 1px solid #b8c5d4;
+  border-radius: 0.5rem;
+  background: white;
+  color: #172b46;
+}
+.policy-selector small {
+  font-size: 0.7rem;
+  color: #5d6c80;
+  font-weight: 400;
+}
+.rollout-story {
+  margin: 0 0 1.2rem;
+  padding: 1rem;
+  background: #eef5fc;
+  border: 1px solid #cadced;
+  border-radius: 0.7rem;
+}
+.rollout-story summary {
+  cursor: pointer;
+  font-weight: 650;
+  color: #25435f;
+}
+.rollout-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+}
+.rollout-stages > span {
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.4rem;
+  background: white;
+  border: 1px solid #c9d8e6;
+  text-transform: capitalize;
+  font-size: 0.8rem;
+}
+.rollout-stages small {
+  display: block;
+  font-size: 0.7rem;
+  color: #5d6c80;
+  margin-top: 0.3rem;
+}
+.rollout-story p {
+  margin: 0.8rem 0 0;
+  font-size: 0.8rem;
+  color: #465e76;
+}
+.evidence-timestamp {
+  display: block;
+  margin-left: 0.3rem;
+  font-size: 0.7rem;
+  color: #52677e;
+}
+.rollout-stages .stage-warning {
+  border-color: #e2b3a9;
+  background: #fff2ef;
+  color: #7c3828;
+}
+.rollout-stages .stage-complete {
+  border-color: #b4d3c8;
+  background: #f3faf6;
+}
+.environment-profiles {
+  margin: 0 0 1rem;
+  padding: 0.7rem 1rem;
+  background: white;
+  border: 1px solid #dce5eb;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+}
+.environment-profiles summary {
+  cursor: pointer;
+  color: #37526a;
+}
+.governance-state-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1.5rem;
+  margin: 0 0 1rem;
+  padding: 0.8rem 1rem;
+  border-left: 3px solid #328d7b;
+  background: #f0f7f5;
+  color: #27453d;
+}
+.governance-state-header span,
+.governance-state-header small {
+  font-size: 0.8rem;
+}
+.rollout-operation-summary {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+}
+.rollout-operation-summary p {
+  color: #745029;
+  background: #fff9ed;
+  padding: 0.7rem;
+  border-radius: 0.4rem;
+}
+.operation-journal {
+  margin-top: 0.8rem;
+}
+.operation-journal li {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e2e9ef;
+  font-size: 0.8rem;
+}
+.operation-journal p {
+  margin: 0.3rem 0;
+  color: #5a6c7d;
+}

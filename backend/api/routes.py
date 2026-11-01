@@ -23,6 +23,9 @@ from backend.api.models import (
     PageQuery,
     RecordQuery,
     Summary,
+    SummaryQuery,
+    VersionMetadata,
+    VersionSummary,
 )
 from backend.service import Evaluation
 
@@ -30,17 +33,27 @@ router = APIRouter(prefix="/api/v1")
 
 
 def evaluation(request: Request, query: Annotated[EvaluationQuery, Query()]) -> Evaluation:
-    return request.app.state.service.evaluate(query.evaluation_timestamp)
+    return request.app.state.service.evaluate(query.evaluation_timestamp, query.policy_version)
 
 
-def envelope(data, at: str) -> dict:
-    return {"metadata": Metadata(evaluated_at=at), "data": data}
+def envelope(data, at: str, result=None) -> dict:
+    metadata = Metadata(evaluated_at=at)
+    if result is not None and result.version is not None:
+        descriptor = result.version.descriptor()
+        descriptor["evaluated_at"] = at
+        metadata = VersionMetadata(
+            **descriptor,
+            evidence_timestamps={
+                e["id"]: e["observed_at"] for e in result.snapshot.fleet["evidence"]
+            },
+        )
+    return {"metadata": metadata, "data": data}
 
 
-def page(rows: list[dict], query: PageQuery) -> dict:
+def page(rows: list[dict], query: PageQuery, result: Evaluation) -> dict:
     end = query.offset + query.limit
     return {
-        **envelope(rows[query.offset : end], query.evaluation_timestamp),
+        **envelope(rows[query.offset : end], result.at, result),
         "pagination": {
             "total": len(rows),
             "limit": query.limit,
@@ -57,14 +70,28 @@ def health(request: Request, query: Annotated[HealthQuery, Query()]):
     )
 
 
-@router.get("/summary", response_model=Envelope[Summary])
-def summary(result: Annotated[Evaluation, Depends(evaluation)]):
-    return envelope(result.summary(), result.at)
+@router.get("/summary", response_model=Envelope[Summary | VersionSummary])
+def summary(request: Request, query: Annotated[SummaryQuery, Query()]):
+    service = request.app.state.service
+    result = service.evaluate(query.evaluation_timestamp, query.policy_version)
+    data = result.summary()
+    if query.catalog or result.version is not None or result.snapshot.context is not None:
+        entries, current_policy, current_run = service.catalogue()
+        data.update(
+            current=entries[current_policy].descriptor(),
+            current_run=current_run,
+            versions=[v.descriptor() for v in entries.values()],
+            journal=(result.snapshot.context or {}).get("journal", []),
+            environment_requirements={
+                e["id"]: e["requirements"] for e in result.snapshot.environments
+            },
+        )
+    return envelope(data, result.at, result)
 
 
 @router.get("/accounts", response_model=Page[AccountView])
 def accounts(request: Request, query: Annotated[AccountQuery, Query()]):
-    result = request.app.state.service.evaluate(query.evaluation_timestamp)
+    result = request.app.state.service.evaluate(query.evaluation_timestamp, query.policy_version)
     rows = [
         r
         for r in result.inventory()
@@ -77,7 +104,7 @@ def accounts(request: Request, query: Annotated[AccountQuery, Query()]):
             query.compliance_status is None or r["compliance"]["status"] == query.compliance_status
         )
     ]
-    return page(rows, query)
+    return page(rows, query, result)
 
 
 @router.get("/accounts/{account_id}", response_model=Envelope[AccountDetail])
@@ -85,12 +112,12 @@ def account_detail(
     account_id: Annotated[str, Path(pattern=r"^sim-account-[0-9]{3}$")],
     result: Annotated[Evaluation, Depends(evaluation)],
 ):
-    return envelope(result.account_detail(account_id), result.at)
+    return envelope(result.account_detail(account_id), result.at, result)
 
 
 @router.get("/findings", response_model=Page[Finding])
 def findings(request: Request, query: Annotated[FindingQuery, Query()]):
-    result = request.app.state.service.evaluate(query.evaluation_timestamp)
+    result = request.app.state.service.evaluate(query.evaluation_timestamp, query.policy_version)
     rows = result.filter_records(
         result.findings, account_id=query.account_id, environment=query.environment
     )
@@ -100,7 +127,7 @@ def findings(request: Request, query: Annotated[FindingQuery, Query()]):
         if (query.control_id is None or r["control_id"] == query.control_id)
         and (query.status is None or r["status"] == query.status)
     ]
-    return page(rows, query)
+    return page(rows, query, result)
 
 
 @router.get("/deployments", response_model=Page[Deployment])
@@ -119,10 +146,11 @@ def exceptions(request: Request, query: Annotated[RecordQuery, Query()]):
 
 
 def record_page(request: Request, query: RecordQuery, collection: str) -> dict:
-    result = request.app.state.service.evaluate(query.evaluation_timestamp)
+    result = request.app.state.service.evaluate(query.evaluation_timestamp, query.policy_version)
     return page(
         result.filter_records(
             result.records(collection), account_id=query.account_id, environment=query.environment
         ),
         query,
+        result,
     )

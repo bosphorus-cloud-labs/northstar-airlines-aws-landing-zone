@@ -3,7 +3,9 @@
 from collections import Counter
 from dataclasses import dataclass
 
-from governance.model.contracts import timestamp, validate_model
+from backend.deployment.snapshot import digest, validate_snapshot
+from backend.versions import DEMO_AT, UnknownVersion, Version
+from governance.model.contracts import timestamp
 from governance.model.evaluate import evaluate, summarize
 
 from .repository import GovernanceRepository, GovernanceSnapshot
@@ -23,6 +25,7 @@ class Evaluation:
     findings: list[dict]
     accounts: dict
     at: str
+    version: Version | None = None
 
     def require_account(self, account_id: str | None) -> None:
         if account_id is not None and account_id not in self.accounts:
@@ -79,14 +82,53 @@ class Evaluation:
 
 
 class GovernanceService:
-    def __init__(self, repository: GovernanceRepository):
+    def __init__(self, repository: GovernanceRepository, catalog=None):
         self.repository = repository
+        self.catalog = catalog
 
-    def evaluate(self, at: str) -> Evaluation:
-        snapshot = self.repository.read_snapshot()
-        # Check input time separately; dataset errors must remain internal errors.
-        validate_model(snapshot.fleet, snapshot.policy, snapshot.environments)
+    def versions(self):
+        if self.catalog is not None:
+            return self.catalog.entries()
+        return {
+            "1.0.0": Version(
+                "1.0.0",
+                "v1",
+                DEMO_AT,
+                self.repository,
+                getattr(self.repository, "snapshot_id", None),
+            )
+        }
+
+    def catalogue(self):
+        if self.catalog is not None:
+            return self.catalog.view()
+        return self.versions(), "1.0.0", None
+
+    def evaluate(self, at: str | None, policy_version: str | None = None) -> Evaluation:
+        version = self.versions().get(policy_version or "1.0.0")
+        if version is None:
+            raise UnknownVersion
+        snapshot = version.repository.read_snapshot()
+        profile = validate_snapshot(snapshot)
+        if profile != version.profile or snapshot.policy["version"] != version.policy_version:
+            raise ValueError("Snapshot selection/profile mismatch")
+        if version.snapshot_id and digest(snapshot) != version.snapshot_id:
+            raise ValueError("Snapshot selection digest mismatch")
+        if snapshot.context and (
+            snapshot.context["evaluated_at"] != version.evaluated_at
+            or snapshot.context["generator"] != version.generator
+        ):
+            raise ValueError("Snapshot reference metadata mismatch")
+        at = at or version.evaluated_at
         if any(timestamp(a["created_at"]) > timestamp(at) for a in snapshot.fleet["accounts"]):
             raise InvalidEvaluationTime
-        findings = evaluate(snapshot.fleet, snapshot.policy, snapshot.environments, at=at)
-        return Evaluation(snapshot, findings, summarize(findings), at)
+        findings = evaluate(
+            snapshot.fleet, snapshot.policy, snapshot.environments, at=at, profile=profile
+        )
+        return Evaluation(
+            snapshot,
+            findings,
+            summarize(findings),
+            at,
+            version if policy_version is not None else None,
+        )

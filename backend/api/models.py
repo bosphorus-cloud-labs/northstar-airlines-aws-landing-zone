@@ -33,6 +33,7 @@ class Control(StrEnum):
     public_access = "public-access"
     logging = "logging"
     monitoring = "security-monitoring"
+    integrity = "audit-log-integrity"
 
 
 class StrictModel(BaseModel):
@@ -44,7 +45,10 @@ class HealthQuery(StrictModel):
 
 
 class EvaluationQuery(StrictModel):
-    at: AwareDatetime = datetime(2026, 10, 31, 12, tzinfo=UTC)
+    at: AwareDatetime | None = None
+    policy_version: str | None = Field(
+        default=None, pattern=r"^[1-9][0-9]*\.[0-9]+\.[0-9]+$", max_length=32
+    )
 
     @field_validator("at", mode="before")
     @classmethod
@@ -61,15 +65,23 @@ class EvaluationQuery(StrictModel):
 
     @field_validator("at")
     @classmethod
-    def normalize_timestamp(cls, value: datetime) -> datetime:
+    def normalize_timestamp(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
         try:
             return value.astimezone(UTC)
         except (OverflowError, ValueError) as exc:
             raise ValueError("Timestamp is outside the supported UTC range") from exc
 
     @property
-    def evaluation_timestamp(self) -> str:
+    def evaluation_timestamp(self) -> str | None:
+        if self.at is None:
+            return None
         return self.at.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+class SummaryQuery(EvaluationQuery):
+    catalog: bool = False
 
 
 class PageQuery(EvaluationQuery):
@@ -102,8 +114,20 @@ class Metadata(StrictModel):
     evaluated_at: str
 
 
+class VersionDescriptor(StrictModel):
+    policy_version: str
+    profile: str
+    evaluated_at: str
+    snapshot_id: str | None
+    generator: str
+
+
+class VersionMetadata(Metadata, VersionDescriptor):
+    evidence_timestamps: dict[str, str]
+
+
 class Envelope[T](StrictModel):
-    metadata: Metadata
+    metadata: Metadata | VersionMetadata
     data: T
 
 
@@ -127,7 +151,14 @@ class Record(StrictModel):
 
     @model_validator(mode="after")
     def validate_phase_one(self) -> Self:
-        validate(self.contract, self.model_dump())
+        value = self.model_dump()
+        profile = (
+            "policy-v2"
+            if value.get("control_id") == "audit-log-integrity"
+            or value.get("policy_version") == "2.0.0"
+            else "v1"
+        )
+        validate(self.contract, value, profile=profile)
         return self
 
 
@@ -260,6 +291,31 @@ class Summary(StrictModel):
     account_counts: Counts
     finding_counts: Counts
     environment_counts: dict[Environment, int]
+
+
+class RolloutEvent(StrictModel):
+    sequence: int
+    at: str
+    action: str
+    detail: str
+    account_id: str | None
+    actor: str
+    source: str
+    simulated: Literal[True]
+
+
+class EnvironmentRequirement(StrictModel):
+    control_id: Control
+    expected: bool
+    max_age_hours: int = Field(ge=1)
+
+
+class VersionSummary(Summary):
+    current: VersionDescriptor
+    current_run: str | None
+    versions: list[VersionDescriptor]
+    journal: list[RolloutEvent]
+    environment_requirements: dict[Environment, list[EnvironmentRequirement]]
 
 
 class Health(StrictModel):

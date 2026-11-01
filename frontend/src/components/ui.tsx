@@ -268,7 +268,13 @@ export function PaginatedTable<T>({
   );
 }
 
-export function Evidence({ reason }: { reason: string }) {
+export function Evidence({
+  reason,
+  observedAt,
+}: {
+  reason: string;
+  observedAt?: string;
+}) {
   const explanations: Record<string, string> = {
     match: "Fresh at evaluation",
     mismatch: "Fresh at evaluation",
@@ -283,6 +289,14 @@ export function Evidence({ reason }: { reason: string }) {
     >
       <Clock3 size={13} />
       {explanations[reason] ?? label(reason)}
+      {observedAt && (
+        <small className="evidence-timestamp">
+          {new Date(observedAt)
+            .toISOString()
+            .replace("T", " ")
+            .replace(".000Z", " UTC")}
+        </small>
+      )}
     </span>
   );
 }

@@ -79,8 +79,9 @@ def package(vendor: Path, output: Path) -> str:
         for path in (ROOT / directory).rglob("*.py"):
             if "__pycache__" not in path.parts:
                 files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
-    schema = ROOT / "governance/contracts/v1.schema.json"
-    files["governance/contracts/v1.schema.json"] = schema.read_bytes()
+    for name in ["v1.schema.json", "policy-v2.profile.json"]:
+        schema = ROOT / "governance/contracts" / name
+        files[f"governance/contracts/{name}"] = schema.read_bytes()
     # Never ship local fixture data, tests, local environments, Terraform, or credentials.
     files["PACKAGE_MANIFEST.json"] = json.dumps(
         {

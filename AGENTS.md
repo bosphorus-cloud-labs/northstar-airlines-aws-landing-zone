@@ -83,3 +83,17 @@ The deployable POC targets one personal AWS account in `eu-central-1`. Enterpris
 - V2 contracts are an explicit opt-in profile. Default API/evaluator/loader behavior stays V1. Reuse policy evaluation rather than reproducing its rules in the CLI.
 - Approval and rollout are explicitly simulated. Preserve desired/observed distinctions, baseline violations, exceptions, missing/stale evidence, failure stop conditions, inactive-account deferrals and deterministic timestamps. No automatic integration/publication path is permitted.
 - The optional `terraform/simulation/` root is an authorized exception for real offline fmt, init with `-backend=false`, validate, plan and show only. Keep it provider/resource/data-source-free; import only `simulated_governance`, never POC/enterprise modules. Save plans/JSON only under ignored artifacts and verify the full desired output against the frozen CLI proposal. No apply, AWS access, deployment or compliance measurement is authorized.
+
+## Interview simplification source scope
+
+- The reviewed local launcher, read-only API/catalogue and React version selector may be implemented in source. This overrides the earlier Phase 5 source-only frontend restriction, not the prohibition on changing the deployed environment.
+- No AWS credentials/APIs, publication, Terraform apply/destroy, commits or pushes are authorized. Keep the POC Terraform/IAM and Cognito/authentication configuration unchanged.
+- V1 remains the default and its snapshot digest/response semantics remain compatible. Select only server-registered versions; validate full snapshot/profile/digest/timestamps and fail closed without cross-version fallback.
+- Launch only loopback local-demo servers with explicit opt-in; Lambda never uses local files/demo identity. Publication preparation has no cloud execution path. Preserve immutable history during replay/reset.
+
+## Minimal governance CI
+
+- PR/manual governance validation is authorized in source. Use only the existing provider-free Terraform root/module and synthetic CLI; guard out cloud-capable blocks before init/plan.
+- Keep workflow contents permission read-only, action revisions immutable and checkout credentials unpersisted. Never use pull_request_target, AWS secrets/OIDC, apply/destroy, push-triggered production delivery or automatic publication.
+- CI approval/distribution/evidence are explicitly simulated. Upload only allowlisted synthetic text/JSON review reports, not state, saved executable plans or publication packages.
+- Local and hosted CI results must be labeled accurately. The workflow does not promote local Current or update the AWS-hosted console. No commit, push, PR creation, merge or cloud change is authorized by the CI implementation task.

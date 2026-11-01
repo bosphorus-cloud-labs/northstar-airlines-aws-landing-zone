@@ -18,9 +18,26 @@ with TestClient(create_app(local_demo=True), base_url='http://127.0.0.1', client
         response = client.get(path, params=params)
         assert response.status_code == 200, path
         fixtures[path] = response.json()
-print(json.dumps({'schema': schema, 'fixtures': fixtures}))
+with TestClient(create_app(local_demo=True), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
+    response = client.get('/api/v1/summary', params={'catalog': 'true'})
+    assert response.status_code == 200
+    fixtures['/api/v1/summary?catalog=true'] = response.json()
+from tests.fixture_versions import catalogue
+version_fixtures = {}
+with TestClient(create_app(local_demo=True, catalog=catalogue()), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
+    for version in ['1.0.0', '2.0.0']:
+        records = {}
+        for path in ['/api/v1/summary', '/api/v1/accounts', '/api/v1/findings', '/api/v1/deployments', '/api/v1/drift', '/api/v1/exceptions', '/api/v1/accounts/sim-account-011']:
+            params = {'policy_version': version}
+            if path == '/api/v1/summary': params['catalog'] = 'true'
+            elif path != '/api/v1/accounts/sim-account-011': params['limit'] = 100
+            response = client.get(path, params=params)
+            assert response.status_code in [200, 404]
+            records[path] = response.json()
+        version_fixtures[version] = records
+print(json.dumps({'schema': schema, 'fixtures': fixtures, 'versions': version_fixtures}))
 `;
-const { schema, fixtures } = JSON.parse(
+const { schema, fixtures, versions } = JSON.parse(
   execFileSync(`${root}.venv/bin/python`, ["-c", python], {
     cwd: root,
     encoding: "utf8",
@@ -31,6 +48,10 @@ const outputs = [
   [
     new URL("../src/test/api-responses.json", import.meta.url),
     `${JSON.stringify(fixtures, null, 2)}\n`,
+  ],
+  [
+    new URL("../src/test/version-responses.json", import.meta.url),
+    `${JSON.stringify(versions, null, 2)}\n`,
   ],
 ];
 for (const [output, content] of outputs) {
