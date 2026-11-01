@@ -1,81 +1,51 @@
-# CI/CD and five-minute interview — quick runbook
+# CI/CD: safe edit, PR, real approval and reporting
 
-## What exists now
+## What is integrated
 
-One read-only React console shows Current governance, historical policy snapshots, rollout outcomes, account compliance and drift. `demo.sh` performs real provider-free Terraform checks and a deterministic **simulated** rollout. The governance CI now includes Python/security/schema checks, POC mock-provider Terraform tests, frontend checks and a commit-bound candidate. The separate [approved delivery implementation](GOVERNANCE_DELIVERY.md) adds protected OIDC publication/promotion; infrastructure and real cloud acceptance still require their explicit gates. The offline demo below does not publish data.
+| Connection | Actual boundary |
+| --- | --- |
+| Feature branch → PR/main CI | GitHub Actions runs Python/schema/security checks, frontend checks, real provider-free Terraform fmt/init/validate/plan/parity and POC mock-provider tests. Read-only permissions; no AWS/OIDC identity. |
+| Main → data CD | Explicit dispatch, exact commit/CI/PR/digest checks, governance-production approval, then short-lived OIDC data-only role. No automatic infrastructure deployment on push. |
+| CD → DynamoDB → console | Manifest-last conditional immutable publication, strong digest verification, atomic generation-checked Current/History. Existing authenticated API/React application reads it; no frontend rebuild per policy snapshot. |
+| GitHub main → Amplify frontend | Existing connected app/main branch with main-only auto-build enabled; app-wide auto-build remains disabled. Amplify builds frontend only, not Terraform. |
+| Local demo → live AWS | No connection: demo.sh changes local immutable files/Current only. |
+| Account rollout → compliance | Synthetic canary/waves/failure/retry/onboarding; successful distribution does not imply passing evidence. |
 
-Unprivileged CI covers every PR/main push and supports manual/reusable execution. It has read-only repository permission, immutable action pins, no persisted checkout credentials, no secrets/OIDC/AWS role, no push trigger and no deployment. The static boundary check rejects providers/resources/data/backends before planning. It uses the existing `terraform/simulation` root and reusable module, not a second implementation.
+See [real execution evidence](DEPLOYMENT_ACCEPTANCE.md) and [five-minute screen script](INTERVIEW_DEMO.md). The POC is explicitly single-owner: PR plus strict CI is required; the owner supplies actual environment approval with self-review permitted, administrator bypass disabled and main-only deployment. No independent review is claimed. Default independent-review mode remains available for enterprise teams.
 
-## Before the presentation — after source review/authorization
+## Beginner-friendly PR exercise — before presenting
 
-Do this in advance, not during the five minutes. Keep the branch; do not merge main yourself. All outstanding console changes must be reviewed/committed too, not only the workflow.
+This harmless comment demonstrates source delivery without inventing a new security requirement or changing infrastructure. Run it once on a fresh feature branch; keep CI outside the five-minute presentation.
 
 ```sh
-# Confirm the output says feat/governance-delivery-pipeline. Stop if it says main.
-git status --short --branch
-# Safe comment-only Terraform edit: demonstrates PR delivery, not a new security control.
-printf '\n# Interview example: reviewed policy changes stay provider-free.\n' >> terraform/modules/simulated_governance/main.tf
+git switch main
+git pull --ff-only
+git switch -c feat/interview-governance-proposal
+printf '\n# Central desired settings are validated before simulated distribution.\n' >> terraform/modules/simulated_governance/main.tf
 terraform fmt terraform/modules/simulated_governance
 git diff --check
-git diff --stat
-# Only after ALL listed source changes have been reviewed; never stage state/credentials/artifacts.
-git add -A
+git diff -- terraform/modules/simulated_governance/main.tf
+git add terraform/modules/simulated_governance/main.tf
 git diff --cached --check
-git diff --cached --stat
-git commit -m "feat: integrate governance CI and interview demonstration"
-git push -u origin feat/governance-delivery-pipeline
-gh pr create --base main --head feat/governance-delivery-pipeline --title "Governance CI and interview demo" --body "Offline Terraform validation, parity checks and simulated rollout reporting. No AWS deployment or publication."
+git commit -m "docs: explain governed configuration validation"
+git push -u origin feat/interview-governance-proposal
+gh pr create --base main --head feat/interview-governance-proposal \
+  --title "Explain governed Terraform configuration" \
+  --body "Comment-only demonstration of the protected PR and real offline CI path; no infrastructure change."
 ```
 
-`gh` requires the GitHub CLI and GitHub sign-in (no AWS identity). Without it, use the compare/PR link printed by `git push`, choose base **main**, and create the PR in GitHub. These commands are instructions for a later authorized action; they have **not** been executed here.
+Open PR → Checks → Governance checks/Frontend checks. Inspect the completed Terraform plan/parity step, synthetic failure/retry report, candidate digest and artifacts. Fix failures on the feature branch; do not force-push main or use admin bypass. Merge only after required checks and the configured approval model are satisfied. A real new policy also needs reviewed profile/environment/scenario/contracts updates; a comment is not such a policy change.
 
-Open the PR → **Checks → Governance checks → Details**. Wait for its completed result before rehearsal. Review the plan/parity and test steps, job summary and `governance-review-...` artifact. Download it before presenting; artifacts expire after seven days. If a check fails, fix it on this feature branch and push normally. A failed check is not a green demo. Have a reviewer approve the PR; no automatic merge is implemented. Repository protection settings were not inspected or configured. An owner should enforce review/check policy before merging; path-filtered checks must not be made globally required for unrelated PRs without addressing skipped/pending checks.
+The existing V2 digest is already immutable and bound to its original publication source. Do not use a new comment-only merge to rebind/re-publish V2. Use the registered-revision selection procedure to demonstrate rollback/restoration, or implement a genuinely new version under reviewed contracts.
 
-The comment edit only demonstrates the delivery process. The actual V1→V2 security requirement is already defined in `governance/policies/v2.json`; the real plan compares those frozen requirements with the Python simulation.
+## CD outside the presentation
 
-Prepare the console and fallback in advance:
+Use [the exact publication/recovery procedure](GOVERNANCE_DELIVERY.md) and the expected live generation. GitHub → Actions → Approved synthetic governance delivery → Run workflow on main. Supply action, exact current main SHA, approved digest and observed generation. Wait for CI/security gate, then the owner selects Review deployments → governance-production → Approve and deploy. The agent must not approve for the owner. Verify the receipt, strong catalogue history and live Current before claiming success.
 
-```sh
-./demo.sh v2 --prepare-only
-./demo.sh v1
-```
+Artifacts contain enumerated synthetic plan/reports/candidates/receipts. Terraform state, binary infrastructure plans, package ZIPs, local settings and credentials must never be uploaded. CI uses pull_request, never privileged pull_request_target; pinned action revisions and no persisted checkout credentials protect public-repository CI. Only the protected publication job requests an OIDC token. Actual workflow and live acceptance links are in the acceptance record; mock plans are not cloud deployment proof.
 
-Leave the baseline server Terminal running; open http://127.0.0.1:5173. Use a second Terminal for the presentation command. Keep the downloaded CI artifact and a completed `artifacts/policy-rollout/interview/run-NNNN/report.json` available. If no hosted run exists, `artifacts/ci/summary.md` is a **local reproduction**, not evidence that GitHub Actions ran.
+## Enterprise AWS fit — documented design, not deployed
 
-## Five minutes — no waiting for CI
+A real enterprise path is reviewed source → CodePipeline/CodeBuild validation and revision-bound Terraform plan → IAM-authorized manual approval → controlled approved apply/customization → published deployment/evidence read model. CodePipeline may notify subscribed approvers through an SNS topic in the pipeline Region. Approval resumes the pipeline; rejection stops it. See [AWS manual approval/SNS documentation](https://docs.aws.amazon.com/codepipeline/latest/userguide/approvals.html).
 
-| Time | Action / concise script |
-| --- | --- |
-| 0:00–0:45 | Show the **already completed** PR check and artifact. “Terraform formatting, validation, plan and full Python parity checks are real. This job cannot deploy AWS.” If CI is unavailable, show the pre-generated local report and say it is local, not a hosted run. |
-| 0:45–1:15 | Show the pure module and environment settings. “Central baseline is inherited. Production/Pre-Production require approval configuration; evidence age varies by environment.” |
-| 1:15–2:15 | Show Current baseline in the existing console; run `./demo.sh v2` once. “The same source is validated locally, then approval, canary, failure/retry and onboarding are simulated.” |
-| 2:15–3:00 | Refresh the browser once. “The Current marker now selects policy 2.0.0, not a different application. There are eleven synthetic accounts.” |
-| 3:00–4:15 | Deployments → rollout targets/stages; Compliance and Drift. “Distribution is not compliance: four findings still fail, nine are unknown and ten stale. Failure/retry history remains visible.” |
-| 4:15–5:00 | Accounts → search `sim-account-011` → details; optionally History → baseline. “New-account governance and old immutable evaluations use the same read-only application. No AWS account or workload was changed.” |
-
-If publication/connectivity fails, **do not repair AWS live**. Keep the hosted V1 POC as the unchanged baseline; use the local console or saved report/plan as an explicitly simulated fallback. `./demo.sh reset` returns only local Current to V1 and retains history. See [the detailed console runbook](INTERVIEW_DEMO.md) for local port ownership and reset behavior.
-
-## Honest integration audit
-
-| Connection | Implemented / boundary |
-| --- | --- |
-| PR → GitHub Actions | Workflow source added; runs after an authorized push/PR and repository Actions approval. Manual dispatch normally needs the workflow on the default branch. No hosted result is claimed yet. |
-| Actions → Terraform | Real fmt/init/validate/plan, no provider/resource/data/backend; plan output checked against the same frozen proposal. No apply/destroy. |
-| Actions → simulation | Automated synthetic approval, canary, intentional failure (expected exit 2), retry and onboarding; reports/test logs uploaded. No publisher/package or executable binary plan uploaded. |
-| Actions → local console | **No automatic transfer.** Local `demo.sh` independently runs the same policy/evaluator/module at the presenter's checkout. Match the reviewed source revision/proposal digest. CI does not move local Current. |
-| Local simulation → local console | Implemented: immutable files plus atomic local Current marker; refresh reads it through the API. History remains intact. |
-| Actions/local demo → AWS-hosted console | Local demo/CI never publish. Separate protected OIDC CD is implemented in source; it requires approved IAM/backend activation, bootstrap and environment approval. Actual publication/dashboard acceptance remains pending those gates. Browser/Lambda remain read-only. |
-| Tests | CI runs Python/backend/schema/delivery/security checks, provider-free Terraform parity, POC mock-provider plans and frontend contract/type/lint/tests/build. |
-| PR review / production approval | PR review is the source-review process; repository protection is an owner setting, not configured here. A `sim-` approval is not production authorization. |
-
-## Enterprise AWS fit — design only, not deployed
-
-A real enterprise pipeline would be **reviewed source → CodePipeline/CodeBuild validation and revision-bound plan → manual approval → controlled approved deployment → reported evidence/read model**. CodePipeline can pause for an IAM-authorized approver and send an SNS notification to subscribed approvers; the SNS topic must be in the pipeline's Region (Frankfurt here). Approval resumes the pipeline; rejection stops it. See [AWS manual approval/SNS documentation](https://docs.aws.amazon.com/codepipeline/latest/userguide/approvals.html).
-
-The reviewer would inspect the exact plan and artifact revision before a separately scoped deployment role executes it, using canary/waves, stop conditions and recovery. Centrally managed Organizations/SCP delivery and AFT account customizations keep separate ownership/state/roles. A separate authorized publisher would deliver immutable outcomes to the read-only application; the browser and reader Lambda never become deployers. **CodePipeline, CodeBuild, SNS notifications, production approval, enterprise AFT/Organizations execution and automatic cloud publication are not implemented by this workflow.** No such AWS resources were created.
-
-Actions implementation references: [checkout](https://github.com/actions/checkout), [setup-python](https://github.com/actions/setup-python), [setup-terraform](https://github.com/hashicorp/setup-terraform), [artifact upload](https://github.com/actions/upload-artifact). Pins were resolved from public official release refs; upgrades require review. CI runs on every PR/main push so required checks do not remain pending because of path filters. The workflow uses `pull_request`, never privileged `pull_request_target`.
-
-## Single-owner interview approval
-
-This public POC explicitly uses the repository variable `GOVERNANCE_APPROVAL_MODEL=single-owner-poc`. Main requires a PR and successful strict CI; the owner provides real manual approval in `governance-production`, with self-review permitted and administrator bypass disabled. No independent PR approval is claimed. The default delivery gate remains the independent-review model for enterprise use. See [delivery procedure](GOVERNANCE_DELIVERY.md).
+Account Factory provisions/enrolls accounts; AFT customizes approved account baselines; central Organizations pipelines own SCP/attachments with separate states/roles. Canary/wave controls stop on failure and support recovery. The reporting browser/Lambda never gains deployment authority. CodePipeline, CodeBuild, SNS, Control Tower, AFT and Organizations resources are not deployed by this POC. The real GitHub OIDC data publication must not be confused with those enterprise services or synthetic account distribution.

@@ -4,7 +4,7 @@
 
 Source implements the complete data path: reviewed Git policy → credential-free CI/provider-free Terraform parity → protected OIDC CD → conditional immutable snapshot records → strongly consistent verification → atomic catalogue/Current promotion → read-only API → the same React console. Rollout approval/canary/failure/retry/onboarding/evidence inside the snapshot remain **simulated**. GitHub environment approval and DynamoDB publication are real operations only when authorized and executed.
 
-Read-only implementation checks found the existing Amplify main branch in baseline-v1 mode with automatic builds disabled; Lambda still ran the pinned V1 package; DynamoDB had the original baseline; no GitHub OIDC provider or deployment environment existed. A strongly consistent read verified the live baseline digest and ten synthetic accounts. This implementation has **not** applied infrastructure, published a record, promoted Current, merged a PR or triggered a build. Do not call it operational until the acceptance sequence below has completed with actual evidence.
+Actual deployment has now been executed under owner authorization: foundation IAM/package changes, exact immutable OIDC subject correction, V1 bootstrap, catalogue activation, Amplify release job 2, V2 publication, rollback to V1 and restoration to V2 at generation 4. Both immutable digests and authenticated Current/History were verified. Main-only Amplify auto-build is enabled separately. Workflow evidence is maintained in [deployment acceptance](DEPLOYMENT_ACCEPTANCE.md). The stages below document the deployment sequence and future recovery procedure; completed plans must never be blindly reapplied.
 
 ## Contracts and safety boundaries
 
@@ -24,11 +24,11 @@ IAM separates reader and publisher. Publisher has only table Query/GetItem/PutIt
 
 `governance-cd.yml` is manual-dispatch on main only. It reruns unprivileged CI and requires successful main-push CI for the exact main SHA and a merged PR. The default independent model requires an independent APPROVED review of the final head. The explicitly authorized `single-owner-poc` model instead requires an owner-authored merged PR, an owner-triggered run, protected main, and the real owner as the environment approver. It never invents PR approvals. It checks `governance-production` required reviewers, the selected self-review setting and exact main-only branch policy before requesting credentials. `GOVERNANCE_APPROVAL_MODEL=single-owner-poc` is an explicit repository variable; an absent value preserves independent review. The privileged job then waits for actual environment approval. Only that job has id-token:write. It downloads only its own workflow's deterministic candidate, verifies SHA/digest offline, assumes the data-only role and executes bootstrap/publish/rollback. Concurrency serializes promotions; generation checks also reject races with other operators. The protected approval is real; `sim-security-reviewer` inside fleet events is not production authorization.
 
-GitHub's public REST response does not expose the administrator-bypass UI setting. An owner must disable **Allow administrators to bypass configured protection rules** and verify it in Settings before enabling CD. The current environment API also exposes `can_admins_bypass`; the single-owner model requires an explicit false value. Do not add an unsupported IAM claim or pretend that setting was API-verified. Main branch protection requires a PR, strict successful Governance checks/Frontend checks, resolved conversations, and no force pushes/deletions/admin shortcuts. In the single-owner POC it requires zero independent approving reviews and no last-pusher approval; deployment authorization is the actual protected environment approval. This is a documented POC separation-of-duties limitation, not an independent review claim. The gate additionally rejects self/stale PR reviews and outstanding changes requests. Reviews reaching the 100-record API budget fail closed pending explicit pagination review. Repository administrators can change workflows, environment protections or IAM trust; they remain trusted operators.
+The current environment API exposes `can_admins_bypass`; the single-owner gate requires it to be explicitly false, and the deployed setting was verified. Keep administrator bypass disabled in Settings. Do not add unsupported IAM claims. Main branch protection requires a PR, strict successful Governance checks/Frontend checks, resolved conversations, and no force pushes/deletions/admin shortcuts. In the single-owner POC it requires zero independent approving reviews and no last-pusher approval; deployment authorization is the actual protected environment approval. This is a documented POC separation-of-duties limitation, not an independent review claim. The default independent model rejects self/stale PR approvals; both models reject outstanding trusted changes requests. Reviews reaching the 100-record API budget fail closed pending explicit pagination review. Repository administrators can change workflows, environment protections or IAM trust; they remain trusted operators.
 
 ## Deployment gates and exact plans
 
-No deployment below is authorized merely by this document. Source PR review/merge, cloud plan approval and protected environment approval are distinct gates. Keep existing app/Cognito/API/table/state; do not rerun hosting migration A–C.
+This is an operating procedure, not standing permission for future cloud changes. Source PR/CI, cloud plan authorization and protected environment approval are distinct gates. Keep existing app/Cognito/API/table/state; do not rerun hosting migration A–C.
 
 ### 1. Approve the foundation plan
 
@@ -38,7 +38,7 @@ Build the Python 3.13 Linux ARM64 package using the existing pinned vendor wheel
 .venv/bin/python -m scripts.package_lambda --output artifacts/lambda/governance-delivery.zip
 ```
 
-The locally inspected real-state plan is `artifacts/governance-delivery-infrastructure.tfplan`, mode 600, ignored and secret-bearing. It used read-only refresh without lock writes and preserved the recorded Amplify setup-token input in memory to avoid unrelated app changes. Do not upload or blindly reuse it after state/source changes. Exact expected actions:
+The locally inspected real-state plan is `artifacts/governance-delivery-infrastructure.tfplan`, mode 600, ignored and secret-bearing. Initial review used read-only refresh without lock writes; fresh authorized apply plans used normal state locking. The recorded Amplify setup-token input was preserved in memory to avoid unrelated app changes. Do not upload or blindly reuse it after state/source changes. Exact expected actions:
 
 | Address | Action |
 | --- | --- |
@@ -58,7 +58,7 @@ AWS_PROFILE=north terraform -chdir=terraform/poc plan -input=false \
 .venv/bin/python -m scripts.inspect_delivery_plan artifacts/governance-delivery-infrastructure.tfplan
 ```
 
-An operator must separately approve/apply that exact reviewed plan. This source task does not apply it. Persist completed flags/package path in ignored settings; wrong defaults after deployment could propose removing roles or reverting the reader.
+An operator must separately approve/apply that exact reviewed plan. The authorized foundation apply has completed; see the acceptance record. Future applies still require scope review. Persist completed flags/package path in ignored settings; wrong defaults after deployment could propose removing roles or reverting the reader.
 
 ### 2. Configure protected GitHub delivery
 
@@ -116,7 +116,7 @@ Retries of the same workflow run use the same operation ID. A later promotion su
 
 ### 6. Enable main-only frontend auto-builds after acceptance
 
-Only after CI, publication/promotion/rollback and authenticated dashboard refresh succeed, review `github_auto_build_enabled=true`. Expected plan: only main branch auto-build flag. App-wide defaults stay false, no other branches/PR previews are enabled. Protect main with reviewed PRs and required CI before this opt-in. Amplify then builds frontend source from approved main merges; it never runs Terraform. Data CD remains separately approved. This flag has not been enabled by this task.
+Only after CI, publication/promotion/rollback and authenticated dashboard refresh succeed, review `github_auto_build_enabled=true`. Expected plan: only main branch auto-build flag. App-wide defaults stay false, no other branches/PR previews are enabled. Protect main with reviewed PRs and required CI before this opt-in. Amplify then builds frontend source from approved main merges; it never runs Terraform. Data CD remains separately approved. Final auto-build enablement status is recorded in the acceptance document.
 
 ## Local reproduction and costs
 
