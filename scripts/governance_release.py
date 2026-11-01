@@ -9,7 +9,20 @@ from pathlib import Path
 from backend.deployment.dynamodb import DynamoSnapshotRepository
 from governance.delivery.publisher import deliver
 from governance.simulation import rollout
-from governance.simulation.publication import candidate, prepare
+from governance.simulation.publication import candidate, prepare, validate_package
+
+
+def check_release(path, commit, approved_digest):
+    """Validate the complete release before constructing any AWS client."""
+    if not re.fullmatch(r"[a-f0-9]{40}", commit) or not re.fullmatch(
+        r"[a-f0-9]{64}", approved_digest or ""
+    ):
+        raise ValueError("Exact source commit and approved digest are required")
+    package = json.loads(path.read_text())
+    if set(package) != {"source_commit", "publication"} or package["source_commit"] != commit:
+        raise ValueError("Release does not match the approved source commit")
+    validate_package(package["publication"], approved_digest)
+    return {"source_commit": commit, "snapshot_id": approved_digest, "simulated": True}
 
 
 def build(run, commit, output):
@@ -51,6 +64,9 @@ def main():
     if args.action == "build":
         args.release.parent.mkdir(parents=True, exist_ok=True)
         print(build(args.run_dir, args.source_commit, args.release))
+        return
+    if args.action == "check":
+        print(json.dumps(check_release(args.release, args.source_commit, args.approved_digest)))
         return
     if (
         not args.execute
