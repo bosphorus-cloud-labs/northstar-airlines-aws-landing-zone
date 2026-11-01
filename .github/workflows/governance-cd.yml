@@ -1,0 +1,116 @@
+name: Approved synthetic governance delivery
+
+"on":
+  workflow_dispatch:
+    inputs:
+      action:
+        type: choice
+        options: [bootstrap, publish, rollback]
+        required: true
+      source_sha:
+        description: Exact current main commit with successful CI and reviewed merged PR
+        type: string
+        required: true
+      snapshot_digest:
+        description: Exact SHA-256 from reviewed CI candidate (or registered rollback/V1 target)
+        type: string
+        required: true
+      expected_generation:
+        description: Current registry generation (0 only for initial bootstrap)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: governance-production-publication
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/governance-ci.yml
+    permissions:
+      contents: read
+
+  gate:
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      APPROVED_DIGEST: ${{ inputs.snapshot_digest }}
+      ACTION: ${{ inputs.action }}
+      CANDIDATE_DIGEST: ${{ needs.validate.outputs.release_digest }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Verify reviews, exact commit CI, environment protection and digest
+        run: |
+          python3 -m scripts.delivery_gate --sha "$SOURCE_SHA" --digest "$APPROVED_DIGEST"
+          if [ "$ACTION" = publish ] && [ "$APPROVED_DIGEST" != "$CANDIDATE_DIGEST" ]; then
+            echo "Approved digest differs from the deterministic candidate"; exit 1
+          fi
+
+  publish:
+    needs: [validate, gate]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: governance-production
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    env:
+      SOURCE_SHA: ${{ inputs.source_sha }}
+      APPROVED_DIGEST: ${{ inputs.snapshot_digest }}
+      EXPECTED_GENERATION: ${{ inputs.expected_generation }}
+      ACTION: ${{ inputs.action }}
+      TABLE: ${{ vars.GOVERNANCE_TABLE }}
+      BASELINE_ID: ${{ vars.GOVERNANCE_BASELINE_ID }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r backend/requirements.txt
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: governance-candidate-${{ github.sha }}
+          path: artifacts/release
+      - name: Validate approved input before requesting AWS identity
+        if: inputs.action == 'publish'
+        run: .venv/bin/python -m scripts.governance_release check --source-commit "$SOURCE_SHA" --approved-digest "$APPROVED_DIGEST"
+      - name: Assume data-only publisher through OIDC after environment approval
+        uses: aws-actions/configure-aws-credentials@4a1596c86fd706dc0521e32f0121ad1a6d1adb74 # v6
+        with:
+          aws-region: eu-central-1
+          role-to-assume: ${{ vars.GOVERNANCE_PUBLISH_ROLE_ARN }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-duration-seconds: 900
+          role-session-name: governance-${{ github.run_id }}-${{ github.run_attempt }}
+          unset-current-credentials: true
+      - name: Conditional publication, strong verification and atomic Current selection
+        run: |
+          .venv/bin/python -m scripts.governance_release "$ACTION" --execute \
+            --table "$TABLE" --confirm-table "$TABLE" --baseline-id "$BASELINE_ID" \
+            --approved-digest "$APPROVED_DIGEST" --source-commit "$SOURCE_SHA" \
+            --generation "$EXPECTED_GENERATION" --operation "gh-${{ github.run_id }}" | tee publication-result.json
+          cat publication-result.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: governance-delivery-receipt-${{ github.run_id }}
+          path: publication-result.json
+          retention-days: 30

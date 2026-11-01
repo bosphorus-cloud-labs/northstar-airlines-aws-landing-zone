@@ -2,16 +2,16 @@
 
 ## What exists now
 
-One read-only React console shows Current governance, historical policy snapshots, rollout outcomes, account compliance and drift. `demo.sh` performs real provider-free Terraform checks and a deterministic **simulated** rollout. This change adds the `Governance checks` GitHub Actions job. Its source and commands are verified locally; **no hosted Actions run, commit, push, PR, AWS operation or publication was performed by this task**.
+One read-only React console shows Current governance, historical policy snapshots, rollout outcomes, account compliance and drift. `demo.sh` performs real provider-free Terraform checks and a deterministic **simulated** rollout. The governance CI now includes Python/security/schema checks, POC mock-provider Terraform tests, frontend checks and a commit-bound candidate. The separate [approved delivery implementation](GOVERNANCE_DELIVERY.md) adds protected OIDC publication/promotion; infrastructure and real cloud acceptance still require their explicit gates. The offline demo below does not publish data.
 
-The workflow covers PR changes to the governance/module/simulation/backend/tests and has a manual trigger. It has read-only repository permission, immutable action pins, no persisted checkout credentials, no secrets/OIDC/AWS role, no push trigger and no deployment. The static boundary check rejects providers/resources/data/backends before planning. It uses the existing `terraform/simulation` root and reusable module, not a second implementation.
+Unprivileged CI covers every PR/main push and supports manual/reusable execution. It has read-only repository permission, immutable action pins, no persisted checkout credentials, no secrets/OIDC/AWS role, no push trigger and no deployment. The static boundary check rejects providers/resources/data/backends before planning. It uses the existing `terraform/simulation` root and reusable module, not a second implementation.
 
 ## Before the presentation — after source review/authorization
 
 Do this in advance, not during the five minutes. Keep the branch; do not merge main yourself. All outstanding console changes must be reviewed/committed too, not only the workflow.
 
 ```sh
-# Confirm the output says feat/governance-operations-ci. Stop if it says main.
+# Confirm the output says feat/governance-delivery-pipeline. Stop if it says main.
 git status --short --branch
 # Safe comment-only Terraform edit: demonstrates PR delivery, not a new security control.
 printf '\n# Interview example: reviewed policy changes stay provider-free.\n' >> terraform/modules/simulated_governance/main.tf
@@ -23,8 +23,8 @@ git add -A
 git diff --cached --check
 git diff --cached --stat
 git commit -m "feat: integrate governance CI and interview demonstration"
-git push -u origin feat/governance-operations-ci
-gh pr create --base main --head feat/governance-operations-ci --title "Governance CI and interview demo" --body "Offline Terraform validation, parity checks and simulated rollout reporting. No AWS deployment or publication."
+git push -u origin feat/governance-delivery-pipeline
+gh pr create --base main --head feat/governance-delivery-pipeline --title "Governance CI and interview demo" --body "Offline Terraform validation, parity checks and simulated rollout reporting. No AWS deployment or publication."
 ```
 
 `gh` requires the GitHub CLI and GitHub sign-in (no AWS identity). Without it, use the compare/PR link printed by `git push`, choose base **main**, and create the PR in GitHub. These commands are instructions for a later authorized action; they have **not** been executed here.
@@ -64,8 +64,8 @@ If publication/connectivity fails, **do not repair AWS live**. Keep the hosted V
 | Actions → simulation | Automated synthetic approval, canary, intentional failure (expected exit 2), retry and onboarding; reports/test logs uploaded. No publisher/package or executable binary plan uploaded. |
 | Actions → local console | **No automatic transfer.** Local `demo.sh` independently runs the same policy/evaluator/module at the presenter's checkout. Match the reviewed source revision/proposal digest. CI does not move local Current. |
 | Local simulation → local console | Implemented: immutable files plus atomic local Current marker; refresh reads it through the API. History remains intact. |
-| Actions/local demo → AWS-hosted console | **Not connected automatically.** Separate authorization is needed for code deployment, scoped immutable snapshot publication, reader IAM/registration and Current promotion. Browser/Lambda remain read-only. |
-| Tests | CI runs the full Python suite including backend, governance and Terraform integration/parity. Frontend type/lint/tests/build are checked locally for this submission, not in this minimal governance workflow. |
+| Actions/local demo → AWS-hosted console | Local demo/CI never publish. Separate protected OIDC CD is implemented in source; it requires approved IAM/backend activation, bootstrap and environment approval. Actual publication/dashboard acceptance remains pending those gates. Browser/Lambda remain read-only. |
+| Tests | CI runs Python/backend/schema/delivery/security checks, provider-free Terraform parity, POC mock-provider plans and frontend contract/type/lint/tests/build. |
 | PR review / production approval | PR review is the source-review process; repository protection is an owner setting, not configured here. A `sim-` approval is not production authorization. |
 
 ## Enterprise AWS fit — design only, not deployed
@@ -74,4 +74,4 @@ A real enterprise pipeline would be **reviewed source → CodePipeline/CodeBuild
 
 The reviewer would inspect the exact plan and artifact revision before a separately scoped deployment role executes it, using canary/waves, stop conditions and recovery. Centrally managed Organizations/SCP delivery and AFT account customizations keep separate ownership/state/roles. A separate authorized publisher would deliver immutable outcomes to the read-only application; the browser and reader Lambda never become deployers. **CodePipeline, CodeBuild, SNS notifications, production approval, enterprise AFT/Organizations execution and automatic cloud publication are not implemented by this workflow.** No such AWS resources were created.
 
-Actions implementation references: [checkout](https://github.com/actions/checkout), [setup-python](https://github.com/actions/setup-python), [setup-terraform](https://github.com/hashicorp/setup-terraform), [artifact upload](https://github.com/actions/upload-artifact). Pins were resolved from public official release refs; upgrades require review. Path filters mean a docs-only PR may not start this job. The workflow uses `pull_request`, never privileged `pull_request_target`.
+Actions implementation references: [checkout](https://github.com/actions/checkout), [setup-python](https://github.com/actions/setup-python), [setup-terraform](https://github.com/hashicorp/setup-terraform), [artifact upload](https://github.com/actions/upload-artifact). Pins were resolved from public official release refs; upgrades require review. CI runs on every PR/main push so required checks do not remain pending because of path filters. The workflow uses `pull_request`, never privileged `pull_request_target`.

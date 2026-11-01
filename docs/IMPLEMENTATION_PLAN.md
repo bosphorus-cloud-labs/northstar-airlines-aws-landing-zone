@@ -28,3 +28,7 @@ Before a deployed demonstration is complete, document ownership, alarms, redacte
 ## Decisions to resolve
 
 Phase 1 fixes the fleet at ten accounts (3 Production, 2 Pre-Production, 2 Testing, 3 Development), five representative controls, Python 3.13, and read-only exception evaluation. Confirm personas, future exception mutation scope, cost/retention limits, Terraform versions, and demo narrative before dependent phases. Defer account identifiers and credential-backed checks until authorized.
+
+## Governance delivery integration
+
+Implemented in source: protected OIDC publication workflow, commit/digest/CI/review gates, conditional immutable loading, strong verification, atomic generation-based Current/history, rollback, dynamic read-only backend and 30-second Current polling. Acceptance is pending separately authorized infrastructure deployment, protected reviewer setup, actual successful Actions publication/rollback and Cognito-authenticated dashboard verification. See [the staged acceptance procedure](GOVERNANCE_DELIVERY.md); do not mark this milestone deployed from local/mock checks alone.

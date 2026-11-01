@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, expect, it, vi } from "vitest";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
@@ -221,4 +221,19 @@ it("prioritizes rollout targets, approval, retry and noncompliant evidence in De
   expect(
     screen.getByText(/4 noncompliant, 9 unknown and 10 stale findings/),
   ).toBeInTheDocument();
+});
+
+it("polls the server Current marker without a browser refresh", async () => {
+  vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+  try {
+    show();
+    await screen.findByText(/CURRENT GOVERNANCE · Policy revision 1.0.0/);
+    currentPolicy = "2.0.0";
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30000);
+    });
+    await screen.findByText(/CURRENT GOVERNANCE · Policy revision 2.0.0/);
+  } finally {
+    vi.useRealTimers();
+  }
 });

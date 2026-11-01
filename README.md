@@ -129,3 +129,7 @@ The governance CI workflow runs Python checks, provider-free Terraform validatio
 Do not access AWS credentials, create cloud resources, run Terraform apply/destroy, or push changes without explicit authorization. No such actions are needed for local foundation work.
 
 Designs will address the AWS Well-Architected pillars: operational excellence through audit trails and runbooks; security through scoped access; reliability through idempotency and recovery; performance efficiency through bounded queries; cost optimization through budgets and retention; sustainability through appropriately sized, on-demand services. These are design goals, not claims of a completed review.
+
+## Controlled governance delivery
+
+The [delivery implementation and deployment gates](docs/GOVERNANCE_DELIVERY.md) connect credential-free CI, separately approved OIDC publication, strongly verified immutable snapshots and a read-only DynamoDB Current/history catalogue. V1 is preserved. The same frontend retains baseline compatibility and polls Current in full catalogue mode. Source implementation and tests are not a claim of a completed cloud release: new IAM/backend activation, protected environment setup and actual publication/rollback/dashboard acceptance remain separately authorized gates.

@@ -388,6 +388,8 @@ class PackagingAndTerraformTests(unittest.TestCase):
                 self.assertFalse(
                     any(n.startswith(("mock-data/", "tests/", ".aws/")) for n in archive.namelist())
                 )
+                self.assertNotIn("governance/delivery/publisher.py", archive.namelist())
+                self.assertIn("backend/deployment/catalog.py", archive.namelist())
                 self.assertNotIn("example/tests/test_example.py", archive.namelist())
             (root / "vendor/pydantic_core-offline.dist-info/WHEEL").write_text(
                 "Tag: cp313-cp313-macosx_11_0_arm64\n"

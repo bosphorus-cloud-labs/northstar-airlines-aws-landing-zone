@@ -14,3 +14,12 @@ variable "permissions_boundary_arn" {
   type    = string
   default = null
 }
+
+variable "delivery_enabled" {
+  type    = bool
+  default = false
+}
+variable "catalog_enabled" {
+  type    = bool
+  default = false
+}

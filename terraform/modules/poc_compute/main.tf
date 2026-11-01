@@ -12,11 +12,12 @@ resource "aws_iam_role" "lambda" {
 resource "aws_iam_role_policy" "runtime" {
   name = "read-pinned-synthetic-snapshot"
   role = aws_iam_role.lambda.id
-  policy = jsonencode({ Version = "2012-10-17", Statement = [
+  policy = jsonencode({ Version = "2012-10-17", Statement = concat([
     { Effect = "Allow", Action = ["dynamodb:Query"], Resource = var.table_arn,
-    Condition = { "ForAllValues:StringEquals" = { "dynamodb:LeadingKeys" = ["SNAPSHOT#${var.snapshot_id}"] } } },
+    Condition = { (var.delivery_enabled ? "ForAllValues:StringLike" : "ForAllValues:StringEquals") = { "dynamodb:LeadingKeys" = var.delivery_enabled ? ["SNAPSHOT#*"] : ["SNAPSHOT#${var.snapshot_id}"] } } },
     { Effect = "Allow", Action = ["logs:CreateLogStream", "logs:PutLogEvents"], Resource = "${aws_cloudwatch_log_group.lambda.arn}:*" }
-  ] })
+    ], var.delivery_enabled ? [{ Effect = "Allow", Action = ["dynamodb:GetItem"], Resource = var.table_arn,
+  Condition = { "ForAllValues:StringEquals" = { "dynamodb:LeadingKeys" = ["GOVERNANCE#CATALOG"] } } }] : []) })
 }
 resource "aws_lambda_function" "api" {
   function_name                  = var.name
@@ -30,14 +31,14 @@ resource "aws_lambda_function" "api" {
   timeout                        = 20
   reserved_concurrent_executions = var.reserved_concurrency
   environment {
-    variables = {
+    variables = merge({
       GOVERNANCE_TABLE  = var.table_name
       SNAPSHOT_ID       = var.snapshot_id
       GATEWAY_API_ID    = var.api_id
       GATEWAY_STAGE     = "poc"
       COGNITO_ISSUER    = var.issuer
       COGNITO_CLIENT_ID = var.client_id
-    }
+    }, var.catalog_enabled ? { GOVERNANCE_CATALOG_MODE = "dynamodb" } : {})
   }
   logging_config {
     log_format            = "JSON"

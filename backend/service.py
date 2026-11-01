@@ -26,6 +26,7 @@ class Evaluation:
     accounts: dict
     at: str
     version: Version | None = None
+    catalog_view: tuple | None = None
 
     def require_account(self, account_id: str | None) -> None:
         if account_id is not None and account_id not in self.accounts:
@@ -105,7 +106,17 @@ class GovernanceService:
         return self.versions(), "1.0.0", None
 
     def evaluate(self, at: str | None, policy_version: str | None = None) -> Evaluation:
-        version = self.versions().get(policy_version or "1.0.0")
+        current_view = None
+        if (
+            policy_version is None
+            and at is None
+            and getattr(self.catalog, "follow_current_by_default", False)
+        ):
+            current_view = self.catalog.view()
+            entries, current, _ = current_view
+            version = entries[current]
+        else:
+            version = self.versions().get(policy_version or "1.0.0")
         if version is None:
             raise UnknownVersion
         snapshot = version.repository.read_snapshot()
@@ -130,5 +141,6 @@ class GovernanceService:
             findings,
             summarize(findings),
             at,
-            version if policy_version is not None else None,
+            version if policy_version is not None or current_view is not None else None,
+            current_view,
         )

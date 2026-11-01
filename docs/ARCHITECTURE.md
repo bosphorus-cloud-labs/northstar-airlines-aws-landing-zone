@@ -80,3 +80,7 @@ React scopes caches and metadata checks to the selected version/hash/time. Local
 ## Minimal governance CI boundary
 
 The [PR validation workflow and interview audit](CI_CD_DEMO.md) reuse the provider-free root and existing evaluator/CLI. Real formatting, validation, planning, parity and Python tests run before the explicitly simulated approval/rollout report. Only synthetic review artifacts are uploaded; no AWS credentials, cloud backend, apply/destroy, production environment, publication, or auto-merge is configured. The local console updates only when the local launcher runs. Hosted dashboard updates still require separate approval/deployment/publication. CodePipeline manual approval/SNS notification are documented enterprise integration points only, not implemented components.
+
+## Approved snapshot delivery
+
+Data CD uses a protected GitHub environment/OIDC data-only publisher role; it cannot run Terraform or change runtime services. Snapshot records are conditionally written with the manifest last and strongly verified. A generation-checked single catalogue item atomically registers immutable revision provenance/history and promotes Current. Runtime only reads the catalogue/snapshots; browser uses the existing Cognito/API boundary. See [delivery contracts, limitations and deployment sequence](GOVERNANCE_DELIVERY.md). Simulated rollout evidence is distinct from real publication approvals/execution. Existing static/pinned V1 configuration remains supported during staged activation.

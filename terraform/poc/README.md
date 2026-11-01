@@ -50,3 +50,7 @@ The generic allowlist above supports other approved origins but does not provisi
 See [the migration procedure](../../docs/AMPLIFY_GITHUB_INTEGRATION.md). AWS requires deleting the old manual branch before connecting the existing app. `hosting_migration_stage` advances through `legacy`, `retire_manual`, `connect_repository`, `create_main` with separate verified plans/applies. The app is never recreated. Stage A was completed and verified; the owner reports repository connection and main creation are complete. Local settings are now at create_main. Do not rerun retirement during source release preparation.
 
 Main builds default off. Its six public connection settings are supplemented by explicit `VITE_GOVERNANCE_API_MODE=baseline-v1` for the currently deployed V1 backend. Full V2/catalogue source remains available after the separately authorized backend upgrade. Credentials, resource changes and source publication require separate authorization.
+
+## Optional governance delivery foundation
+
+`enable_governance_delivery=false` preserves the pinned-reader default. Enabling it creates only a data publisher OIDC provider/role/policy and extends runtime read permissions. `governance_catalog_enabled` must stay false until the existing baseline catalogue is bootstrapped/verified. The separate [deployment gates](../../docs/GOVERNANCE_DELIVERY.md) describe the real 3-create/2-update plan, package preparation, environment approval and later reader/frontend activation. No Terraform resource inserts snapshot data and CD has no Terraform deployment permissions.
