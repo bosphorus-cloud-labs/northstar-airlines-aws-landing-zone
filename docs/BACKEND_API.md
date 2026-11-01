@@ -31,7 +31,7 @@ curl --fail --silent --get http://127.0.0.1:8000/api/v1/findings \
 
 Default mode is **fail-closed**, not an anonymous API. All routes, health, docs, OpenAPI, unknown paths, and unsupported methods pass through server-side authentication and a `governance:read` permission check before dispatch. No-read principals receive 403.
 
-`--local-demo` is an explicit identity bypass for development on a trusted workstation, **not production authentication**. It grants a fixed local demo reader only to numeric loopback client addresses, requires exactly one raw Host header matching a loopback name/address (with an optional numeric port), and rejects every Authorization header. It never parses or accepts bearer tokens. Forwarded identity/address headers confer no identity; no CORS allowances are configured. The Phase 3 Vite proxy is the sole documented proxy exception: both processes bind to loopback on a trusted workstation, with a fixed API target. Do not expose either server via public binds, tunnels, public reverse proxies, port forwarding, or shared hosts. Local processes can access demo data while the mode is enabled.
+`--local-demo` is an explicit identity bypass for development on a trusted workstation, **not production authentication**. It grants a fixed local demo reader only to numeric loopback client addresses, requires exactly one raw Host header matching a loopback name/address (with an optional numeric port), and rejects every Authorization header. It never parses or accepts bearer tokens. Forwarded identity/address headers confer no identity; no CORS allowances are configured. The local Vite proxy is the sole documented proxy exception: both processes bind to loopback on a trusted workstation, with a fixed API target. Do not expose either server via public binds, tunnels, public reverse proxies, port forwarding, or shared hosts. Local processes can access demo data while the mode is enabled.
 
 `Authenticator.authenticate(Request) -> Principal` is the replaceable identity interface. API Gateway verifies JWT signature, issuer, audience/client binding, expiry and scopes; Lambda requires the configured gateway/stage and verified reader scope/group. A different authenticator must preserve an equivalent reviewed identity boundary. The deployed authenticator consumes only API Gateway verified claims and checks read scope/group; it does not pretend to verify arbitrary bearer tokens. No local-demo bypass exists in that composition.
 
@@ -69,7 +69,7 @@ Except for process health, endpoints accept `at`, a timezone-aware RFC 3339 time
 | `/api/v1/summary` | Fleet counts, four-state account/finding counts, environment counts; optional catalogue | `at`, `policy_version`, `catalog` |
 | `/api/v1/accounts` | Account record and compliance summary | `environment`, `lifecycle_status`, `compliance_status`; pagination |
 | `/api/v1/accounts/{account_id}` | Account, OU, compliance summary, selected-profile control findings | `at` |
-| `/api/v1/findings` | Phase 1 finding records | `account_id`, `environment`, `control_id`, `status`; pagination |
+| `/api/v1/findings` | Governance finding records | `account_id`, `environment`, `control_id`, `status`; pagination |
 | `/api/v1/deployments` | Simulated revision/deployment records | `account_id`, `environment`; pagination |
 | `/api/v1/drift` | Simulated desired/observed drift records | `account_id`, `environment`; pagination |
 | `/api/v1/exceptions` | Original exception plus evaluator-derived expiration state | `account_id`, `environment`; pagination |
@@ -97,14 +97,14 @@ Exception items retain both the original record and its evaluation state:
  "expiration_state": {"id": "exc-002", "state": "active"}}
 ```
 
-The exception record above is abbreviated; actual responses include all Phase 1 required fields and provenance. The related encryption finding remains **noncompliant**. Missing evidence remains unknown; stale evidence remains stale.
+The exception record above is abbreviated; actual responses include all required contract fields and provenance. The related encryption finding remains **noncompliant**. Missing evidence remains unknown; stale evidence remains stale.
 
 Errors use `{"error":{"code":"invalid_request","message":"Request parameters are invalid"}}`. Statuses include 401 authentication required, 403 access denied, 404 unknown account/path, 405 unsupported method, 422 invalid request/time, and 500 internal failure. Validation input, exceptions, local file paths, and stack traces are not returned. Responses have no-store caching and nosniff headers. No durable error telemetry is implemented yet.
 
 ## Layers and integration boundaries
 
 - `backend/api/routes.py`: versioned GET routes and filtering/pagination presentation.
-- `backend/api/models.py`: typed Pydantic queries/responses and Phase 1 JSON Schema validation of returned domain records. It does not define compliance rules.
+- `backend/api/models.py`: typed Pydantic queries/responses and governance JSON Schema validation of returned domain records. It does not define compliance rules.
 - `backend/service.py`: loads one request-owned snapshot, calls `governance.model.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
 - `backend/repository.py`: `GovernanceRepository` protocol and read-only `FixtureRepository`. The deployed `DynamoSnapshotRepository` and `DynamoCatalog` preserve immutable version/digest selection and strongly verify the read model.
 - `backend/auth.py`, `app.py`: identity/permission boundary, application factory, sanitized error handling. No cloud SDKs or network calls.
@@ -122,7 +122,7 @@ The fixture adapter parses fresh JSON per request so caller mutations cannot aff
 git diff --check
 ```
 
-Tests cover every route, Pydantic/Phase 1 contract validation, paging/filter combinations, invalid and absent IDs, default denial, demo peer/host/token restrictions, permission denial, metadata, exception expiration, evaluator parity, deterministic UTC-equivalent responses, safe internal errors, repository isolation, CLI defaults, OpenAPI, and fail-closed Mangum invocation. Existing Phase 1 tests run in the same suite.
+Tests cover every route, Pydantic/domain contract validation, paging/filter combinations, invalid and absent IDs, default denial, demo peer/host/token restrictions, permission denial, metadata, exception expiration, evaluator parity, deterministic UTC-equivalent responses, safe internal errors, repository isolation, CLI defaults, OpenAPI, and fail-closed Mangum invocation. Governance model tests run in the same suite.
 
 References: [FastAPI response validation](https://fastapi.tiangolo.com/tutorial/response-model/), [Mangum adapter](https://mangum.fastapiexpert.com/adapter/).
 

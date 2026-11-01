@@ -1,8 +1,8 @@
-# Phase 5 — policy lifecycle interview demonstration
+# Policy lifecycle simulation
 
 For the simplified **one-command, visual five-minute demo**, use [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md). The commands below remain the advanced step-by-step explanation. No live publication is performed by either workflow.
 
-The project owner confirms the existing AWS-hosted Version 1 dashboard works. This phase neither inspects nor changes it. The Python CLI is a local simulation: it performs no AWS SDK client creation, credential lookup, account provisioning, AFT execution, Terraform subprocess, database write or dashboard publication. It is separate from the read-only application.
+The Python CLI runs independently of the AWS-hosted console. It is a local simulation: it performs no AWS SDK client creation, credential lookup, account provisioning, AFT execution, Terraform subprocess, database write or dashboard publication. It is separate from the read-only application.
 
 The optional Terraform companion below performs **real local Terraform validation and planning**, not deployment. It has no providers, resources or data sources. The Python lifecycle, AFT execution records and compliance observations remain simulated. It is isolated from the deployed POC.
 
