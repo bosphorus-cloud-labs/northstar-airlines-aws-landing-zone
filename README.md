@@ -1,8 +1,8 @@
 # NorthStar Airlines AWS Landing Zone Governance
 
-NorthStar Airlines is an AWS governance proof of concept developed for the Emirates Senior Technical Engineer – Public Cloud case study. It combines reusable Terraform configuration, deterministic policy evaluation and a read-only operations console.
+NorthStar Airlines provides a central view of AWS account governance, policy rollout outcomes and compliance evidence. The solution combines reusable Terraform configuration, deterministic policy evaluation and a read-only operations console, with a single-account deployment for validating the architecture and delivery controls.
 
-The application runs in a single AWS account in **eu-central-1 (Frankfurt)**. Its fleet inventory, account customizations and compliance evidence are synthetic. The hosting, authentication, API, storage and approved snapshot-publication pipeline are deployed AWS services.
+The application runs in a single AWS account in **eu-central-1 (Frankfurt)**. Its fleet inventory, account customizations and compliance evidence are synthetic. Hosting, authentication, the API and storage use deployed AWS services. GitHub Actions publishes approved governance snapshots through a separate data-delivery workflow.
 
 [Open the governance console](https://main.d1eetlse86595h.amplifyapp.com/). Access requires an invited Amazon Cognito user with governance-reader membership. See [deployment acceptance](docs/DEPLOYMENT_ACCEPTANCE.md) for the verified publication, rollback and application tests.
 
@@ -41,7 +41,7 @@ Evaluation distinguishes compliant, noncompliant, unknown and stale findings. Mi
 | V1 / policy 1.0.0 | 10 | 31 | 3 | 6 | 10 |
 | V2 / policy 2.0.0 | 11 | 43 | 4 | 9 | 10 |
 
-V2 adds audit-log integrity validation and demonstrates canary rollout, a controlled failure, retry and account onboarding. The verified deployment restored V2 as Current at catalogue generation 4 after a V1 rollback. Evaluation timestamps are fixed synthetic reference times, not AWS collection times.
+V2 adds audit-log integrity validation and demonstrates canary rollout, a controlled failure, retry and account onboarding. Publication and rollback results are recorded in [deployment validation](docs/DEPLOYMENT_ACCEPTANCE.md). Evaluation timestamps are fixed synthetic reference times, not AWS collection times.
 
 V1/V2 label whole-governance snapshots, not application releases. Production policies would need independent revisions, owners, scope, approval history and account-specific deployment records. Only the V1/V2 scenarios are implemented; additional versions require reviewed contracts and scenario registration.
 
@@ -53,7 +53,7 @@ V1/V2 label whole-governance snapshots, not application releases. Production pol
 
 Amplify builds the frontend from the protected GitHub `main` branch using [amplify.yml](amplify.yml). Main-only automatic builds are enabled; app-wide automatic builds and PR previews are disabled. These frontend releases are independent of governance-data publication: selecting or publishing a snapshot requires no frontend rebuild.
 
-The deployed POC uses an explicit **single-owner approval model**. The owner may approve an environment deployment, administrator bypass is disabled, and required CI and main-only deployment restrictions remain enforced. This is not independent enterprise review. CodePipeline, CodeBuild, manual approval and SNS are documented enterprise integration points, not deployed components. See [delivery controls](docs/GOVERNANCE_DELIVERY.md) and the [CI/CD runbook](docs/CI_CD_DEMO.md).
+The deployed POC uses an explicit **single-owner approval model**. The owner may approve an environment deployment, administrator bypass is disabled, and required CI and main-only deployment restrictions remain enforced. This is not independent enterprise review. CodePipeline, CodeBuild, manual approval and SNS are documented enterprise integration points, not deployed components. See [delivery controls](docs/GOVERNANCE_DELIVERY.md) and [CI/CD operations](docs/CI_CD_OPERATIONS.md).
 
 ## Run locally
 
@@ -75,18 +75,6 @@ npm --prefix frontend run dev
 ```
 
 Open [the local console](http://127.0.0.1:5173/) or [API documentation](http://127.0.0.1:8000/docs). Both servers bind to loopback. Explicit `--local-demo` mode grants a local read-only identity; it is unsuitable for shared or public hosts. The default API denies access, and deployed Lambda cannot enable this bypass. Amplify uses explicit API/Cognito configuration rather than the local Vite proxy.
-
-### Interview rehearsal
-
-The [five-minute runbook](docs/INTERVIEW_DEMO.md) covers the live console, completed CI/CD evidence and the local fallback. Prepare workflow links before presenting rather than waiting for a pipeline during the demonstration.
-
-```sh
-./demo.sh v1       # Prepare the local baseline before the interview.
-./demo.sh v2       # Run the rollout demonstration, then refresh the local console.
-./demo.sh reset    # Return local Current to V1; retain historical artifacts.
-```
-
-The launcher runs Terraform formatting, initialization, validation, planning and parity checks, followed by simulated approval, distribution, failure/retry and onboarding. It updates only local artifacts and the local console; it never publishes DynamoDB records or changes the AWS-hosted application.
 
 ## Validation
 
@@ -118,7 +106,7 @@ terraform -chdir=terraform/poc test \
   -var=lambda_package_path=../../artifacts/validation/mock-lambda.zip
 ```
 
-The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider plans and do not prove AWS deployment compatibility. A normal POC plan/refresh contacts AWS and is not an offline validation step. The [provider-free Terraform guide](terraform/simulation/README.md) contains the full planning and parity commands; `./demo.sh v2` runs that path locally.
+The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider plans and do not prove AWS deployment compatibility. A normal POC plan/refresh contacts AWS and is not an offline validation step. The [provider-free Terraform guide](terraform/simulation/README.md) contains the full planning and parity commands. [Local Demonstration](docs/LOCAL_DEMONSTRATION.md) describes the `./demo.sh` workflow, reset behavior and console checks.
 
 ## Repository guide
 

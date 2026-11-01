@@ -93,9 +93,9 @@ Amplify builds the frontend from protected main; Terraform supplies public API/C
 
 ## Read-only policy selector
 
-The interview source reads the version catalogue from the API summary and renders options dynamically. Each dataset/detail query is scoped by policy version, immutable hash and evaluation time, and validates returned identity before displaying data. Switching resets page filters and does not show another version's data during loading/error. A failed V2 load is visible; return to V1 explicitly. Catalogue-unavailable legacy APIs remain V1-only. Authentication and deployed configuration are unchanged.
+The frontend reads the version catalogue from the API summary and renders options dynamically. Each dataset/detail query is scoped by policy version, immutable hash and evaluation time, and validates returned identity before displaying data. Switching resets page filters and does not show another version's data during loading/error. A failed V2 load is visible; return to V1 explicitly. Catalogue-unavailable legacy APIs remain V1-only. Authentication and deployed configuration are unchanged.
 
-The UI shows simulated rollout stages and environment-specific requirements from API responses, plus evidence observation timestamps. The generated V1/V2 fixtures are test-only, not a frontend fallback. Hosted Current/History is deployed; [INTERVIEW_DEMO.md](INTERVIEW_DEMO.md) provides the live demonstration and local fallback.
+The UI shows simulated rollout stages and environment-specific requirements from API responses, plus evidence observation timestamps. The generated V1/V2 fixtures are test-only, not a frontend fallback. Hosted Current/History is deployed; [LOCAL_DEMONSTRATION.md](LOCAL_DEMONSTRATION.md) provides the live demonstration and local fallback.
 
 The operations-console refinement follows the server-owned Current marker by default, with no persisted policy selection. History is explicitly labeled Historical evaluation with revision/time/hash options; it is not an application-version switch. A fresh page opens Current, and Refresh current state returns to the latest marker. The console does not show baseline data as Current when marker resolution fails. Deployments prioritizes target/approval/stage/retry outcomes and explicitly separates successful distribution from compliance evidence.
 

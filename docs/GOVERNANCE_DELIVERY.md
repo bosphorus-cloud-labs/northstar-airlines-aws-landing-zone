@@ -62,7 +62,7 @@ An operator must separately approve/apply that exact reviewed plan. The authoriz
 
 ### 2. Configure protected GitHub delivery
 
-The repository is public and user-owned. The owner has explicitly chosen the single-owner interview POC model: `GOVERNANCE_APPROVAL_MODEL=single-owner-poc` as a repository variable. `governance-production` requires the real owner, permits self-review, disables administrator bypass, and allows only exact main. The workflow still waits for the owner's actual GitHub deployment approval. No CLI approval, fabricated review or administrative bypass is used. Enterprise deployments should keep the default independent model and assign a different reviewer.
+The repository is public and user-owned. The owner has explicitly chosen the single-owner POC model: `GOVERNANCE_APPROVAL_MODEL=single-owner-poc` as a repository variable. `governance-production` requires the real owner, permits self-review, disables administrator bypass, and allows only exact main. The workflow still waits for the owner's actual GitHub deployment approval. No CLI approval, fabricated review or administrative bypass is used. Enterprise deployments should keep the default independent model and assign a different reviewer.
 
 Add environment variables, not AWS keys:
 
@@ -120,7 +120,7 @@ Only after CI, publication/promotion/rollback and authenticated dashboard refres
 
 ## Local reproduction and costs
 
-Use the existing `./demo.sh v1` / `./demo.sh v2` for the offline interview fallback. Real provider-free plan/parity plus simulated rollout remain separate from real publication. `scripts.governance_release build` requires a clean committed checkout and completed CLI run/real plan JSON; no credential is needed. `check` validates release SHA/digest offline. Only explicit execute modes construct an AWS client, and require table confirmation, generation and approved digest.
+Use the existing `./demo.sh v1` / `./demo.sh v2` for an offline local demonstration. Real provider-free plan/parity plus simulated rollout remain separate from real publication. `scripts.governance_release build` requires a clean committed checkout and completed CLI run/real plan JSON; no credential is needed. `check` validates release SHA/digest offline. Only explicit execute modes construct an AWS client, and require table confirmation, generation and approved digest.
 
 GitHub Actions usage, DynamoDB conditional/strong reads/writes, Lambda polling and Amplify builds/storage/traffic can incur charges. No NAT/VPC/Control Tower/Organizations/AFT infrastructure is added. Closing the dashboard stops catalogue polling. History is retained; there is no automatic deletion/TTL cleanup. Infra teardown, permission removal and data retention need separate reviewed plans. Publication roles cannot delete data or provision infrastructure.
 

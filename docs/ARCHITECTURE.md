@@ -81,15 +81,15 @@ V1 defines ten synthetic accounts, one root with four environment OUs and five r
 - [AFT prerequisites and purpose](https://docs.aws.amazon.com/controltower/latest/userguide/aft-overview.html)
 - [Updating existing accounts with AFT](https://docs.aws.amazon.com/controltower/latest/userguide/aft-update-account.html)
 
-## Read-only versioned interview view
+## Read-only snapshot selection
 
-The [one-command interview workflow](INTERVIEW_DEMO.md) adds a server-owned version catalogue on the existing summary route. All data GETs accept a semantic policy version; repository selection stays server-side. Local/pinned compatibility defaults to V1; deployed requests without explicit version/time follow Current. V2 uses a distinct content-addressed snapshot including its simulated journal/reference metadata. Optional Lambda configuration registers only pinned DynamoDB readers; the local launcher explicitly supplies an immutable file catalogue to the loopback demo server. Neither path grants browser or Lambda writes.
+The API exposes a server-owned version catalogue on the summary route; see [console validation](LOCAL_DEMONSTRATION.md). All data GETs accept a semantic policy version; repository selection stays server-side. Local/pinned compatibility defaults to V1; deployed requests without explicit version/time follow Current. V2 uses a distinct content-addressed snapshot including its simulated journal/reference metadata. Optional Lambda configuration registers only pinned DynamoDB readers; the local launcher explicitly supplies an immutable file catalogue to the loopback demo server. Neither path grants browser or Lambda writes.
 
-React scopes caches and metadata checks to the selected version/hash/time. Local rehearsal publishes no cloud data. The existing Cognito/app/API/table identities and immutable V1 are preserved. Authorized IAM/runtime activation and actual publication are recorded in the acceptance report. Only V1/V2 policy profiles exist today; future versions use the same envelope with explicitly registered contracts/scenarios.
+React scopes caches and metadata checks to the selected version/hash/time. Local demonstrations publish no cloud data. The existing Cognito/app/API/table identities and immutable V1 are preserved. Authorized IAM/runtime activation and actual publication are recorded in the acceptance report. Only V1/V2 policy profiles exist today; future versions use the same envelope with explicitly registered contracts/scenarios.
 
 ## CI and cloud delivery boundary
 
-[Credential-free CI](CI_CD_DEMO.md) runs on PRs/main and performs real provider-free fmt/init/validate/plan/parity, Python/schema/security tests, POC mock-provider plans and frontend checks. It uploads only enumerated synthetic review/candidate artifacts, never credentials, Terraform state or executable infrastructure plans. It cannot deploy AWS. A separate manual-dispatch CD workflow reruns CI, checks exact commit/digest and owner/PR/environment policy, waits for actual approval, then assumes the data-only role through OIDC. Local `demo.sh` independently changes only local Current. CodePipeline/CodeBuild/SNS are enterprise design points, not deployed resources.
+[Credential-free CI](CI_CD_OPERATIONS.md) runs on PRs/main and performs real provider-free fmt/init/validate/plan/parity, Python/schema/security tests, POC mock-provider plans and frontend checks. It uploads only enumerated synthetic review/candidate artifacts, never credentials, Terraform state or executable infrastructure plans. It cannot deploy AWS. A separate manual-dispatch CD workflow reruns CI, checks exact commit/digest and owner/PR/environment policy, waits for actual approval, then assumes the data-only role through OIDC. Local `demo.sh` independently changes only local Current. CodePipeline/CodeBuild/SNS are enterprise design points, not deployed resources.
 
 ## Approved snapshot delivery
 
