@@ -1,0 +1,13 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "DenyUnapprovedRegions",
+    "Effect": "Deny",
+    "NotAction": ["aws-marketplace-management:*", "aws-marketplace:*", "aws-portal:*", "budgets:*", "ce:*", "cloudfront:*", "cur:*", "ec2:DescribeRegions", "health:*", "iam:*", "networkmanager:*", "organizations:*", "pricing:*", "route53:*", "route53domains:*", "s3:GetAccountPublic*", "s3:ListAllMyBuckets", "s3:ListMultiRegionAccessPoints", "s3:PutAccountPublic*", "shield:*", "sts:*", "support:*", "trustedadvisor:*", "waf:*"],
+    "Resource": "*",
+    "Condition": {
+      "StringNotEquals": {"aws:RequestedRegion": ["eu-central-1", "eu-west-1"]},
+      "ArnNotLike": {"aws:PrincipalArn": ["arn:aws:iam::*:role/AWSControlTowerExecution", "arn:aws:iam::*:role/NorthStarEmergencyRepair"]}
+    }
+  }]
+}

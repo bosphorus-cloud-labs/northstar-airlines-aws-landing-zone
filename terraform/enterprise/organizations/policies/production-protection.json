@@ -1,0 +1,15 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "DenyLeavingOrganization",
+    "Effect": "Deny",
+    "Action": ["organizations:LeaveOrganization"],
+    "Resource": "*"
+  }, {
+    "Sid": "DenyDisablingSecurityServices",
+    "Effect": "Deny",
+    "Action": ["config:DeleteConfigurationRecorder", "config:StopConfigurationRecorder", "guardduty:DeleteDetector", "securityhub:DisableSecurityHub"],
+    "Resource": "*",
+    "Condition": {"ArnNotLike": {"aws:PrincipalArn": ["arn:aws:iam::*:role/AWSControlTowerExecution", "arn:aws:iam::*:role/NorthStarEmergencyRepair"]}}
+  }]
+}

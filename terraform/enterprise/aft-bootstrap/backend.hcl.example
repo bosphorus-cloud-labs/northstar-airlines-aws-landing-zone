@@ -1,0 +1,5 @@
+bucket         = "northstar-aft-bootstrap-state-example"
+key            = "aft-bootstrap/terraform.tfstate"
+region         = "eu-central-1"
+encrypt        = true
+use_lockfile   = true
