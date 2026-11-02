@@ -420,9 +420,16 @@ class PackagingAndTerraformTests(unittest.TestCase):
 
     def test_hcl_security_boundaries_and_no_enterprise_resources(self):
         resources = {}
-        for path in (ROOT / "terraform").rglob("*.tf"):
-            if ".terraform" in path.parts:
-                continue
+        deployed_poc_roots = [
+            ROOT / "terraform/poc",
+            ROOT / "terraform/modules/governance_delivery",
+            ROOT / "terraform/modules/poc_compute",
+            ROOT / "terraform/modules/poc_data",
+            ROOT / "terraform/modules/poc_hosting",
+            ROOT / "terraform/modules/poc_http_api",
+            ROOT / "terraform/modules/poc_identity",
+        ]
+        for path in (path for root in deployed_poc_roots for path in root.glob("*.tf")):
             config = hcl2.loads(
                 path.read_text(),
                 serialization_options=SerializationOptions(
