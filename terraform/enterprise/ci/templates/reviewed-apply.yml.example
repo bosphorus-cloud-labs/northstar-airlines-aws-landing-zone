@@ -1,0 +1,70 @@
+name: Illustrative enterprise Terraform reviewed apply handoff
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha: { required: true, type: string }
+      root: { required: true, type: choice, options: [organizations, networking-core] }
+      plan_run_id: { required: true, type: string }
+      artifact_sha256: { required: true, type: string }
+permissions: { contents: read }
+jobs:
+  reviewed-handoff:
+    runs-on: [self-hosted, linux, enterprise-terraform]
+    environment: enterprise-production
+    permissions: { contents: read, id-token: write, actions: read }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with: { ref: '${{ inputs.source_sha }}', fetch-depth: 0, persist-credentials: false }
+      - name: Verify exact approved commit is reachable from main
+        run: |
+          test "$(git rev-parse HEAD)" = "${{ inputs.source_sha }}"
+          git merge-base --is-ancestor "${{ inputs.source_sha }}" origin/main
+      - name: Verify runner artifact tools
+        run: command -v age && command -v jq && command -v sha256sum && command -v tar
+      - name: Download the exact plan-run artifact
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: enterprise-plan-${{ inputs.plan_run_id }}
+          path: ${{ runner.temp }}/plan-artifact
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.plan_run_id }}
+      - name: Verify, decrypt, and inspect provenance
+        env: { PLAN_AGE_IDENTITY: '${{ secrets.PLAN_AGE_IDENTITY }}' }
+        run: |
+          cd "$RUNNER_TEMP/plan-artifact"
+          test "$(sha256sum review.tar.age | cut -d' ' -f1)" = "${{ inputs.artifact_sha256 }}"
+          printf '%s' "$PLAN_AGE_IDENTITY" > "$RUNNER_TEMP/age-identity.txt"
+          age --decrypt -i "$RUNNER_TEMP/age-identity.txt" -o "$RUNNER_TEMP/review.tar" review.tar.age
+          tar -C "$RUNNER_TEMP" -xf "$RUNNER_TEMP/review.tar"
+          test "$(jq -r .source_sha "$RUNNER_TEMP/manifest.json")" = "${{ inputs.source_sha }}"
+          test "$(jq -r .root "$RUNNER_TEMP/manifest.json")" = "${{ inputs.root }}"
+          test "$(jq -r .run_id "$RUNNER_TEMP/manifest.json")" = "${{ inputs.plan_run_id }}"
+          test "$(sha256sum "$RUNNER_TEMP/review.tfplan" | cut -d' ' -f1)" = "$(jq -r .plan_sha256 "$RUNNER_TEMP/manifest.json")"
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with: { terraform_version: 1.14.6, terraform_wrapper: false }
+      - name: Select and initialize the approved state boundary
+        run: |
+          case "${{ inputs.root }}" in
+            organizations) root=terraform/enterprise/organizations ;;
+            networking-core) root=terraform/enterprise/networking/core ;;
+            *) exit 2 ;;
+          esac
+          echo "TF_ROOT=$root" >> "$GITHUB_ENV"
+          echo "TF_STATE_KEY=enterprise/${{ inputs.root }}/terraform.tfstate" >> "$GITHUB_ENV"
+      - name: Assume distinct deployment identity after environment approval
+        uses: aws-actions/configure-aws-credentials@4a1596c86fd706dc0521e32f0121ad1a6d1adb74 # v6
+        with:
+          role-to-assume: ${{ vars.ENTERPRISE_APPLY_ROLE_ARN }}
+          aws-region: eu-central-1
+          role-session-name: apply-${{ github.run_id }}
+      - name: Reinitialize state and verify the saved plan is readable
+        run: |
+          terraform -chdir="$TF_ROOT" init -input=false \
+            -backend-config="bucket=${{ vars.ENTERPRISE_STATE_BUCKET }}" \
+            -backend-config="key=$TF_STATE_KEY" \
+            -backend-config="region=eu-central-1" \
+            -backend-config="use_lockfile=true"
+          test "$(sha256sum "$TF_ROOT/.terraform.lock.hcl" | cut -d' ' -f1)" = "$(jq -r .lock_sha256 "$RUNNER_TEMP/manifest.json")"
+          terraform -chdir="$TF_ROOT" show -no-color "$RUNNER_TEMP/review.tfplan" > /dev/null
+      - name: Deliberate deployment stop
+        run: echo "The deployment command is deliberately absent from this illustrative template."
