@@ -33,7 +33,7 @@
     {
       "control_id": "audit-log-integrity",
       "expected": true,
-      "max_age_hours": 168
+      "max_age_hours": 144
     }
   ]
 }
