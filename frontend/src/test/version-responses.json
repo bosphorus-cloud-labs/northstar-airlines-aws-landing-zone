@@ -82,7 +82,7 @@
           "policy_version": "2.0.0",
           "profile": "policy-v2",
           "evaluated_at": "2026-10-31T12:28:00Z",
-          "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+          "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
           "generator": "northstar-policy-rollout-v1"
         },
         "current_run": "run-0001",
@@ -98,7 +98,7 @@
             "policy_version": "2.0.0",
             "profile": "policy-v2",
             "evaluated_at": "2026-10-31T12:28:00Z",
-            "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+            "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
             "generator": "northstar-policy-rollout-v1"
           }
         ],
@@ -1840,7 +1840,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -1964,7 +1964,7 @@
           "policy_version": "2.0.0",
           "profile": "policy-v2",
           "evaluated_at": "2026-10-31T12:28:00Z",
-          "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+          "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
           "generator": "northstar-policy-rollout-v1"
         },
         "current_run": "run-0001",
@@ -1980,7 +1980,7 @@
             "policy_version": "2.0.0",
             "profile": "policy-v2",
             "evaluated_at": "2026-10-31T12:28:00Z",
-            "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+            "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
             "generator": "northstar-policy-rollout-v1"
           }
         ],
@@ -2306,7 +2306,7 @@
             {
               "control_id": "audit-log-integrity",
               "expected": true,
-              "max_age_hours": 168
+              "max_age_hours": 144
             }
           ],
           "pre-production": [
@@ -2413,7 +2413,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -2800,7 +2800,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -3979,7 +3979,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -4241,7 +4241,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:18:00Z",
           "completed_at": "2026-10-31T12:19:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4256,7 +4256,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:20:00Z",
           "completed_at": "2026-10-31T12:21:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4271,7 +4271,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:22:00Z",
           "completed_at": "2026-10-31T12:23:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4286,7 +4286,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:11:00Z",
           "completed_at": "2026-10-31T12:12:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4301,7 +4301,7 @@
           "status": "failed",
           "started_at": "2026-10-31T12:13:00Z",
           "completed_at": "2026-10-31T12:14:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": "SIMULATED AccessDenied: customization role permission check failed; no AWS call occurred."
         },
         {
@@ -4316,7 +4316,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:16:00Z",
           "completed_at": "2026-10-31T12:17:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4331,7 +4331,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:08:00Z",
           "completed_at": "2026-10-31T12:09:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4346,7 +4346,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:05:00Z",
           "completed_at": "2026-10-31T12:06:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4361,7 +4361,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:02:00Z",
           "completed_at": "2026-10-31T12:03:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         },
         {
@@ -4376,7 +4376,7 @@
           "status": "succeeded",
           "started_at": "2026-10-31T12:26:00Z",
           "completed_at": "2026-10-31T12:27:00Z",
-          "correlation_id": "sim-phase5-1af76bc2bafb",
+          "correlation_id": "sim-phase5-f2e883b67002",
           "failure_reason": null
         }
       ],
@@ -4392,7 +4392,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -4645,7 +4645,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
@@ -4816,7 +4816,7 @@
         "policy_version": "2.0.0",
         "profile": "policy-v2",
         "evaluated_at": "2026-10-31T12:28:00Z",
-        "snapshot_id": "1e00c3c3e1919a59dd16a83f092d1c2bab2cdff68c0999c33cb1735822098fc5",
+        "snapshot_id": "a997f7afe660e2f810f407c14907ac1859c9e05d27086e1c38ba69405536d9ea",
         "generator": "northstar-policy-rollout-v1",
         "api_version": "v1",
         "source": "northstar-synthetic-v1",
