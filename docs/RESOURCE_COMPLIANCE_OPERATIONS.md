@@ -33,7 +33,7 @@ The Terraform plan represents desired configuration. It does not provision or re
 5. Only then is the existing least-privilege OIDC role assumed. The job revalidates provenance before requesting credentials and rechecks current main immediately before writes and promotion. No long-lived AWS credentials are introduced.
 6. Immutable records are inserted conditionally, manifest last, then read strongly and integrity-checked. A conditional catalogue update selects Current and appends before/after audit records. A failed/partial load cannot promote Current. Already-current data is a verified no-op.
 
-The new catalogue uses `GOVERNANCE#CATALOG / RESOURCE-COMPLIANCE`. The existing `STATE` catalogue and all historical snapshots remain untouched. Snapshot identifiers and internal compare-and-swap generations remain implementation details; users do not manage them. A Git revert reuses immutable content and records a new approved publication event. A bounded history of 128 publications and 25 accounts/100 resources intentionally limits this POC; indexed fleet-scale storage and archival are future work.
+The new catalogue uses `GOVERNANCE#CATALOG / RESOURCE-COMPLIANCE`. The existing `STATE` catalogue and all historical snapshots remain untouched. Snapshot identifiers and internal compare-and-swap generations remain implementation details; users do not manage them. A Git revert reuses immutable content and records a new approved publication event. A bounded history of 128 publications and 100 accounts/200 resources intentionally limits this POC; indexed fleet-scale storage and archival are future work.
 
 Use the existing delivery workflow's `resources` action on main only for a controlled baseline retry; source SHA and content identity are selected and verified automatically. Older dispatch actions remain available for the preserved catalogue recovery procedure, not the new presentation workflow.
 
@@ -88,8 +88,8 @@ Changing an observation does not weaken Terraform's desired requirement: IMDSv2 
 
 Prepare successful baseline publication and cloud activation before presenting. Keep the CI artifact/report and a captured publication receipt available so the demonstration does not rely on waiting for a runner.
 
-1. **Central governance and Terraform (45 seconds):** open `compliance-rules/resource-controls.json`, then CI's `policy-rollout/resources-ci/terraform-plan.txt` and release report. Show the same central controls assigned to all ten synthetic accounts, with Production/Pre-Production/Testing/Development freshness of 24/48/72/168 hours. Show the console's environment table and verified Terraform status. Say: “Terraform calculates the desired baseline across synthetic accounts. The same input is checked against observations by the compliance engine.”
-2. **Multi-account reporting (45 seconds):** open Accounts to show account-specific status and environment assignments, then Resources. Search `Booking API`. Its EC2 metadata setting is `required`; the IMDSv2 control is compliant. Show desired, observed and evidence time. Point out the separate noncompliant, unknown and stale examples.
+1. **Central governance and Terraform (45 seconds):** open `compliance-rules/resource-controls.json`, then CI's `policy-rollout/resources-ci/terraform-plan.txt` and release report. Show the same central controls assigned to all 100 synthetic accounts, with Production/Pre-Production/Testing/Development freshness of 24/48/72/168 hours. Show the console's environment table and verified Terraform status. Say: “Terraform calculates the desired baseline across synthetic accounts. The same input is checked against observations by the compliance engine.”
+2. **Multi-account reporting (45 seconds):** open Accounts to show account-specific status and environment assignments, then Resources. Search `Booking API`. Its EC2 metadata setting is `required`; the IMDSv2 control is compliant. The unified fleet has 100 accounts (30 Production, 20 Pre-Production, 20 Testing, 30 Development) and 100 resources. Baseline results are 77 compliant / 9 noncompliant / 7 unknown / 7 stale. Use account search rather than paging through the whole fleet. Show desired, observed and evidence time. Point out the separate noncompliant, unknown and stale examples.
 3. **Git change and CI (90 seconds):** in VS Code edit only `mock-aws-resources/resources.json`: for `sim-ec2-001`, change `configuration.metadata_options.http_tokens` from `required` to `optional`. On a fresh feature branch run:
 
    ```sh
@@ -105,7 +105,7 @@ Prepare successful baseline publication and cloud activation before presenting. 
    ```
 
    Show completed CI and its readable provider-free Terraform plan. This is a valid observation of an insecure configuration; validation must accept it and report the violation. CI rejects invalid schema or unsafe baseline weakening, not all negative observations.
-4. **Approved publication (60 seconds):** merge through protected PR checks, approve the real Environment deployment when GitHub prompts, then refresh the console. Booking API becomes noncompliant because optional metadata tokens allow IMDSv1. Publication history records the old/new setting and status. No frontend rebuild is required to read new data (Amplify may independently rebuild on main pushes).
+4. **Approved publication (60 seconds):** merge through protected PR checks, approve the real Environment deployment when GitHub prompts, then refresh the console. Booking API becomes noncompliant because optional metadata tokens allow IMDSv1. Fleet results become 76 compliant / 10 noncompliant / 7 unknown / 7 stale; reverting restores 77 / 9 / 7 / 7. Publication history records the old/new setting and status. No frontend rebuild is required to read new data (Amplify may independently rebuild on main pushes).
 5. **Git rollback (60 seconds):** after the change has merged, create a fresh branch from updated main and revert the original data commit:
 
    ```sh
@@ -145,3 +145,21 @@ The three required proofs are therefore visible in five minutes: **central envir
 Deploy the backwards-compatible Lambda package first, without changing authentication, IAM, API routes or the existing catalogue. Verify existing endpoints and denied unauthenticated requests. Merge/review the pipeline, obtain real Environment approval and verify the new catalogue and manifest. Only then plan the `governance_frontend_mode = "resources"` change: expect one existing Amplify main-branch environment update, no creates/destroys, no Cognito/API/DynamoDB/IAM changes. Apply only a reviewed non-destructive plan and build the frontend through Amplify.
 
 Keep the previous Lambda artifact and existing frontend mode for operational recovery. Reverting the console activation restores the old console without touching either dataset. Data rollback uses a normal reviewed Git revert and protected publication. No enterprise deployment, resource remediation or Terraform apply occurs in the governance-data workflow.
+
+## Reproducing the 100-account fleet
+
+There are 100 current accounts in total, not 100 additional accounts. `mock-aws-resources/` is the single editable current fleet. The original ten account/resource records, including Booking API and the Production 18-hour EBS observation, are retained unchanged. Ninety deterministic workload accounts extend that inventory; fixed ten-account test scenarios and immutable historical snapshots are regression/audit evidence, not another active fleet.
+
+To reproduce the initial extension without changing source files or contacting AWS:
+
+```sh
+.venv/bin/python -m deployment.generate_synthetic_fleet
+```
+
+This writes preview JSON to ignored `artifacts/synthetic-fleet/`. Do not regenerate over an operator's later observation changes. Normal demonstrations still edit only the Booking API attribute in `mock-aws-resources/resources.json`.
+
+Real Terraform plans all 100 accounts and checks every environment/control/approval assignment against Python. The same bounded atomic API snapshot feeds summary, account details, filters and client-side pagination; no per-page cloud scans or separate data source is introduced. Page-size controls offer 5/10/25/50 rows with first/last navigation. Refresh clamps pagination if a restored dataset has fewer records. Large publication entries collapse, while single-resource changes remain visible.
+
+Capacity is bounded at 100 accounts, 200 resources and 200 KB of canonical snapshot JSON including the Terraform receipt. Each immutable DynamoDB payload remains below the 400 KiB item limit, and its two-item strongly consistent query remains below the 1 MiB query-page limit. The catalogue retains its 300 KB/128-event budget and 200 changes per event; oversized changes fail before writes. API views have an additional 2 MB budget, below Lambda's synchronous response limit. This is a 100-account synthetic demonstration, not unbounded enterprise ingestion.
+
+Deploy the validated backwards-compatible Lambda package before approving the 100-account publication: the previous deployed validator permits only 25 accounts. Expect exactly one Lambda code update and zero other resource changes. Keep existing Current untouched until that code is verified, then use the normal protected publication. No table migration, new IAM permissions or enterprise resources are required.

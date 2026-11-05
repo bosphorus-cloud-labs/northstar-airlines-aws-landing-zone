@@ -64,6 +64,7 @@ it("navigates, paginates and filters account inventory then opens account resour
   const user = userEvent.setup();
   show("/accounts");
   await screen.findByText(/10 accounts · Page 1/);
+  await user.selectOptions(screen.getByLabelText("Rows per page"), "5");
   await user.click(screen.getByRole("button", { name: "Next" }));
   expect(screen.getByText(/Page 2/)).toBeInTheDocument();
   await user.selectOptions(screen.getByLabelText("Environment"), "production");
@@ -219,4 +220,58 @@ it("opens a read-only acceptance preview without changing the default or authent
   expect(
     fetcher.mock.calls.every(([, options]) => options?.method === "GET"),
   ).toBe(true);
+});
+
+it("navigates the full 100-account fleet, filters environments and handles current-state shrink", async () => {
+  const scale = (await import("./resource-scale-responses.json")).default;
+  fetcher.mockImplementation(async () => new Response(JSON.stringify(scale)));
+  const user = userEvent.setup();
+  show("/accounts");
+  await screen.findByText(/100 accounts · Page 1 of 10/);
+  expect(
+    screen.getByText(/Evaluating 100 synthetic AWS accounts/),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Last" }));
+  expect(screen.getByText(/Page 10 of 10/)).toBeInTheDocument();
+  expect(screen.getByText("sim-account-100")).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Environment"), "production");
+  expect(screen.getByText(/30 accounts · Page 1 of 3/)).toBeInTheDocument();
+  await user.selectOptions(
+    screen.getByLabelText("Compliance status"),
+    "noncompliant",
+  );
+  expect(screen.getByText(/2 accounts · Page 1 of 1/)).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Environment"), "");
+  await user.selectOptions(screen.getByLabelText("Compliance status"), "");
+  await user.selectOptions(screen.getByLabelText("Rows per page"), "25");
+  expect(screen.getByText(/100 accounts · Page 1 of 4/)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Last" }));
+  fetcher.mockImplementation(
+    async () => new Response(JSON.stringify(response)),
+  );
+  await user.click(screen.getByRole("button", { name: "Refresh" }));
+  expect(
+    await screen.findByText(/10 accounts · Page 1 of 1/),
+  ).toBeInTheDocument();
+  expect(screen.getByText("sim-account-001")).toBeInTheDocument();
+});
+
+it("paginates 100 resource findings and keeps Booking API discoverable by account or name", async () => {
+  const scale = (await import("./resource-scale-responses.json")).default;
+  fetcher.mockImplementation(async () => new Response(JSON.stringify(scale)));
+  const user = userEvent.setup();
+  show("/resources");
+  await screen.findByText(/100 resources · Page 1 of 10/);
+  expect(screen.getAllByRole("row")).toHaveLength(11);
+  await user.click(screen.getByRole("button", { name: "Last" }));
+  expect(screen.getByText(/Page 10 of 10/)).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Search"), "Booking API");
+  expect(screen.getByText(/1 resources · Page 1 of 1/)).toBeInTheDocument();
+  expect(screen.getByText("Booking API")).toBeInTheDocument();
+  await user.clear(screen.getByLabelText("Search"));
+  await user.type(screen.getByLabelText("Search"), "sim-account-100");
+  expect(screen.getByText(/1 resources · Page 1 of 1/)).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "sim-account-100" }),
+  ).toBeInTheDocument();
 });

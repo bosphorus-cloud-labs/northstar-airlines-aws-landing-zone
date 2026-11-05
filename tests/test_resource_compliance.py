@@ -355,3 +355,142 @@ class ResourceComplianceTests(unittest.TestCase):
             response = client.get("/api/v1/summary?view=resources")
             self.assertEqual(response.status_code, 503)
             self.assertNotIn("/private", response.text)
+
+
+class HundredAccountTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from deployment.generate_synthetic_fleet import extend
+
+        cls.generated = extend(load())
+        rollout.OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+        cls.temp = tempfile.TemporaryDirectory(dir=rollout.OUTPUT_ROOT)
+        cls.document, _, cls.plan = prepare(cls.generated, Path(cls.temp.name) / "hundred")
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.temp.cleanup()
+
+    def test_deterministic_fleet_preserves_original_accounts_and_observations(self):
+        from collections import Counter
+
+        from deployment.generate_synthetic_fleet import extend
+
+        baseline = load()
+        self.assertEqual(self.generated, extend(baseline))
+        self.assertEqual(self.generated, extend(self.generated))
+        self.assertEqual(
+            self.generated["accounts"]["accounts"][:10], baseline["accounts"]["accounts"]
+        )
+        self.assertEqual(
+            self.generated["inventory"]["resources"][:10], baseline["inventory"]["resources"]
+        )
+        self.assertEqual(
+            Counter(a["environment"] for a in self.generated["accounts"]["accounts"]),
+            {"production": 30, "pre-production": 20, "testing": 20, "development": 30},
+        )
+        self.assertEqual(
+            evaluate(self.document)["summary"],
+            {
+                "accounts": 100,
+                "resources": 100,
+                "controls": 3,
+                "compliant": 77,
+                "noncompliant": 9,
+                "unknown": 7,
+                "stale": 7,
+            },
+        )
+        # Actual editable input is validated independently from fixed unit scenarios.
+        current = evaluate(load_current())
+        self.assertEqual(current["summary"]["accounts"], 100)
+        self.assertEqual(current["summary"]["resources"], 100)
+        self.assertEqual(
+            {f["status"] for f in current["findings"]},
+            {"compliant", "noncompliant", "unknown", "stale"},
+        )
+
+    def test_real_terraform_assignments_cover_every_account_and_environment(self):
+        self.assertFalse(self.plan.get("resource_changes"))
+        receipt = self.document["terraform_validation"]["accounts"]
+        self.assertEqual(set(receipt), {f"sim-account-{i:03}" for i in range(1, 101)})
+        limits = {"production": 24, "pre-production": 48, "testing": 72, "development": 168}
+        for assignment in receipt.values():
+            self.assertEqual(
+                assignment["approval_required"],
+                assignment["environment"] in {"production", "pre-production"},
+            )
+            self.assertEqual(len(assignment["requirements"]), 3)
+            for requirement in assignment["requirements"].values():
+                self.assertEqual(requirement["max_age_hours"], limits[assignment["environment"]])
+
+    def test_existing_history_survives_expansion_regression_and_restoration(self):
+        from backend.deployment.resources import read_snapshot, view
+
+        client = MemoryDynamo([])
+        baseline, _, _ = prepare(load(), Path(self.temp.name) / "ten")
+        documents = [baseline, self.document]
+        bad = copy.deepcopy(self.generated)
+        booking = next(r for r in bad["inventory"]["resources"] if r["id"] == "sim-ec2-001")
+        booking["configuration"]["metadata_options"]["http_tokens"] = "optional"
+        regression, _, _ = prepare(bad, Path(self.temp.name) / "regression")
+        documents.extend([regression, self.document])
+        for number, document in enumerate(documents, 1):
+            publish(
+                client,
+                "northstar-offline-records",
+                document,
+                source_commit=f"{number:040x}",
+                actor="synthetic-reviewer",
+                operation=f"gh-{number}-1",
+                published_at="2026-11-05T12:00:00Z",
+            )
+        catalogue = read_catalog(client, "northstar-offline-records")
+        self.assertEqual(catalogue["generation"], 4)
+        self.assertEqual(catalogue["current"], digest(self.document))
+        for event in catalogue["history"]:
+            read_snapshot(client, "northstar-offline-records", event["target"])
+        self.assertEqual(catalogue["history"][2]["changes"][0]["before"], "compliant")
+        self.assertEqual(catalogue["history"][3]["changes"][0]["after"], "compliant")
+        with TestClient(
+            create_app(
+                local_demo=True,
+                resource_repository=DynamoResources(
+                    "northstar-offline-records", client_factory=lambda: client
+                ),
+            ),
+            base_url="http://127.0.0.1",
+            client=("127.0.0.1", 50000),
+        ) as api:
+            response = api.get("/api/v1/summary?view=resources")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.json()["data"]["accounts"]), 100)
+            self.assertEqual(response.json()["data"]["summary"]["compliant"], 77)
+            self.assertLess(len(response.content), 2_000_000)
+        self.assertLess(len(json.dumps(view(self.document, catalogue)).encode()), 2_000_000)
+        # DynamoDB's 400 KiB item and 1 MiB Query page limits have ample headroom.
+        self.assertTrue(
+            all(len(json.dumps(row).encode()) < 400_000 for row in client.rows.values())
+        )
+
+    def test_bounded_capacity_rejects_excess_and_oversized_input(self):
+        bad = copy.deepcopy(self.generated)
+        extra = {**bad["accounts"]["accounts"][-1], "id": "sim-account-101"}
+        bad["accounts"]["accounts"].append(extra)
+        with self.assertRaises(ValueError):
+            validate(bad)
+        for i in range(101, 201):
+            extra = {**bad["inventory"]["resources"][0], "id": f"sim-ec2-extra-{i}"}
+            bad["inventory"]["resources"].append(extra)
+        bad["accounts"]["accounts"].pop()
+        validate(bad)  # 100 accounts / 200 resources is allowed, subject to byte budgets.
+        bad["inventory"]["resources"].append({**extra, "id": "sim-ec2-extra-201"})
+        with self.assertRaises(ValueError):
+            validate(bad)
+        bad["inventory"]["resources"].pop()
+        for account in bad["accounts"]["accounts"]:
+            account["name"] = "✈" * 100
+        for resource in bad["inventory"]["resources"]:
+            resource["name"] = "✈" * 100
+        with self.assertRaises(ValueError):
+            validate(bad)

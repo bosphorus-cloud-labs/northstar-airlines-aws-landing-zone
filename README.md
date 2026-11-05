@@ -38,7 +38,7 @@ Production, Pre-Production, Testing and Development inherit a common baseline an
 
 Evaluation distinguishes compliant, noncompliant, unknown and stale findings. Missing evidence is unknown, and approved or expired exceptions retain the underlying violation. Desired configuration, observed revisions, successful configuration distribution and compliance evidence are separate records: a successful simulated rollout does not make every account compliant.
 
-The new resource fixture contains ten synthetic accounts and three controls, with passing, failing, missing and stale observations. Terraform calculates the central requirements for all four environments; Python verifies every planned assignment before evaluating evidence. No compliance totals are hardcoded in React.
+The current resource fixture contains **100 synthetic accounts total**, one representative resource per account and three controls, with passing, failing, missing and stale observations. Terraform calculates the central requirements for all four environments; Python verifies every planned assignment before evaluating evidence. The fleet has 30 Production, 20 Pre-Production, 20 Testing and 30 Development accounts. Account and resource tables provide search, filters and bounded pagination. No compliance totals are hardcoded in React.
 
 The original account-governance catalogue and its immutable baseline remain available for compatibility and recovery. It includes the tested canary, failure/retry, onboarding and exception scenarios. Those simulated operations are distinct from real GitHub approval and DynamoDB publication.
 

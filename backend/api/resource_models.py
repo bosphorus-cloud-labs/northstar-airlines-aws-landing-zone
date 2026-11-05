@@ -83,14 +83,14 @@ class ResourceTerraformReceipt(StrictModel):
     source: Literal["northstar-terraform-resource-desired-v1"]
     simulated: Literal[True]
     input_digest: str
-    accounts: dict[str, ResourceAssignment]
+    accounts: dict[str, ResourceAssignment] = Field(max_length=100)
     terraform_version: Literal["1.14.6"]
 
 
 class ResourceData(StrictModel):
-    accounts: list[ResourceAccountView]
-    resources: list[ResourceView]
-    findings: list[ResourceFinding]
+    accounts: list[ResourceAccountView] = Field(max_length=100)
+    resources: list[ResourceView] = Field(max_length=200)
+    findings: list[ResourceFinding] = Field(max_length=200)
     controls: list[Rule]
     summary: ResourceCounts
     evaluated_at: str

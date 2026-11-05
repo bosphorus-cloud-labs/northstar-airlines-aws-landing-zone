@@ -103,10 +103,16 @@ The protected publisher owns a distinct `RESOURCE-COMPLIANCE` catalogue sort key
 
 `GET /api/v1/summary?view=resources` serves a coherent bounded resource dataset through the existing authenticated GET route. It rejects historical/version/evaluation query overrides; the dashboard always reads Current. No extra API Gateway route or AWS service is required. Missing or corrupt resource initialization fails closed rather than falling back to fixtures. Separate legacy exception and distribution reads retain their explicit account-governance scope.
 
-Activation remains explicit: existing catalogue mode stays the default until compatible Lambda code, approved publication and authenticated acceptance pass. See [resource operations](RESOURCE_COMPLIANCE_OPERATIONS.md) and [requirement traceability](REQUIREMENTS_TRACEABILITY.md). New local acceptance does not retroactively establish cloud execution evidence.
+The resource console is deployed and opens on Current. Further fleet expansion is staged behind validated compatible reader code and the existing protected data-publication approval. See [resource operations](RESOURCE_COMPLIANCE_OPERATIONS.md) and [requirement traceability](REQUIREMENTS_TRACEABILITY.md). New local acceptance does not retroactively establish cloud execution evidence.
 
 ### Demonstration acceptance boundaries
 
-The minimum technical demonstration is one connected flow: central environment requirements → provider-free Terraform assignments → complete parity-verified receipt → protected publication → multi-account API/console reporting. `docs/REQUIREMENTS_TRACEABILITY.md` maps each capability to exact files and tests and separates missing cloud acceptance from tested local implementation.
+The minimum technical demonstration is one connected flow: central environment requirements → provider-free Terraform assignments → complete parity-verified receipt → protected publication → multi-account API/console reporting. `docs/REQUIREMENTS_TRACEABILITY.md` maps each capability to exact files and tests and separates recorded cloud acceptance from tested local implementation.
 
 Organization-wide desired changes and environment-targeted changes are tested separately. Both retain compliance evaluation of observed evidence: distribution success never proves a resource compliant. Onboarding, canary/failure/retry and exceptions remain tested synthetic capabilities; real account provisioning, Organizations enforcement and fleet-scale orchestration remain enterprise reference designs. No extra workflow or enforcement service is required for this demonstration.
+
+### Bounded 100-account fleet
+
+The current resource inventory expands the original ten accounts to 100 total (30 Production, 20 Pre-Production, 20 Testing, 30 Development), with one representative synthetic resource per account. The same provider-free module plans all 100 desired assignments. The engine verifies complete output parity and evaluates observations independently. No account or resource is provisioned in AWS.
+
+Existing immutable snapshots and the successful Git-revert audit chain remain intact. One atomic, integrity-checked resource snapshot serves the read-only API; React paginates and filters that bounded response. Snapshot JSON stays within 200 KB, catalogue JSON within 300 KB, and API JSON within 2 MB. These budgets avoid DynamoDB item/query and Lambda response limits without new tables or a pagination framework. The model caps 100 accounts/200 resources; large-fleet collectors, indexed storage and archival remain design-only.
