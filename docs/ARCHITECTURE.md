@@ -104,3 +104,9 @@ The protected publisher owns a distinct `RESOURCE-COMPLIANCE` catalogue sort key
 `GET /api/v1/summary?view=resources` serves a coherent bounded resource dataset through the existing authenticated GET route. It rejects historical/version/evaluation query overrides; the dashboard always reads Current. No extra API Gateway route or AWS service is required. Missing or corrupt resource initialization fails closed rather than falling back to fixtures. Separate legacy exception and distribution reads retain their explicit account-governance scope.
 
 Activation remains explicit: existing catalogue mode stays the default until compatible Lambda code, approved publication and authenticated acceptance pass. See [resource operations](RESOURCE_COMPLIANCE_OPERATIONS.md) and [requirement traceability](REQUIREMENTS_TRACEABILITY.md). New local acceptance does not retroactively establish cloud execution evidence.
+
+### Demonstration acceptance boundaries
+
+The minimum technical demonstration is one connected flow: central environment requirements → provider-free Terraform assignments → complete parity-verified receipt → protected publication → multi-account API/console reporting. `docs/REQUIREMENTS_TRACEABILITY.md` maps each capability to exact files and tests and separates missing cloud acceptance from tested local implementation.
+
+Organization-wide desired changes and environment-targeted changes are tested separately. Both retain compliance evaluation of observed evidence: distribution success never proves a resource compliant. Onboarding, canary/failure/retry and exceptions remain tested synthetic capabilities; real account provisioning, Organizations enforcement and fleet-scale orchestration remain enterprise reference designs. No extra workflow or enforcement service is required for this demonstration.

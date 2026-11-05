@@ -1,4 +1,4 @@
-# Future repository-connected Amplify builds only; this file does not create a deployment.
+# Repository-connected frontend build; infrastructure and governance data use separate delivery paths.
 version: 1
 applications:
   - appRoot: frontend
