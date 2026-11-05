@@ -75,14 +75,14 @@ def package(vendor: Path, output: Path) -> str:
             ):
                 raise ValueError("Private keys must not enter the artifact")
             files[path.relative_to(vendor).as_posix()] = content
-    for directory in ["backend", "governance"]:
+    for directory in ["backend", "governance", "compliance_engine"]:
         for path in (ROOT / directory).rglob("*.py"):
-            if (
-                "__pycache__" not in path.parts
-                and path.relative_to(ROOT).as_posix() != "governance/delivery/publisher.py"
-            ):
+            if "__pycache__" not in path.parts and path.relative_to(ROOT).as_posix() not in {
+                "governance/delivery/publisher.py",
+                "governance/delivery/resource_publisher.py",
+            }:
                 files[path.relative_to(ROOT).as_posix()] = path.read_bytes()
-    for name in ["v1.schema.json", "policy-v2.profile.json"]:
+    for name in ["v1.schema.json", "policy-v2.profile.json", "resource-compliance.schema.json"]:
         schema = ROOT / "governance/contracts" / name
         files[f"governance/contracts/{name}"] = schema.read_bytes()
     # Never ship local fixture data, tests, local environments, Terraform, or credentials.

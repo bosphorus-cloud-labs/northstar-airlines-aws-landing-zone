@@ -7,7 +7,7 @@ from pathlib import Path
 
 from backend.deployment.snapshot import digest
 from backend.repository import GovernanceRepository
-from governance.model.contracts import timestamp
+from compliance_engine.contracts import timestamp
 
 DEMO_AT = "2026-10-31T12:00:00Z"
 

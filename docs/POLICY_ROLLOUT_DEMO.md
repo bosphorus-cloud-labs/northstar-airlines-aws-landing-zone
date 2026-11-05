@@ -154,9 +154,9 @@ V1/V2 represent whole-governance snapshots, not independently versioned producti
 ```sh
 .venv/bin/python -m unittest tests.test_policy_rollout -v
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check backend governance scripts tests
-.venv/bin/ruff format --check backend governance scripts tests
-.venv/bin/python -m compileall -q backend governance scripts tests
+.venv/bin/ruff check backend governance compliance_engine deployment tests
+.venv/bin/ruff format --check backend governance compliance_engine deployment tests
+.venv/bin/python -m compileall -q backend governance compliance_engine deployment tests
 .venv/bin/python -m pip check
 npm --prefix frontend run api:check
 npm --prefix frontend run typecheck

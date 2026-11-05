@@ -24,7 +24,7 @@ AWS rejected UpdateApp while a manually deployed branch existed. Ordering requir
 
 The `moved` block preserves the original branch address when introducing its conditional index. `prevent_destroy` protects the existing app. Returning to legacy or disabling integration could propose a new manual branch or removal of main; that is not recovery for a frontend/data incident.
 
-The retained `scripts.plan_amplify_retirement`, `scripts.inspect_amplify_migration` and hosting-plan tests enforce those historical single-stage scopes. They are operator safeguards/compatibility tests, not routine setup commands. Any future migration needs fresh inventory, state review, exact plan guards, explicit destructive authorization and recovery planning; never reuse an old saved plan or use `-target` to force ordering.
+Hosting-plan regression tests retain the historical scope safeguards. The standalone migration operator commands were retired after migration. Future changes require a fresh scoped plan and authorization.
 
 ## Token and plan handling
 

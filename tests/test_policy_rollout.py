@@ -11,8 +11,8 @@ from unittest.mock import patch
 
 from jsonschema import Draft202012Validator, ValidationError
 
-from governance.model.contracts import SCHEMA, schema_for, validate, validate_model
-from governance.model.evaluate import evaluate, load_model
+from compliance_engine.contracts import SCHEMA, schema_for, validate, validate_model
+from compliance_engine.evaluate import evaluate, load_model
 from governance.simulation import rollout as sim
 
 V1_COUNTS = {"compliant": 31, "noncompliant": 3, "unknown": 6, "stale": 10}

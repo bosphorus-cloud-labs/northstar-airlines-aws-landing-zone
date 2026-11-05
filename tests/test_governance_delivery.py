@@ -107,7 +107,7 @@ class GovernanceDeliveryTests(unittest.TestCase):
                     [
                         sys.executable,
                         "-m",
-                        "scripts.governance_release",
+                        "deployment.governance_release",
                         "check",
                         "--source-commit",
                         commit,

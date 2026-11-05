@@ -4,7 +4,7 @@ import copy
 import json
 import unittest
 
-from scripts.inspect_delivery_plan import EXPECTED, check
+from deployment.inspect_delivery_plan import EXPECTED, check
 
 
 def plan():

@@ -7,7 +7,7 @@ from typing import Annotated, ClassVar, Literal, Self
 from jsonschema import FormatChecker
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator, model_validator
 
-from governance.model.contracts import validate
+from compliance_engine.contracts import validate
 
 DEMO_AT = "2026-10-31T12:00:00Z"
 AccountId = Annotated[str, Field(pattern=r"^sim-account-[0-9]{3}$")]
@@ -82,6 +82,7 @@ class EvaluationQuery(StrictModel):
 
 class SummaryQuery(EvaluationQuery):
     catalog: bool = False
+    view: Literal["resources"] | None = None
 
 
 class PageQuery(EvaluationQuery):

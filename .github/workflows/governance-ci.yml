@@ -52,12 +52,12 @@ jobs:
           .venv/bin/python -m pip install -r requirements-dev.txt
           mkdir -p artifacts/ci
       - name: Guard offline Terraform boundary before any planning
-        run: .venv/bin/python -m scripts.ci_governance preflight
+        run: .venv/bin/python -m deployment.ci_governance preflight
       - name: Python lint and governance/backend tests (real offline checks)
         run: |
-          .venv/bin/python -m scripts.check_source_security
-          .venv/bin/ruff check backend governance scripts tests terraform/poc/tests/*.py
-          .venv/bin/ruff format --check backend governance scripts tests terraform/poc/tests/*.py
+          .venv/bin/python -m deployment.check_source_security
+          .venv/bin/ruff check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
+          .venv/bin/ruff format --check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
           .venv/bin/python -m pip check
           .venv/bin/python -m unittest discover -s tests -v 2>&1 | tee artifacts/ci/python-tests.txt
       - name: Validate POC Terraform offline (mock provider only)
@@ -111,7 +111,7 @@ jobs:
           cat artifacts/ci/simulation.txt
       - name: Publish job summary (synthetic results only)
         run: |
-          .venv/bin/python -m scripts.ci_governance summary
+          .venv/bin/python -m deployment.ci_governance summary
           cat artifacts/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Retain review artifacts (no state, binary plan or publication package)
         if: always()
@@ -133,7 +133,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ github.sha }}
         run: |
-          digest=$(.venv/bin/python -m scripts.governance_release build --source-commit "$SOURCE_COMMIT")
+          digest=$(.venv/bin/python -m deployment.governance_release build --source-commit "$SOURCE_COMMIT")
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "Synthetic candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
       - name: Retain synthetic release input only

@@ -1,0 +1,159 @@
+{
+  "format": "resource-compliance/1",
+  "simulated": true,
+  "evaluated_at": "2026-11-05T12:00:00Z",
+  "resources": [
+    {
+      "id": "sim-ec2-001",
+      "name": "Booking API",
+      "account_id": "sim-account-001",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-002",
+      "name": "NorthStar S3 02",
+      "account_id": "sim-account-002",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-003",
+      "name": "NorthStar EBS 03",
+      "account_id": "sim-account-003",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-004",
+      "name": "NorthStar EC2 04",
+      "account_id": "sim-account-004",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-005",
+      "name": "NorthStar S3 05",
+      "account_id": "sim-account-005",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": false
+      }
+    },
+    {
+      "id": "sim-ebs-006",
+      "name": "NorthStar EBS 06",
+      "account_id": "sim-account-006",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": null
+      }
+    },
+    {
+      "id": "sim-ec2-007",
+      "name": "NorthStar EC2 07",
+      "account_id": "sim-account-007",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-008",
+      "name": "NorthStar S3 08",
+      "account_id": "sim-account-008",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-009",
+      "name": "NorthStar EBS 09",
+      "account_id": "sim-account-009",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-010",
+      "name": "NorthStar EC2 10",
+      "account_id": "sim-account-010",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    }
+  ]
+}

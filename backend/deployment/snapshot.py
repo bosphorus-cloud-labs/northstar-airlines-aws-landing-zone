@@ -4,7 +4,7 @@ import hashlib
 import json
 
 from backend.repository import GovernanceSnapshot
-from governance.model.contracts import timestamp, validate_model
+from compliance_engine.contracts import timestamp, validate_model
 
 
 def canonical(value: object) -> str:

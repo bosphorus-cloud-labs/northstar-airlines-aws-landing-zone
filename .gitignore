@@ -79,3 +79,7 @@ tmp/
 artifacts/
 test-results/
 playwright-report/
+
+# Also ignore local dependency symlinks used by isolated worktrees.
+.venv
+node_modules

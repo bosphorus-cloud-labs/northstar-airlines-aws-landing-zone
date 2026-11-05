@@ -9,9 +9,9 @@ from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
+from deployment.ci_governance import CONFIGS, preflight, summary
 from governance.simulation import rollout
 from governance.simulation.terraform_plan import desired
-from scripts.ci_governance import CONFIGS, preflight, summary
 
 
 class GovernanceCITests(unittest.TestCase):

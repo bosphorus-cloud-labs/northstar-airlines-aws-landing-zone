@@ -55,7 +55,7 @@ jobs:
           persist-credentials: false
       - name: Verify reviews, exact commit CI, environment protection and digest
         run: |
-          python3 -m scripts.delivery_gate --sha "$SOURCE_SHA" --digest "$APPROVED_DIGEST"
+          python3 -m deployment.delivery_gate --sha "$SOURCE_SHA" --digest "$APPROVED_DIGEST"
           if [ "$ACTION" = publish ] && [ "$APPROVED_DIGEST" != "$CANDIDATE_DIGEST" ]; then
             echo "Approved digest differs from the deterministic candidate"; exit 1
           fi
@@ -93,7 +93,7 @@ jobs:
           path: artifacts/release
       - name: Validate approved input before requesting AWS identity
         if: inputs.action == 'publish'
-        run: .venv/bin/python -m scripts.governance_release check --source-commit "$SOURCE_SHA" --approved-digest "$APPROVED_DIGEST"
+        run: .venv/bin/python -m deployment.governance_release check --source-commit "$SOURCE_SHA" --approved-digest "$APPROVED_DIGEST"
       - name: Assume data-only publisher through OIDC after environment approval
         uses: aws-actions/configure-aws-credentials@4a1596c86fd706dc0521e32f0121ad1a6d1adb74 # v6
         with:
@@ -106,7 +106,7 @@ jobs:
           unset-current-credentials: true
       - name: Conditional publication, strong verification and atomic Current selection
         run: |
-          .venv/bin/python -m scripts.governance_release "$ACTION" --execute \
+          .venv/bin/python -m deployment.governance_release "$ACTION" --execute \
             --table "$TABLE" --confirm-table "$TABLE" --baseline-id "$BASELINE_ID" \
             --approved-digest "$APPROVED_DIGEST" --source-commit "$SOURCE_SHA" \
             --generation "$EXPECTED_GENERATION" --operation "gh-${{ github.run_id }}" | tee publication-result.json

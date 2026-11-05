@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from scripts.delivery_gate import ENVIRONMENT, REPOSITORY, verify
+from deployment.delivery_gate import ENVIRONMENT, REPOSITORY, verify
 
 
 class DeliveryGateTests(unittest.TestCase):
@@ -196,7 +196,7 @@ class DeliveryGateTests(unittest.TestCase):
         )
 
     def test_tracked_source_rejects_generated_files_and_credentials(self):
-        from scripts.check_source_security import validate
+        from deployment.check_source_security import validate
 
         validate("terraform/poc/settings.example.tfvars", b'owner = "synthetic"')
         validate("terraform/poc/settings.example.tfvars.json", b'{"owner":"synthetic"}')

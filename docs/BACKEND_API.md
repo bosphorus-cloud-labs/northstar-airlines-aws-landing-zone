@@ -41,7 +41,7 @@ Default mode is **fail-closed**, not an anonymous API. All routes, health, docs,
 
 Runtime and test dependencies are exact-pinned for Python 3.13; advisory scans and update guidance are in [SECURITY.md](../SECURITY.md). FastAPI's OpenTelemetry API dependency has no configured telemetry SDK/exporter. Do not remove transitive pins independently: the package builder validates the complete runtime set.
 
-`scripts.package_lambda` accepts preinstalled Linux ARM64/Python 3.13 wheels and assembles a deterministic ZIP containing backend/governance code and the approved contract files. It excludes local fixtures, tests, environment files, Terraform and the publisher. Deployed Lambda uses DynamoDB, not a copied local fixture directory. Native wheel compatibility is checked locally and actual Lambda execution is verified separately; never package the workstation virtual environment. See [the deployment guide](AWS_DEPLOYMENT_FOUNDATION.md).
+`deployment.package_lambda` accepts preinstalled Linux ARM64/Python 3.13 wheels and assembles a deterministic ZIP containing backend/governance code and the approved contract files. It excludes local fixtures, tests, environment files, Terraform and the publisher. Deployed Lambda uses DynamoDB, not a copied local fixture directory. Native wheel compatibility is checked locally and actual Lambda execution is verified separately; never package the workstation virtual environment. See [the deployment guide](AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## API structure
 
@@ -105,7 +105,7 @@ Errors use `{"error":{"code":"invalid_request","message":"Request parameters are
 
 - `backend/api/routes.py`: versioned GET routes and filtering/pagination presentation.
 - `backend/api/models.py`: typed Pydantic queries/responses and governance JSON Schema validation of returned domain records. It does not define compliance rules.
-- `backend/service.py`: loads one request-owned snapshot, calls `governance.model.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
+- `backend/service.py`: loads one request-owned snapshot, calls `compliance_engine.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
 - `backend/repository.py`: `GovernanceRepository` protocol and read-only `FixtureRepository`. The deployed `DynamoSnapshotRepository` and `DynamoCatalog` preserve immutable version/digest selection and strongly verify the read model.
 - `backend/auth.py`, `app.py`: identity/permission boundary, application factory, sanitized error handling. No cloud SDKs or network calls.
 

@@ -21,10 +21,10 @@ from backend.deployment.dynamodb import DynamoSnapshotRepository
 from backend.deployment.identity import GatewayIdentity
 from backend.deployment.snapshot import decode, digest
 from backend.repository import FixtureRepository
-from governance.model.evaluate import evaluate
-from scripts.frontend_config import render
-from scripts.package_lambda import package, runtime_pins
-from scripts.seed_governance import load, main, prepare
+from compliance_engine.evaluate import evaluate
+from deployment.frontend_config import render
+from deployment.package_lambda import package, runtime_pins
+from deployment.seed_governance import load, main, prepare
 
 ROOT = Path(__file__).resolve().parents[1]
 ISSUER = "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_offline"

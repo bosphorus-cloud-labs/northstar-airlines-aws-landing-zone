@@ -51,3 +51,21 @@ output "desired" {
     error_message = "Environment assignment must cover all controls and preserve the central baseline."
   }
 }
+
+# Optional resource controls reuse this same pure module; no additional provider/project.
+variable "resource_controls" {
+  type    = map(object({ expected_json = string, max_age_hours = number }))
+  default = {}
+}
+output "resource_desired" {
+  value = {
+    account_id        = var.account.id
+    environment       = var.account.environment
+    approval_required = local.requirements["deployment-approval"].expected
+    requirements      = var.resource_controls
+  }
+  precondition {
+    condition     = alltrue([for requirement in values(var.resource_controls) : can(jsondecode(requirement.expected_json)) && requirement.max_age_hours >= 1 && requirement.max_age_hours <= 168])
+    error_message = "Resource requirements must be explicit JSON values with bounded freshness."
+  }
+}

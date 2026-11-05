@@ -28,7 +28,7 @@ DynamoDB uses on-demand capacity, encryption, PITR and deletion protection, plus
 
 Normal publication/reselection uses [the protected OIDC workflow](GOVERNANCE_DELIVERY.md), not direct loading from a workstation. Manifest-last insertion and strong verification precede a generation-checked atomic selection update. Rollback/restoration reselects a registered revision without rewriting its rows or provenance. Lost responses must be resolved by strong read/history inspection, not blind retries or claims that Current stayed unchanged.
 
-`scripts.seed_governance` remains the original baseline preparation/bootstrap utility. Its no-execute form is offline. Its explicit execute form requires a separately approved temporary loader principal and matching table confirmation. Do not rerun it against the working deployment or substitute its broader initial-loader scope for the data-CD role. Terraform and the API never seed records.
+`deployment.seed_governance` remains the original baseline preparation/bootstrap utility. Its no-execute form is offline. Its explicit execute form requires a separately approved temporary loader principal and matching table confirmation. Do not rerun it against the working deployment or substitute its broader initial-loader scope for the data-CD role. Terraform and the API never seed records.
 
 ## Lambda packaging and public frontend configuration
 
@@ -38,14 +38,14 @@ Build from Linux ARM64 Python 3.13 wheels, never the workstation virtual environ
 .venv/bin/python -m pip install --platform manylinux2014_aarch64 --implementation cp \
   --python-version 3.13 --abi cp313 --only-binary=:all: \
   -r backend/requirements.txt --target artifacts/lambda/vendor
-.venv/bin/python -m scripts.package_lambda --output artifacts/lambda/governance-delivery.zip
+.venv/bin/python -m deployment.package_lambda --output artifacts/lambda/governance-delivery.zip
 ```
 
 Use an empty vendor directory for a new dependency set; the builder rejects duplicate/stale/non-Linux metadata and checks the complete pins. It assembles deterministic code/schema payloads, excludes fixtures/tests/local settings and omits the publisher. ZIPs and vendor files remain ignored. Package validation is not permission to update Lambda; code changes require a separate reviewed plan.
 
 The existing `amplify.yml` builds `frontend/` with Node 24, `npm ci`, type/lint/tests and `dist` output. Terraform supplies six public API/Cognito/origin settings plus explicit catalogue mode and the monorepo root. No local Vite proxy exists in Amplify. App-wide automatic builds remain disabled; only the protected main branch has auto-build enabled, with PR previews disabled. A main source merge builds frontend assets only, never Terraform or data publication.
 
-For explicitly authorized manual/static consumers, `scripts.frontend_config` retains its six-setting `frontend_settings` contract and writes ignored `.env.production.local`. Hosted main instead consumes `github_frontend_settings` directly, including catalogue mode; do not feed that extended object to the six-setting converter. Never pass full state or secret-bearing outputs. Missing production configuration fails closed. [The historical existing-app migration](AMPLIFY_GITHUB_INTEGRATION.md) explains why the original app ID/resource address were preserved; it is not a procedure to rerun on the working app.
+For explicitly authorized manual/static consumers, `deployment.frontend_config` retains its six-setting `frontend_settings` contract and writes ignored `.env.production.local`. Hosted main instead consumes `github_frontend_settings` directly, including catalogue mode; do not feed that extended object to the six-setting converter. Never pass full state or secret-bearing outputs. Missing production configuration fails closed. [The historical existing-app migration](AMPLIFY_GITHUB_INTEGRATION.md) explains why the original app ID/resource address were preserved; it is not a procedure to rerun on the working app.
 
 ## State, IAM and future deployment authorization
 

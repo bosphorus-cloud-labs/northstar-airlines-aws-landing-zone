@@ -14,8 +14,8 @@ python3.13 -m venv .venv
 .venv/bin/python -m unittest discover -s tests -v
 .venv/bin/ruff check governance tests
 .venv/bin/ruff format --check governance tests
-.venv/bin/python -m governance.model.evaluate --at 2026-10-31T12:00:00Z
-.venv/bin/python -m governance.model.evaluate --at 2026-10-31T12:00:00Z --findings
+.venv/bin/python -m compliance_engine.evaluate --at 2026-10-31T12:00:00Z
+.venv/bin/python -m compliance_engine.evaluate --at 2026-10-31T12:00:00Z --findings
 ```
 
 Installation downloads pinned Python dependencies; evaluation and tests need no network, AWS credentials, or AWS SDK. The RFC 3339 validator is explicitly pinned because JSON Schema format checking otherwise may silently skip date-time validation. `--at` is mandatory. All persisted timestamps must be RFC 3339 with timezone; there is no system-clock default. No output is written unless the caller redirects stdout.

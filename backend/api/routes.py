@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Path, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, Request
 
 from backend.api.models import (
     DEMO_AT,
@@ -27,6 +27,7 @@ from backend.api.models import (
     VersionMetadata,
     VersionSummary,
 )
+from backend.api.resource_models import ResourceEnvelope
 from backend.service import Evaluation
 
 router = APIRouter(prefix="/api/v1")
@@ -70,8 +71,17 @@ def health(request: Request, query: Annotated[HealthQuery, Query()]):
     )
 
 
-@router.get("/summary", response_model=Envelope[Summary | VersionSummary])
+@router.get("/summary", response_model=Envelope[Summary | VersionSummary] | ResourceEnvelope)
 def summary(request: Request, query: Annotated[SummaryQuery, Query()]):
+    if query.view == "resources":
+        if query.at is not None or query.policy_version is not None or query.catalog:
+            raise HTTPException(status_code=422, detail="Resource data follows approved Current")
+        try:
+            return ResourceEnvelope.model_validate(request.app.state.resources.read())
+        except Exception as exc:
+            raise HTTPException(
+                status_code=503, detail="Approved resource data is unavailable"
+            ) from exc
     service = request.app.state.service
     result = service.evaluate(query.evaluation_timestamp, query.policy_version)
     data = result.summary()

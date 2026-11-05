@@ -1,0 +1,310 @@
+{
+  "$defs": {
+    "Account": {
+      "additionalProperties": false,
+      "properties": {
+        "environment": {
+          "enum": [
+            "production",
+            "pre-production",
+            "testing",
+            "development"
+          ],
+          "title": "Environment",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^sim-account-[0-9]{3}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "lifecycle_status": {
+          "default": "active",
+          "enum": [
+            "active",
+            "onboarding",
+            "suspended"
+          ],
+          "title": "Lifecycle Status",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "ou_id": {
+          "pattern": "^sim-ou-[a-z-]+$",
+          "title": "Ou Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "environment",
+        "ou_id"
+      ],
+      "title": "Account",
+      "type": "object"
+    },
+    "Accounts": {
+      "additionalProperties": false,
+      "properties": {
+        "accounts": {
+          "items": {
+            "$ref": "#/$defs/Account"
+          },
+          "maxItems": 25,
+          "minItems": 1,
+          "title": "Accounts",
+          "type": "array"
+        },
+        "simulated": {
+          "const": true,
+          "title": "Simulated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "simulated",
+        "accounts"
+      ],
+      "title": "Accounts",
+      "type": "object"
+    },
+    "Inventory": {
+      "additionalProperties": false,
+      "properties": {
+        "evaluated_at": {
+          "title": "Evaluated At",
+          "type": "string"
+        },
+        "format": {
+          "const": "resource-compliance/1",
+          "title": "Format",
+          "type": "string"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/Resource"
+          },
+          "maxItems": 100,
+          "minItems": 1,
+          "title": "Resources",
+          "type": "array"
+        },
+        "simulated": {
+          "const": true,
+          "title": "Simulated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "format",
+        "simulated",
+        "evaluated_at",
+        "resources"
+      ],
+      "title": "Inventory",
+      "type": "object"
+    },
+    "Resource": {
+      "additionalProperties": false,
+      "properties": {
+        "account_id": {
+          "pattern": "^sim-account-[0-9]{3}$",
+          "title": "Account Id",
+          "type": "string"
+        },
+        "configuration": {
+          "additionalProperties": true,
+          "title": "Configuration",
+          "type": "object"
+        },
+        "environment": {
+          "enum": [
+            "production",
+            "pre-production",
+            "testing",
+            "development"
+          ],
+          "title": "Environment",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^sim-(ec2|s3|ebs)-[a-z0-9-]{1,60}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "observed_at": {
+          "title": "Observed At",
+          "type": "string"
+        },
+        "region": {
+          "const": "eu-central-1",
+          "title": "Region",
+          "type": "string"
+        },
+        "resource_type": {
+          "enum": [
+            "ec2_instance",
+            "s3_bucket",
+            "ebs_volume"
+          ],
+          "title": "Resource Type",
+          "type": "string"
+        },
+        "simulated": {
+          "const": true,
+          "title": "Simulated",
+          "type": "boolean"
+        },
+        "source": {
+          "const": "northstar-synthetic-resources",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "account_id",
+        "environment",
+        "region",
+        "resource_type",
+        "source",
+        "simulated",
+        "observed_at",
+        "configuration"
+      ],
+      "title": "Resource",
+      "type": "object"
+    },
+    "Rule": {
+      "additionalProperties": false,
+      "properties": {
+        "expected": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean"
+            }
+          ],
+          "title": "Expected"
+        },
+        "id": {
+          "enum": [
+            "ec2-imdsv2",
+            "s3-public-access",
+            "ebs-encryption"
+          ],
+          "title": "Id",
+          "type": "string"
+        },
+        "max_age_hours": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "propertyNames": {
+            "enum": [
+              "production",
+              "pre-production",
+              "testing",
+              "development"
+            ]
+          },
+          "title": "Max Age Hours",
+          "type": "object"
+        },
+        "name": {
+          "maxLength": 100,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "reason",
+        "expected",
+        "max_age_hours"
+      ],
+      "title": "Rule",
+      "type": "object"
+    },
+    "Rules": {
+      "additionalProperties": false,
+      "properties": {
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/Rule"
+          },
+          "maxItems": 3,
+          "minItems": 3,
+          "title": "Rules",
+          "type": "array"
+        },
+        "simulated": {
+          "const": true,
+          "title": "Simulated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "simulated",
+        "rules"
+      ],
+      "title": "Rules",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "accounts": {
+      "$ref": "#/$defs/Accounts"
+    },
+    "controls": {
+      "$ref": "#/$defs/Rules"
+    },
+    "inventory": {
+      "$ref": "#/$defs/Inventory"
+    },
+    "terraform_validation": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Terraform Validation"
+    }
+  },
+  "required": [
+    "accounts",
+    "inventory",
+    "controls"
+  ],
+  "title": "Document",
+  "type": "object"
+}

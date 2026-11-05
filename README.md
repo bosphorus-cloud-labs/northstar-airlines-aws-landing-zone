@@ -82,10 +82,10 @@ Run from the repository root after installing development dependencies:
 
 ```sh
 .venv/bin/python -m unittest discover -s tests -v
-.venv/bin/ruff check backend governance scripts tests terraform/poc/tests/*.py
-.venv/bin/ruff format --check backend governance scripts tests terraform/poc/tests/*.py
+.venv/bin/ruff check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
+.venv/bin/ruff format --check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
 .venv/bin/python -m pip check
-.venv/bin/python -m scripts.check_source_security
+.venv/bin/python -m deployment.check_source_security
 npm --prefix frontend run api:check
 npm --prefix frontend run typecheck
 npm --prefix frontend run lint
@@ -123,7 +123,7 @@ The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider pl
 | `.github/workflows/` | Credential-free CI and approved data publication |
 | `tests/`, `docs/` | Regression tests, architecture and operating procedures |
 
-See the [data model](docs/GOVERNANCE_MODEL.md), [API guide](docs/BACKEND_API.md), [frontend guide](docs/FRONTEND.md), [AWS operating guide](docs/AWS_DEPLOYMENT_FOUNDATION.md) and [implementation milestones](docs/IMPLEMENTATION_PLAN.md).
+See the [data model](docs/GOVERNANCE_MODEL.md), [API guide](docs/BACKEND_API.md), [frontend guide](docs/FRONTEND.md), [AWS operating guide](docs/AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## Security and POC limits
 

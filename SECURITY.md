@@ -26,7 +26,7 @@ gitleaks git . --log-opts="--all --full-history" --redact=100 --ignore-gitleaks-
 npm --prefix frontend audit
 # Use a separately installed pip-audit tool; never add auditor dependencies to Lambda.
 pip-audit -r requirements-dev.txt --no-deps --disable-pip --strict
-.venv/bin/python -m scripts.check_source_security
+.venv/bin/python -m deployment.check_source_security
 ```
 
 Keep reports redacted/local; never print secret values or upload full state/plan/log payloads. Full-tree/commit-message scanning and historical path checks complement Gitleaks' diff scan. Ignore rules do not remove a file already committed. The CI source guard also rejects credential/key files, sensitive HCL/JSON tfvars and saved-plan/state formats even if force-added; sanitized example settings remain allowed. Runtime dependency pins are intentionally complete for reproducible packaging; test-only API response fixtures and generated TypeScript contracts are meaningful and excluded from production runtime imports.
