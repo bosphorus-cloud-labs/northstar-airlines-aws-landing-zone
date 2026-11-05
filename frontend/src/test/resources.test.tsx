@@ -187,3 +187,36 @@ it("requires a Cognito session and transmits its access token only as a read aut
     config.mockRestore();
   }
 });
+
+it("opens a read-only acceptance preview without changing the default or authentication", async () => {
+  vi.stubEnv("VITE_GOVERNANCE_API_MODE", "catalog");
+  fetcher.mockImplementation(async (input) => {
+    const url = new URL(String(input), "http://127.0.0.1");
+    const key =
+      url.pathname +
+      (url.searchParams.get("catalog") === "true" ? "?catalog=true" : "");
+    return new Response(
+      JSON.stringify(
+        url.searchParams.get("view") === "resources"
+          ? response
+          : (legacy as Record<string, unknown>)[key],
+      ),
+    );
+  });
+  show();
+  await screen.findByRole("heading", { name: "Account compliance posture" });
+  await userEvent.click(
+    screen.getByRole("button", { name: "Preview resource console" }),
+  );
+  expect(
+    await screen.findByRole("heading", { name: "What needs attention" }),
+  ).toBeInTheDocument();
+  expect(
+    fetcher.mock.calls.some(([input]) =>
+      String(input).includes("view=resources"),
+    ),
+  ).toBe(true);
+  expect(
+    fetcher.mock.calls.every(([, options]) => options?.method === "GET"),
+  ).toBe(true);
+});
