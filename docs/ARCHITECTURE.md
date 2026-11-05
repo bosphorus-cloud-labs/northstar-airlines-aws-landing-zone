@@ -1,6 +1,6 @@
 # Architecture and responsibility boundaries
 
-Status: the read-only application and controlled OIDC data-delivery path are deployed in the existing single-account POC. V1 bootstrap, V2 publication, rollback and V2 restoration are verified with real workflow/AWS evidence. V2 is Current at generation 4; existing Amplify main auto-build is enabled separately. See [deployment acceptance](DEPLOYMENT_ACCEPTANCE.md). Simulated account operations remain distinct from real DynamoDB publication and GitHub approval.
+Status: the read-only application and controlled OIDC data-delivery path are deployed in the existing single-account POC. V1 bootstrap, V2 publication, rollback and V2 restoration are verified with real workflow/AWS evidence. The historical acceptance run restored V2 at generation 4; later Current generations are operational state, not a documentation constant; existing Amplify main auto-build is enabled separately. See [deployment acceptance](DEPLOYMENT_ACCEPTANCE.md). Simulated account operations remain distinct from real DynamoDB publication and GitHub approval.
 
 ## Scope and ownership
 
@@ -94,3 +94,13 @@ React scopes caches and metadata checks to the selected version/hash/time. Local
 ## Approved snapshot delivery
 
 Data CD uses a protected GitHub environment/OIDC data-only publisher role; it cannot run Terraform or change runtime services. Snapshot records are conditionally written with the manifest last and strongly verified. A generation-checked single catalogue item atomically registers immutable revision provenance/history and promotes Current. Runtime only reads the catalogue/snapshots; browser uses the existing Cognito/API boundary. See [delivery contracts, limitations and deployment sequence](GOVERNANCE_DELIVERY.md). Simulated rollout evidence is distinct from real publication approvals/execution. Existing static/pinned V1 configuration remains supported during staged activation.
+
+## Resource-compliance extension
+
+The staged resource view uses `compliance_engine/resources.py` for strict contracts and deterministic observed-versus-desired evaluation. `compliance-rules/` owns central control intent; `mock-aws-resources/` owns synthetic observations. The existing provider-free Terraform module now optionally plans complete resource-control assignments, including environment freshness and approval intent. `deployment/resource_plan.py` checks every output against the same inputs before `deployment/resource_release.py` binds a release to CI's exact source commit. This is real planning, not AWS enforcement.
+
+The protected publisher owns a distinct `RESOURCE-COMPLIANCE` catalogue sort key under the existing permitted partition. Existing IAM leading-key restrictions already cover it; no browser/runtime write permission is added. Content-addressed resource partitions have a verified manifest; immutable old content and the existing `STATE` catalogue remain intact. A conditional catalogue update records actor, Git commit, publication time and before/after resource results. A normal Git revert can select prior content with a new audit event. Evaluation remains tied to the explicit synthetic timestamp, independent of publication time.
+
+`GET /api/v1/summary?view=resources` serves a coherent bounded resource dataset through the existing authenticated GET route. It rejects historical/version/evaluation query overrides; the dashboard always reads Current. No extra API Gateway route or AWS service is required. Missing or corrupt resource initialization fails closed rather than falling back to fixtures. Separate legacy exception and distribution reads retain their explicit account-governance scope.
+
+Activation remains explicit: existing catalogue mode stays the default until compatible Lambda code, approved publication and authenticated acceptance pass. See [resource operations](RESOURCE_COMPLIANCE_OPERATIONS.md) and [requirement traceability](REQUIREMENTS_TRACEABILITY.md). New local acceptance does not retroactively establish cloud execution evidence.

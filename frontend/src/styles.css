@@ -2041,3 +2041,122 @@ th {
   margin: 0.3rem 0;
   color: #5a6c7d;
 }
+
+/* Resource compliance view shares the existing authenticated application shell. */
+.resource-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.resource-metrics .panel {
+  padding: 20px;
+  margin: 0;
+}
+.resource-metrics strong {
+  font-size: 30px;
+  color: #16385c;
+}
+.resource-issue {
+  padding: 16px 0;
+  border-top: 1px solid #e5eaf0;
+}
+.resource-issue > strong {
+  margin-left: 12px;
+}
+.resource-context {
+  color: #596b80;
+  margin: 0 0 24px;
+  overflow-wrap: anywhere;
+}
+.resource-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 20px 0;
+}
+.resource-filters label {
+  display: grid;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 13px;
+  flex: 1;
+  min-width: 160px;
+}
+.resource-filters input,
+.resource-filters select {
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: white;
+  width: 100%;
+}
+.resource-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 20px;
+}
+.content {
+  padding: 28px;
+  max-width: 1800px;
+  width: 100%;
+}
+.content .panel {
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.content td {
+  vertical-align: top;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+.content td small {
+  display: block;
+  color: #61748a;
+  margin-top: 6px;
+}
+.sidebar-footer {
+  margin-top: auto;
+  padding: 24px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: #b9c9db;
+}
+.resource-console .sidebar nav > a {
+  padding: 13px 24px;
+  color: #b9c9db;
+  display: block;
+  text-decoration: none;
+}
+.resource-console .sidebar nav > a.active {
+  background: #173654;
+  color: white;
+}
+@media (max-width: 700px) {
+  .content {
+    padding: 16px;
+  }
+  .content .panel {
+    padding: 16px;
+  }
+  .resource-context {
+    font-size: 12px;
+  }
+}
+
+.resource-console .brand {
+  font-size: 19px;
+  letter-spacing: -0.5px;
+}
+.resource-console .sidebar nav {
+  font-size: 13px;
+}
+.resource-console .page-heading {
+  margin-bottom: 20px;
+}
+
+.resource-console .table-scroll table {
+  min-width: 760px;
+}

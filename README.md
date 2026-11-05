@@ -21,7 +21,9 @@ DynamoDB — immutable snapshots and Current/History catalogue
 
 The API exposes account inventory, compliance findings, deployment history, configuration drift and governance exceptions. React consumes typed API responses; the Python governance engine evaluates the selected snapshot. Neither the browser nor Lambda can write governance records or execute deployments. CloudWatch retains API and Lambda logs with bounded retention.
 
-Each snapshot contains policy intent, environment assignments, inventory, evidence and a fixed evaluation timestamp. The API verifies snapshot integrity before evaluating it. **Current** selects the active snapshot; **History** supports read-only comparison without changing Current. Approved rollback reselects a registered snapshot rather than overwriting historical records.
+The resource-compliance view shows each synthetic resource, its desired configuration, observed setting and reason for its result. Operators edit `mock-aws-resources/resources.json`; CI validates the data and real Terraform desired-state outputs before a protected publisher can update DynamoDB. A normal Git revert restores earlier resource configuration while preserving the publication audit history. The browser and Lambda remain read-only.
+
+The simplified console is staged behind an explicit activation setting. Its local tests do not constitute live deployment acceptance; the existing deployed catalogue remains the default until the new backend and protected publication have been verified. See [resource compliance operations](docs/RESOURCE_COMPLIANCE_OPERATIONS.md) for activation, exact commands and the operational demonstration.
 
 The repository separates two Terraform purposes:
 
@@ -36,20 +38,15 @@ Production, Pre-Production, Testing and Development inherit a common baseline an
 
 Evaluation distinguishes compliant, noncompliant, unknown and stale findings. Missing evidence is unknown, and approved or expired exceptions retain the underlying violation. Desired configuration, observed revisions, successful configuration distribution and compliance evidence are separate records: a successful simulated rollout does not make every account compliant.
 
-| Snapshot | Synthetic accounts | Compliant findings | Noncompliant | Unknown | Stale |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| V1 / policy 1.0.0 | 10 | 31 | 3 | 6 | 10 |
-| V2 / policy 2.0.0 | 11 | 43 | 4 | 9 | 10 |
+The new resource fixture contains ten synthetic accounts and three controls, with passing, failing, missing and stale observations. Terraform calculates the central requirements for all four environments; Python verifies every planned assignment before evaluating evidence. No compliance totals are hardcoded in React.
 
-V2 adds audit-log integrity validation and demonstrates canary rollout, a controlled failure, retry and account onboarding. Publication and rollback results are recorded in [deployment validation](docs/DEPLOYMENT_ACCEPTANCE.md). Evaluation timestamps are fixed synthetic reference times, not AWS collection times.
-
-V1/V2 label whole-governance snapshots, not application releases. Production policies would need independent revisions, owners, scope, approval history and account-specific deployment records. Only the V1/V2 scenarios are implemented; additional versions require reviewed contracts and scenario registration.
+The original account-governance catalogue and its immutable baseline remain available for compatibility and recovery. It includes the tested canary, failure/retry, onboarding and exception scenarios. Those simulated operations are distinct from real GitHub approval and DynamoDB publication.
 
 ## CI/CD
 
 [Governance CI](.github/workflows/governance-ci.yml) runs on pull requests and pushes to `main`. It checks Python and frontend code, API contracts, source hygiene, Terraform formatting and validation, POC mock-provider plans, and provider-free governance planning. It also verifies Terraform-to-simulation parity and exercises simulated approval, canary, failure/retry and onboarding. Human-readable plans and synthetic reports are retained as review artifacts. CI has no AWS credentials or deployment authority.
 
-[Governance data CD](.github/workflows/governance-cd.yml) is dispatched separately from `main`. It reruns validation, checks the exact source commit and digest, and waits for approval in the `governance-production` environment. Only then does GitHub OIDC provide short-lived credentials to the data-only publisher. Publication conditionally inserts snapshot records, writes the manifest last, verifies the digest with strongly consistent reads, and updates Current/History using a generation check. The publisher cannot deploy infrastructure, delete records or rewrite V1.
+[Governance data CD](.github/workflows/governance-cd.yml) adds a resource-publication path after successful main CI. It verifies the exact main commit, originating CI run, artifact content and protected PR process, then waits for the actual `governance-production` Environment approval. GitHub OIDC supplies short-lived credentials to the separate data-only publisher. Immutable insertion, manifest verification and conditional Current selection preserve historical data. Existing catalogue recovery dispatches remain available. This new path must pass hosted CI and approved deployment acceptance before being described as verified live.
 
 Amplify builds the frontend from the protected GitHub `main` branch using [amplify.yml](amplify.yml). Main-only automatic builds are enabled; app-wide automatic builds and PR previews are disabled. These frontend releases are independent of governance-data publication: selecting or publishing a snapshot requires no frontend rebuild.
 
@@ -71,7 +68,7 @@ In a second terminal, also from the repository root:
 
 ```sh
 npm --prefix frontend ci
-npm --prefix frontend run dev
+VITE_GOVERNANCE_API_MODE=resources npm --prefix frontend run dev
 ```
 
 Open [the local console](http://127.0.0.1:5173/) or [API documentation](http://127.0.0.1:8000/docs). Both servers bind to loopback. Explicit `--local-demo` mode grants a local read-only identity; it is unsuitable for shared or public hosts. The default API denies access, and deployed Lambda cannot enable this bypass. Amplify uses explicit API/Cognito configuration rather than the local Vite proxy.
@@ -106,7 +103,7 @@ terraform -chdir=terraform/poc test \
   -var=lambda_package_path=../../artifacts/validation/mock-lambda.zip
 ```
 
-The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider plans and do not prove AWS deployment compatibility. A normal POC plan/refresh contacts AWS and is not an offline validation step. The [provider-free Terraform guide](terraform/simulation/README.md) contains the full planning and parity commands. [Local Demonstration](docs/LOCAL_DEMONSTRATION.md) describes the `./demo.sh` workflow, reset behavior and console checks.
+The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider plans and do not prove AWS deployment compatibility. A normal POC plan/refresh contacts AWS and is not an offline validation step. The [provider-free Terraform guide](terraform/simulation/README.md) contains the full planning and parity commands. [Local Demonstration](docs/LOCAL_DEMONSTRATION.md) describes the resource-change workflow and preserved `./demo.sh` rehearsal.
 
 ## Repository guide
 
@@ -114,16 +111,20 @@ The mock ZIP is deliberately nondeployable. Terraform tests use mock-provider pl
 | --- | --- |
 | `frontend/` | React console, Cognito sign-in and typed API client |
 | `backend/` | Read-only REST API, service/repository layers and Lambda adapter |
-| `governance/` | Contracts, environment requirements, evaluator, simulation and publication logic |
+| `compliance_engine/` | Shared deterministic policy and resource evaluation; no cloud operations |
+| `compliance-rules/` | Human-readable central resource controls and environment-specific freshness |
+| `mock-aws-resources/` | Editable synthetic accounts and resource observations |
+| `governance/` | Existing contracts, environment requirements, rollout simulation and protected publication |
+| `deployment/` | CI checks, Lambda packaging, configuration export and operator publication commands |
 | `mock-data/` | Deterministic synthetic inventory and evidence |
 | `terraform/modules/` | Reusable POC and provider-free governance modules |
 | `terraform/poc/` | Isolated single-account infrastructure root |
 | `terraform/simulation/` | Provider-free desired-configuration demonstration |
-| `terraform/enterprise/` | Reserved reference-only structure; no enterprise deployment root |
+| `terraform/enterprise/` | Reference-only Control Tower/AFT account requests, customizations, SCP and networking examples |
 | `.github/workflows/` | Credential-free CI and approved data publication |
 | `tests/`, `docs/` | Regression tests, architecture and operating procedures |
 
-See the [data model](docs/GOVERNANCE_MODEL.md), [API guide](docs/BACKEND_API.md), [frontend guide](docs/FRONTEND.md), [AWS operating guide](docs/AWS_DEPLOYMENT_FOUNDATION.md).
+See [requirements traceability](docs/REQUIREMENTS_TRACEABILITY.md), the [data model](docs/GOVERNANCE_MODEL.md), [API guide](docs/BACKEND_API.md), [frontend guide](docs/FRONTEND.md), [AWS operating guide](docs/AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## Security and POC limits
 

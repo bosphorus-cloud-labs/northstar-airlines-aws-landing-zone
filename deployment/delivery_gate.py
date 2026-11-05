@@ -15,11 +15,11 @@ def api(path):
     return json.loads(result.stdout)
 
 
-def verify(sha, digest, *, get=api, env=None):
+def verify(sha, digest, *, get=api, env=None, validation_run_id=None):
     env = os.environ if env is None else env
     if (
         env.get("GITHUB_REF") != "refs/heads/main"
-        or env.get("GITHUB_EVENT_NAME") != "workflow_dispatch"
+        or env.get("GITHUB_EVENT_NAME") not in {"workflow_dispatch", "workflow_run"}
         or env.get("GITHUB_REPOSITORY") != REPOSITORY
         or env.get("GITHUB_SHA") != sha
     ):
@@ -27,6 +27,21 @@ def verify(sha, digest, *, get=api, env=None):
     if not re.fullmatch(r"[a-f0-9]{40}", sha) or not re.fullmatch(r"[a-f0-9]{64}", digest):
         raise ValueError("Exact reviewed commit and approved snapshot digest are required")
     root = f"repos/{REPOSITORY}"
+    if env.get("GITHUB_EVENT_NAME") == "workflow_run" or validation_run_id:
+        if not re.fullmatch(r"[0-9]+", str(validation_run_id or "")):
+            raise ValueError("Exact completed validation run required")
+        run = get(f"{root}/actions/runs/{validation_run_id}")
+        if (
+            run.get("head_sha") != sha
+            or run.get("head_branch") != "main"
+            or run.get("event") != "push"
+            or run.get("status") != "completed"
+            or run.get("conclusion") != "success"
+            or run.get("path") != ".github/workflows/governance-ci.yml"
+            or run.get("head_repository", {}).get("full_name") != REPOSITORY
+            or get(f"{root}/git/ref/heads/main").get("object", {}).get("sha") != sha
+        ):
+            raise ValueError("Untrusted, failed or outdated validation run")
     approval_model = env.get("GOVERNANCE_APPROVAL_MODEL", "independent")
     if approval_model not in {"independent", "single-owner-poc"}:
         raise ValueError("Unsupported approval model")
@@ -139,8 +154,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sha", required=True)
     parser.add_argument("--digest", required=True)
+    parser.add_argument("--validation-run-id")
     args = parser.parse_args()
-    print(json.dumps(verify(args.sha, args.digest)))
+    print(json.dumps(verify(args.sha, args.digest, validation_run_id=args.validation_run_id)))
 
 
 if __name__ == "__main__":

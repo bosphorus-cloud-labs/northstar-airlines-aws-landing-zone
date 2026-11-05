@@ -90,6 +90,25 @@ export interface components {
       account: components["schemas"]["Account"];
       compliance: components["schemas"]["Compliance"];
     };
+    /** Activity */
+    Activity: {
+      /** Operation */
+      operation: string;
+      /** Generation */
+      generation: number;
+      /** Source Commit */
+      source_commit: string;
+      /** Actor */
+      actor: string;
+      /** Published At */
+      published_at: string;
+      /** Previous */
+      previous: string | null;
+      /** Target */
+      target: string;
+      /** Changes */
+      changes: components["schemas"]["Change"][];
+    };
     /** AuditEntry */
     AuditEntry: {
       /** At */
@@ -98,6 +117,25 @@ export interface components {
       action: string;
       /** Actor */
       actor: string;
+    };
+    /** Change */
+    Change: {
+      /** Resource Id */
+      resource_id: string;
+      /** Resource Name */
+      resource_name: string;
+      /** Control */
+      control: string;
+      /** Before */
+      before: ("compliant" | "noncompliant" | "unknown" | "stale") | null;
+      /** After */
+      after: ("compliant" | "noncompliant" | "unknown" | "stale") | null;
+      /** Old Value */
+      old_value: string | boolean | null;
+      /** New Value */
+      new_value: string | boolean | null;
+      /** Reason */
+      reason: string;
     };
     /** Compliance */
     Compliance: {
@@ -464,6 +502,187 @@ export interface components {
       data: components["schemas"]["Finding"][];
       pagination: components["schemas"]["PageInfo"];
     };
+    /** ResourceAccountView */
+    ResourceAccountView: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /**
+       * Environment
+       * @enum {string}
+       */
+      environment: "production" | "pre-production" | "testing" | "development";
+      /** Ou Id */
+      ou_id: string;
+      /**
+       * Lifecycle Status
+       * @default active
+       * @enum {string}
+       */
+      lifecycle_status?: "active" | "onboarding" | "suspended";
+      /** Resource Count */
+      resource_count: number;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "compliant" | "noncompliant" | "unknown" | "stale";
+    };
+    /** ResourceCounts */
+    ResourceCounts: {
+      /** Accounts */
+      accounts: number;
+      /** Resources */
+      resources: number;
+      /** Controls */
+      controls: number;
+      /** Compliant */
+      compliant: number;
+      /** Noncompliant */
+      noncompliant: number;
+      /** Unknown */
+      unknown: number;
+      /** Stale */
+      stale: number;
+    };
+    /** ResourceData */
+    ResourceData: {
+      /** Accounts */
+      accounts: components["schemas"]["ResourceAccountView"][];
+      /** Resources */
+      resources: components["schemas"]["ResourceView"][];
+      /** Findings */
+      findings: components["schemas"]["ResourceFinding"][];
+      /** Controls */
+      controls: components["schemas"]["Rule"][];
+      summary: components["schemas"]["ResourceCounts"];
+      /** Evaluated At */
+      evaluated_at: string;
+      /** Activity */
+      activity: components["schemas"]["Activity"][];
+      /** Terraform Validation */
+      terraform_validation: {
+        [key: string]: unknown;
+      } | null;
+    };
+    /** ResourceEnvelope */
+    ResourceEnvelope: {
+      metadata: components["schemas"]["ResourceMetadata"];
+      data: components["schemas"]["ResourceData"];
+    };
+    /** ResourceFinding */
+    ResourceFinding: {
+      /** Id */
+      id: string;
+      /** Resource Id */
+      resource_id: string;
+      /** Account Id */
+      account_id: string;
+      /** Environment */
+      environment: string;
+      /** Control Id */
+      control_id: string;
+      /** Control */
+      control: string;
+      /** Expected */
+      expected: string | boolean;
+      /** Observed */
+      observed: string | boolean | null;
+      /** Observed At */
+      observed_at: string;
+      /** Evaluated At */
+      evaluated_at: string;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "compliant" | "noncompliant" | "unknown" | "stale";
+      /** Reason */
+      reason: string;
+      /**
+       * Source
+       * @constant
+       */
+      source: "northstar-synthetic-resources";
+      /**
+       * Simulated
+       * @constant
+       */
+      simulated: true;
+    };
+    /** ResourceMetadata */
+    ResourceMetadata: {
+      /**
+       * Api Version
+       * @constant
+       */
+      api_version: "v1";
+      /**
+       * Source
+       * @constant
+       */
+      source: "northstar-synthetic-resources";
+      /**
+       * Simulated
+       * @constant
+       */
+      simulated: true;
+      /** Evaluated At */
+      evaluated_at: string;
+      /** Published At */
+      published_at: string | null;
+      /** Source Commit */
+      source_commit: string | null;
+      /** Workflow Run */
+      workflow_run: string | null;
+    };
+    /** ResourceView */
+    ResourceView: {
+      /** Id */
+      id: string;
+      /** Name */
+      name: string;
+      /** Account Id */
+      account_id: string;
+      /**
+       * Environment
+       * @enum {string}
+       */
+      environment: "production" | "pre-production" | "testing" | "development";
+      /**
+       * Region
+       * @constant
+       */
+      region: "eu-central-1";
+      /**
+       * Resource Type
+       * @enum {string}
+       */
+      resource_type: "ec2_instance" | "s3_bucket" | "ebs_volume";
+      /**
+       * Source
+       * @constant
+       */
+      source: "northstar-synthetic-resources";
+      /**
+       * Simulated
+       * @constant
+       */
+      simulated: true;
+      /** Observed At */
+      observed_at: string;
+      /** Configuration */
+      configuration: {
+        [key: string]: unknown;
+      };
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "compliant" | "noncompliant" | "unknown" | "stale";
+      finding: components["schemas"]["ResourceFinding"];
+    };
     /** RolloutEvent */
     RolloutEvent: {
       /** Sequence */
@@ -485,6 +704,24 @@ export interface components {
        * @constant
        */
       simulated: true;
+    };
+    /** Rule */
+    Rule: {
+      /**
+       * Id
+       * @enum {string}
+       */
+      id: "ec2-imdsv2" | "s3-public-access" | "ebs-encryption";
+      /** Name */
+      name: string;
+      /** Reason */
+      reason: string;
+      /** Expected */
+      expected: string | boolean;
+      /** Max Age Hours */
+      max_age_hours: {
+        [key: string]: number;
+      };
     };
     /**
      * Status
@@ -644,13 +881,14 @@ export interface operations {
         at?: string | null;
         policy_version?: string | null;
         catalog?: boolean;
+        view?: "resources" | null;
       };
     };
     responses: {
       /** @description Successful Response */
       200: {
         content: {
-          "application/json": components["schemas"]["Envelope_Union_Summary__VersionSummary__"];
+          "application/json": components["schemas"]["Envelope_Union_Summary__VersionSummary__"] | components["schemas"]["ResourceEnvelope"];
         };
       };
       /** @description Bad Request */

@@ -1,0 +1,155 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { App } from "../App";
+import { resourceState } from "../api/resources";
+import { setTokenProvider } from "../auth/session";
+import response from "./resource-responses.json";
+import legacy from "./api-responses.json";
+const fetcher = vi.fn<typeof fetch>();
+const clients: QueryClient[] = [];
+function show(path = "/") {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, gcTime: Infinity } },
+  });
+  clients.push(client);
+  return render(
+    <QueryClientProvider client={client}>
+      <MemoryRouter initialEntries={[path]}>
+        <App />
+      </MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+beforeEach(() => {
+  vi.stubEnv("VITE_GOVERNANCE_API_MODE", "resources");
+  fetcher.mockReset().mockImplementation(async (input) => {
+    const path = new URL(String(input), "http://127.0.0.1").pathname;
+    return new Response(
+      JSON.stringify(
+        path === "/api/v1/exceptions"
+          ? legacy["/api/v1/exceptions"]
+          : path === "/api/v1/deployments"
+            ? legacy["/api/v1/deployments"]
+            : response,
+      ),
+    );
+  });
+  vi.stubGlobal("fetch", fetcher);
+});
+afterEach(() => {
+  clients.splice(0).forEach((c) => c.clear());
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+  setTokenProvider(() => null);
+});
+it("uses the current backend dataset with visible simulation and no policy selectors", async () => {
+  show();
+  expect(
+    await screen.findByRole("heading", { name: "What needs attention" }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("SIMULATED DATA")).toBeInTheDocument();
+  expect(
+    screen.getByText(/Not run for this local fixture/),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+  expect(screen.queryByText(/V1|V2|snapshot digest/i)).not.toBeInTheDocument();
+  expect(fetcher.mock.calls[0][0]).toBe("/api/v1/summary?view=resources");
+  expect(fetcher.mock.calls[0][1]?.method).toBe("GET");
+});
+it("navigates, paginates and filters account inventory then opens account resources", async () => {
+  const user = userEvent.setup();
+  show("/accounts");
+  await screen.findByText(/10 accounts · Page 1/);
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(screen.getByText(/Page 2/)).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Environment"), "production");
+  expect(screen.getByText(/3 accounts · Page 1/)).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Search"), "sim-account-001");
+  expect(screen.getByText(/1 accounts · Page 1/)).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("link", { name: response.data.accounts[0].name }),
+  );
+  expect(await screen.findByText("Booking API")).toBeInTheDocument();
+  expect(
+    screen.getByRole("columnheader", { name: "Desired" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("columnheader", { name: "Observed" }),
+  ).toBeInTheDocument();
+});
+it("shows why a specific resource fails and handles empty resource filters", async () => {
+  const user = userEvent.setup();
+  show("/compliance");
+  await screen.findByText("Booking API");
+  await user.selectOptions(
+    screen.getByLabelText("Compliance status"),
+    "noncompliant",
+  );
+  expect(screen.queryByText("Booking API")).not.toBeInTheDocument();
+  expect(
+    screen.getByText(
+      response.data.findings.find((f) => f.status === "noncompliant")!.reason,
+    ),
+  ).toBeInTheDocument();
+  await user.type(screen.getByLabelText("Search"), "no-such-resource");
+  expect(
+    screen.getByText("No resources match these filters."),
+  ).toBeInTheDocument();
+});
+it("refreshes the same current endpoint and exposes loading and sanitized failure", async () => {
+  fetcher.mockImplementationOnce(() => new Promise(() => {}));
+  const first = show();
+  expect(screen.getByRole("status")).toHaveTextContent("Loading");
+  first.unmount();
+  fetcher.mockResolvedValue(
+    new Response("secret/internal/path", { status: 503 }),
+  );
+  show();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Current compliance data is unavailable",
+  );
+  expect(screen.queryByText("secret/internal/path")).not.toBeInTheDocument();
+  fetcher.mockImplementation(
+    async () => new Response(JSON.stringify(response)),
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+  await screen.findByRole("heading", { name: "What needs attention" });
+  await userEvent.click(screen.getByRole("button", { name: "Refresh" }));
+  await waitFor(() => expect(fetcher).toHaveBeenCalledTimes(4));
+});
+it("reports no fabricated publication events for an unseeded local fixture", async () => {
+  show("/deployments");
+  expect(
+    await screen.findByText(/No protected publications recorded/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/not Terraform apply executions/),
+  ).toBeInTheDocument();
+});
+it("rejects unlabelled API data", async () => {
+  fetcher.mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        ...response,
+        metadata: { ...response.metadata, simulated: false },
+      }),
+    ),
+  );
+  await expect(resourceState(new AbortController().signal)).rejects.toThrow(
+    "inconsistent or unlabelled",
+  );
+});
+
+it("retains visible approved and expired exceptions without hiding violations", async () => {
+  show("/exceptions");
+  expect(
+    await screen.findByText("sim-account-002 · baseline-encryption"),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Expired")).toBeInTheDocument();
+  expect(
+    screen.getAllByText("The underlying compliance violation remains visible."),
+  ).toHaveLength(2);
+});

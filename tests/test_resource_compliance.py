@@ -174,6 +174,44 @@ class ResourceComplianceTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             DynamoResources("northstar-offline-records", client_factory=lambda: self.client).read()
 
+    def test_unvalidated_terraform_or_failed_prewrite_gate_cannot_publish(self):
+        with self.assertRaises(ValueError):
+            self.publish(load())
+        self.assertEqual(self.client.writes, [])
+
+        def deny():
+            raise ValueError("Main advanced")
+
+        with self.assertRaises(ValueError):
+            publish(
+                self.client,
+                "northstar-offline-records",
+                self.document,
+                source_commit="a" * 40,
+                actor="bosphorus-cloud-labs",
+                operation="gh-99-1",
+                published_at="2026-11-05T12:00:00Z",
+                before_write=deny,
+            )
+        self.assertEqual(self.client.writes, [])
+
+    def test_central_environment_change_is_planned_across_existing_accounts(self):
+        document = load()
+        for rule in document["controls"]["rules"]:
+            rule["max_age_hours"]["production"] = 12
+        result, _, _ = prepare(document, self.temporary.name + "/central-change")
+        for account in result["terraform_validation"]["accounts"].values():
+            for requirement in account["requirements"].values():
+                expected = (
+                    12
+                    if account["environment"] == "production"
+                    else {"pre-production": 48, "testing": 72, "development": 168}[
+                        account["environment"]
+                    ]
+                )
+                self.assertEqual(requirement["max_age_hours"], expected)
+        self.assertEqual(len(result["terraform_validation"]["accounts"]), 10)
+
     def test_legacy_catalogue_never_changes(self):
         self.client.rows[("GOVERNANCE#CATALOG", "STATE")] = {"preserved": "legacy catalogue"}
         self.publish()

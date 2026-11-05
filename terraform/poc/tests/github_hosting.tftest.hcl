@@ -135,3 +135,17 @@ run "full_catalog_after_separate_backend_upgrade" {
     error_message = "Full V2-capable frontend must remain available after backend upgrade."
   }
 }
+
+run "resource_console_explicit_activation" {
+  command = plan
+  variables {
+    hosting_migration_stage       = "create_main"
+    enable_github_hosting         = true
+    github_baseline_compatibility = false
+    governance_frontend_mode      = "resources"
+  }
+  assert {
+    condition     = aws_amplify_branch.github_main[0].environment_variables["VITE_GOVERNANCE_API_MODE"] == "resources" && aws_amplify_branch.github_main[0].app_id == module.hosting.app_id
+    error_message = "Resource activation must use the same existing app/main branch and explicit frontend mode."
+  }
+}

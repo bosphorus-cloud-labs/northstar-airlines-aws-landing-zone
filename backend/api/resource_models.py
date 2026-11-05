@@ -30,12 +30,12 @@ class ResourceView(Resource):
     finding: ResourceFinding
 
 
-class AccountView(Account):
+class ResourceAccountView(Account):
     resource_count: int = Field(ge=0)
     status: Status
 
 
-class Counts(StrictModel):
+class ResourceCounts(StrictModel):
     accounts: int
     resources: int
     controls: int
@@ -68,11 +68,11 @@ class Activity(StrictModel):
 
 
 class ResourceData(StrictModel):
-    accounts: list[AccountView]
+    accounts: list[ResourceAccountView]
     resources: list[ResourceView]
     findings: list[ResourceFinding]
     controls: list[Rule]
-    summary: Counts
+    summary: ResourceCounts
     evaluated_at: str
     activity: list[Activity]
     terraform_validation: dict | None

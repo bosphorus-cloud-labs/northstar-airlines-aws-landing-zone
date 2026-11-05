@@ -141,3 +141,13 @@ variable "github_oidc_provider_arn" {
   default     = null
   description = "Optional existing GitHub OIDC provider ARN; null creates one after approved plan. Inventory was empty at implementation."
 }
+
+variable "governance_frontend_mode" {
+  description = "Keep catalog until resource backend, CI and approved publication are verified; resources enables the simplified console."
+  type        = string
+  default     = "catalog"
+  validation {
+    condition     = contains(["catalog", "resources"], var.governance_frontend_mode)
+    error_message = "Frontend mode must be catalog or resources."
+  }
+}

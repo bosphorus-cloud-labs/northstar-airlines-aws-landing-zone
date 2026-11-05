@@ -1,5 +1,7 @@
 # CI/CD Operations
 
+The staged resource-change path adds automatic publication preparation after successful main CI, followed by the existing real Environment approval and OIDC boundary. See [Resource Compliance Operations](RESOURCE_COMPLIANCE_OPERATIONS.md#protected-delivery). The explicit catalogue dispatch procedures below remain the preserved recovery path; they are not required for resource-change publication.
+
 ## What is integrated
 
 | Connection | Actual boundary |

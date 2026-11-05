@@ -57,6 +57,8 @@ def publish(
 ):
     if not re.fullmatch(r"[a-f0-9]{40}", source_commit):
         raise ValueError("Exact source commit required")
+    if not document.get("terraform_validation"):
+        raise ValueError("Verified Terraform desired-state receipt required for publication")
     prepared = encode(document)
     identifier = prepared["snapshot_id"]
     old = read_catalog(client, table)

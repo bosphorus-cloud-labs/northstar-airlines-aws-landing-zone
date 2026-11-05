@@ -10,7 +10,7 @@ locals {
   ))
   github_frontend_settings = local.main_branch_enabled ? merge(local.frontend_settings, {
     VITE_APP_ORIGIN          = local.github_origin
-    VITE_GOVERNANCE_API_MODE = var.github_baseline_compatibility ? "baseline-v1" : "catalog"
+    VITE_GOVERNANCE_API_MODE = var.github_baseline_compatibility ? "baseline-v1" : var.governance_frontend_mode
   }) : null
 }
 resource "aws_amplify_branch" "github_main" {
