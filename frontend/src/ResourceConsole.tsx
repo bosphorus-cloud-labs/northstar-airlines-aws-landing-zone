@@ -152,7 +152,11 @@ function Overview({ data }: { data: ResourceData }) {
       <div className="resource-metrics">
         {Object.entries(data.summary).map(([name, value]) => (
           <section className="panel" key={name}>
-            <p>{environment(name)}</p>
+            <p>
+              {["compliant", "noncompliant", "unknown", "stale"].includes(name)
+                ? `${environment(name)} resources`
+                : environment(name)}
+            </p>
             <strong>{value}</strong>
           </section>
         ))}

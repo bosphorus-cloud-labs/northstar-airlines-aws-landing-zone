@@ -16,7 +16,7 @@ Implementation and offline acceptance are separate from deployment acceptance. U
 | `terraform/modules/simulated_governance/main.tf` | Existing reusable, provider-free desired-state module. |
 | `terraform/simulation/main.tf` | Existing planning root, extended with optional resource/control inputs. |
 
-Production, Pre-Production, Testing and Development use 24, 48, 72 and 168-hour evidence limits respectively. Production and Pre-Production inherit approval intent from the account-governance baseline. Real publication into the POC always additionally requires GitHub Environment approval, regardless of the target environment. These are synthetic requirements, not deployed SCPs.
+Production, Pre-Production, Testing and Development use 24, 48, 72 and 168-hour evidence limits respectively. Production and Pre-Production inherit approval intent from the account-governance baseline. Real publication into the POC always additionally requires GitHub Environment approval, regardless of the target environment. These are synthetic requirements, not deployed SCPs. Production EBS observation `sim-ebs-003` is 18 hours old at the explicit evaluation time: tightening Production freshness from 24 to 12 hours changes its result from compliant to stale. This preserves the original Production policy-change demonstration without changing existing snapshot files.
 
 ## Real Terraform connection
 

@@ -200,6 +200,9 @@ class ResourceComplianceTests(unittest.TestCase):
         for rule in document["controls"]["rules"]:
             rule["max_age_hours"]["production"] = 12
         result, _, _ = prepare(document, self.temporary.name + "/central-change")
+        before = next(r for r in evaluate(load())["resources"] if r["id"] == "sim-ebs-003")
+        after = next(r for r in evaluate(result)["resources"] if r["id"] == "sim-ebs-003")
+        self.assertEqual((before["status"], after["status"]), ("compliant", "stale"))
         for account in result["terraform_validation"]["accounts"].values():
             for requirement in account["requirements"].values():
                 expected = (
