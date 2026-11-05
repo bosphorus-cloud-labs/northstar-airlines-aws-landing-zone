@@ -24,6 +24,10 @@ name: Approved synthetic governance delivery
         type: string
         required: false
 
+defaults:
+  run:
+    shell: bash
+
 permissions:
   contents: read
 
@@ -156,7 +160,7 @@ jobs:
           [[ "$VALIDATION_RUN" =~ ^[0-9]+$ ]]
           echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
           echo "run=$VALIDATION_RUN" >> "$GITHUB_OUTPUT"
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || git diff --name-only HEAD^ HEAD -- mock-aws-resources compliance-rules compliance_engine deployment/resource_plan.py deployment/resource_release.py governance/delivery/resource_publisher.py terraform/simulation terraform/modules/simulated_governance | grep -q .; then
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || git diff --name-only HEAD^ HEAD -- mock-aws-resources compliance-rules compliance_engine deployment/resource_plan.py deployment/resource_release.py governance/delivery/resource_publisher.py .github/workflows/governance-cd.yml terraform/simulation terraform/modules/simulated_governance | grep -q .; then
             echo 'changed=true' >> "$GITHUB_OUTPUT"
           else
             echo 'changed=false' >> "$GITHUB_OUTPUT"
@@ -228,10 +232,11 @@ jobs:
         env:
           TABLE: ${{ vars.GOVERNANCE_TABLE }}
         run: |
-          .venv/bin/python -m deployment.resource_release publish --execute --table "$TABLE" --source-commit "$SOURCE_SHA" --validation-run-id "${{ needs.resource-gate.outputs.run }}" | tee resource-publication.json
-          cat resource-publication.json >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p artifacts/resource-publication
+          .venv/bin/python -m deployment.resource_release publish --execute --table "$TABLE" --source-commit "$SOURCE_SHA" --validation-run-id "${{ needs.resource-gate.outputs.run }}" > artifacts/resource-publication/receipt.json
+          cat artifacts/resource-publication/receipt.json >> "$GITHUB_STEP_SUMMARY"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: resource-publication-${{ github.run_id }}
-          path: resource-publication.json
+          path: artifacts/resource-publication/receipt.json
           retention-days: 30
