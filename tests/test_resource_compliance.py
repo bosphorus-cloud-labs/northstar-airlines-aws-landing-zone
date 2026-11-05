@@ -290,6 +290,34 @@ class ResourceComplianceTests(unittest.TestCase):
                 self.assertEqual(requirement["max_age_hours"], expected)
         self.assertEqual(len(result["terraform_validation"]["accounts"]), 10)
 
+    def test_organization_wide_change_targets_every_account_and_environment(self):
+        document = load()
+        rule = next(
+            rule for rule in document["controls"]["rules"] if rule["id"] == "ebs-encryption"
+        )
+        limits = {environment: hours // 2 for environment, hours in rule["max_age_hours"].items()}
+        rule["max_age_hours"] = limits
+        result, _, plan = prepare(document, self.temporary.name + "/organization-wide-change")
+        assignments = result["terraform_validation"]["accounts"]
+        self.assertEqual(
+            set(assignments), {account["id"] for account in document["accounts"]["accounts"]}
+        )
+        self.assertEqual({account["environment"] for account in assignments.values()}, set(limits))
+        for account in assignments.values():
+            requirement = account["requirements"]["ebs-encryption"]
+            self.assertEqual(
+                requirement,
+                {"expected_json": "true", "max_age_hours": limits[account["environment"]]},
+            )
+            baseline = self.document["terraform_validation"]["accounts"][account["account_id"]]
+            self.assertEqual(
+                account["requirements"]["ec2-imdsv2"], baseline["requirements"]["ec2-imdsv2"]
+            )
+        self.assertFalse(plan.get("resource_changes"))
+        self.assertTrue(
+            any(finding["status"] != "compliant" for finding in evaluate(result)["findings"])
+        )
+
     def test_legacy_catalogue_never_changes(self):
         self.client.rows[("GOVERNANCE#CATALOG", "STATE")] = {"preserved": "legacy catalogue"}
         self.publish()

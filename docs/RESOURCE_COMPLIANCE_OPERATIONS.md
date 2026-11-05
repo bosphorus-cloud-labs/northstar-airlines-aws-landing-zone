@@ -69,14 +69,27 @@ Run the backend in one terminal and frontend in another:
 VITE_GOVERNANCE_API_MODE=resources npm --prefix frontend run dev
 ```
 
-Open http://127.0.0.1:5173. The local backend reads current source fixtures, on every request, so refresh the browser after editing fixtures. Local data is labelled **not published** and has no fabricated GitHub approval history or Terraform receipt. Cloud data changes require the protected pipeline.
+Open http://127.0.0.1:5173. The local backend reads current source fixtures on every request, so refresh the browser after editing fixtures. Local data is labelled **not published** and has no fabricated GitHub approval history or Terraform receipt. Cloud data changes require the protected pipeline.
+
+## Required proof chain
+
+```text
+Central controls + synthetic account/environment assignments
+  → existing provider-free Terraform root and reusable module
+  → complete desired-output parity check and input-bound receipt
+  → protected release publication
+  → read-only API: terraform_validation + independent compliance findings
+  → one governance console: environments, accounts, evidence and activity
+```
+
+Changing an observation does not weaken Terraform's desired requirement: IMDSv2 remains required when observed tokens become optional. The resulting mismatch is the compliance finding. Changing a central requirement changes the planned assignments themselves; both paths use the same module, verifier and application read model.
 
 ## Five-minute operational demonstration
 
 Prepare successful baseline publication and cloud activation before presenting. Keep the CI artifact/report and a captured publication receipt available so the demonstration does not rely on waiting for a runner.
 
-1. **Overview (45 seconds):** show the four environments, resource totals and Terraform verification. Say: “Terraform calculates the desired baseline across synthetic accounts. The same input is checked against observations by the compliance engine.”
-2. **Resources (45 seconds):** search `Booking API`. Its EC2 metadata setting is `required`; the IMDSv2 control is compliant. Show desired, observed and evidence time. Point out the separate noncompliant, unknown and stale examples.
+1. **Central governance and Terraform (45 seconds):** open `compliance-rules/resource-controls.json`, then CI's `policy-rollout/resources-ci/terraform-plan.txt` and release report. Show the same central controls assigned to all ten synthetic accounts, with Production/Pre-Production/Testing/Development freshness of 24/48/72/168 hours. Show the console's environment table and verified Terraform status. Say: “Terraform calculates the desired baseline across synthetic accounts. The same input is checked against observations by the compliance engine.”
+2. **Multi-account reporting (45 seconds):** open Accounts to show account-specific status and environment assignments, then Resources. Search `Booking API`. Its EC2 metadata setting is `required`; the IMDSv2 control is compliant. Show desired, observed and evidence time. Point out the separate noncompliant, unknown and stale examples.
 3. **Git change and CI (90 seconds):** in VS Code edit only `mock-aws-resources/resources.json`: for `sim-ec2-001`, change `configuration.metadata_options.http_tokens` from `required` to `optional`. On a fresh feature branch run:
 
    ```sh
@@ -109,6 +122,23 @@ Prepare successful baseline publication and cloud activation before presenting. 
 The shell variable survives only in the original terminal; otherwise copy the original data commit SHA from the PR. If the PR was squash-merged and the original commit differs from the merged data change, use the squash commit shown on main. Review the revert diff before pushing.
 
 **Fallback:** show pre-generated CI plans, compliance reports and publication receipts, then demonstrate the same edit with the local API. Clearly call it local/captured evidence; do not claim failed live publication succeeded. CI and manual approval latency are outside a guaranteed five-minute live window.
+
+## Central-policy variant and retained operational scenarios
+
+To show an actual desired-policy delta instead of an observation delta, edit **only** `compliance-rules/resource-controls.json`: for `ebs-encryption`, change `max_age_hours.production` from `24` to `12`. Use the same reviewed Git/CI/approval workflow. Terraform must plan 12-hour EBS requirements for all three Production accounts while retaining other environments' limits. Resource `sim-ebs-003` has an 18-hour-old observation: its result changes from compliant to **stale**, while desired and observed encryption both remain true. Revert the data commit to restore the 24-hour requirement. This demonstrates evidence freshness, not a logging-retention setting or disabled encryption.
+
+For an offline rehearsal of central/environment-wide changes and new-account inheritance, one command runs the real Terraform-backed acceptance cases without editing tracked data or contacting AWS:
+
+```sh
+.venv/bin/python -m unittest -v \
+  tests.test_resource_compliance.ResourceComplianceTests.test_central_environment_change_is_planned_across_existing_accounts \
+  tests.test_resource_compliance.ResourceComplianceTests.test_organization_wide_change_targets_every_account_and_environment \
+  tests.test_resource_compliance.ResourceComplianceTests.test_new_synthetic_account_inherits_terraform_baseline
+```
+
+Keep CI's retained `simulation.txt` and rollout `report.json` ready to show simulated approval, canary, stopped failure, retry and account onboarding without typing a second sequence during the five-minute presentation. `./demo.sh v2 --prepare-only` remains an optional detailed local walkthrough. These distribution results are simulated; the Terraform planning and parity are real. Account-governance exceptions remain visible separately and never exempt the resource findings. Large-fleet collectors, provisioning and orchestration are design-only beyond the bounded POC.
+
+The three required proofs are therefore visible in five minutes: **central environment rules**, **real Terraform plan/parity**, and **multi-account application results**. Allow CI and human approvals to finish before timed presentation where necessary; use captured, clearly dated artifacts if a live stage is delayed.
 
 ## Safe cloud activation and recovery
 
