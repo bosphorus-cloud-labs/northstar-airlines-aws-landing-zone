@@ -41,7 +41,7 @@ Default mode is **fail-closed**, not an anonymous API. All routes, health, docs,
 
 Runtime and test dependencies are exact-pinned for Python 3.13; advisory scans and update guidance are in [SECURITY.md](../SECURITY.md). FastAPI's OpenTelemetry API dependency has no configured telemetry SDK/exporter. Do not remove transitive pins independently: the package builder validates the complete runtime set.
 
-`scripts.package_lambda` accepts preinstalled Linux ARM64/Python 3.13 wheels and assembles a deterministic ZIP containing backend/governance code and the approved contract files. It excludes local fixtures, tests, environment files, Terraform and the publisher. Deployed Lambda uses DynamoDB, not a copied local fixture directory. Native wheel compatibility is checked locally and actual Lambda execution is verified separately; never package the workstation virtual environment. See [the deployment guide](AWS_DEPLOYMENT_FOUNDATION.md).
+`deployment.package_lambda` accepts preinstalled Linux ARM64/Python 3.13 wheels and assembles a deterministic ZIP containing backend/governance code and the approved contract files. It excludes local fixtures, tests, environment files, Terraform and the publisher. Deployed Lambda uses DynamoDB, not a copied local fixture directory. Native wheel compatibility is checked locally and actual Lambda execution is verified separately; never package the workstation virtual environment. See [the deployment guide](AWS_DEPLOYMENT_FOUNDATION.md).
 
 ## API structure
 
@@ -105,7 +105,7 @@ Errors use `{"error":{"code":"invalid_request","message":"Request parameters are
 
 - `backend/api/routes.py`: versioned GET routes and filtering/pagination presentation.
 - `backend/api/models.py`: typed Pydantic queries/responses and governance JSON Schema validation of returned domain records. It does not define compliance rules.
-- `backend/service.py`: loads one request-owned snapshot, calls `governance.model.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
+- `backend/service.py`: loads one request-owned snapshot, calls `compliance_engine.evaluate.evaluate` and `summarize`, assembles read views. Exception states come from evaluator output.
 - `backend/repository.py`: `GovernanceRepository` protocol and read-only `FixtureRepository`. The deployed `DynamoSnapshotRepository` and `DynamoCatalog` preserve immutable version/digest selection and strongly verify the read model.
 - `backend/auth.py`, `app.py`: identity/permission boundary, application factory, sanitized error handling. No cloud SDKs or network calls.
 
@@ -133,3 +133,7 @@ Data GETs accept `policy_version=1.0.0|2.0.0`; `/api/v1/summary?catalog=true` ad
 The deployed `GOVERNANCE_CATALOG_MODE=dynamodb` path reads one generation-checked server catalogue. Default requests follow Current when neither version nor time is supplied; explicit version/time reads retain deterministic historical semantics. Local/pinned compatibility remains V1 without a catalogue. The optional static `GOVERNANCE_VERSIONS_JSON` path is retained for compatibility, not the active deployment mechanism.
 
 Version metadata includes policy/profile/generator, immutable hash and observation times. Versioned summaries include the simulated journal and environment requirements. The same evaluator computes all findings. The local launcher explicitly selects a file catalogue with loopback-only demo identity; deployed Lambda cannot select it. V1/V2 are whole-governance snapshots, not independently versioned production policy records. See [data semantics](GOVERNANCE_MODEL.md), [delivery operations](GOVERNANCE_DELIVERY.md) and [console validation](LOCAL_DEMONSTRATION.md).
+
+## Current resource-compliance view
+
+`GET /api/v1/summary?view=resources` uses the same server-side read permission and API Gateway route. Its `ResourceEnvelope` includes typed accounts/resources/findings, controls, four-state counts, explicit evaluation time, optional verified Terraform receipt and publication activity. It does not accept `at`, `policy_version` or `catalog` simultaneously. Local fixture reads are explicitly unpublished; deployed reads require the distinct strongly verified resource catalogue and never substitute fixtures. Unknown/unseeded/corrupt data returns a sanitized 503. Existing summary shapes and all earlier routes remain compatible.

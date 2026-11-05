@@ -6,8 +6,8 @@ from collections import Counter
 
 from jsonschema import Draft202012Validator, ValidationError
 
-from governance.model.contracts import SCHEMA, validate, validate_model
-from governance.model.evaluate import evaluate, load_model, summarize
+from compliance_engine.contracts import SCHEMA, validate, validate_model
+from compliance_engine.evaluate import evaluate, load_model, summarize
 
 AT = "2026-10-31T12:00:00Z"
 

@@ -27,6 +27,7 @@ def create_app(
     repository: GovernanceRepository | None = None,
     authenticator: Authenticator | None = None,
     catalog=None,
+    resource_repository=None,
 ) -> FastAPI:
     if local_demo and authenticator is not None:
         raise ValueError("Choose local-demo mode or an external authenticator")
@@ -50,6 +51,12 @@ def create_app(
     )
     app.state.service = GovernanceService(
         repository if repository is not None else FixtureRepository(), catalog=catalog
+    )
+
+    from backend.deployment.resources import FixtureResources
+
+    app.state.resources = (
+        resource_repository if resource_repository is not None else FixtureResources()
     )
 
     @app.middleware("http")

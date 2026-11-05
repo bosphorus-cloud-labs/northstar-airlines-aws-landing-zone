@@ -16,7 +16,10 @@ type Responses = {
     P in ApiPath
   ]: paths[P]["get"]["responses"][200]["content"]["application/json"];
 };
-type ResponseFor<P extends ApiPath> = Responses[P];
+type ResponseFor<P extends ApiPath> = Exclude<
+  Responses[P],
+  Models["ResourceEnvelope"]
+>;
 
 export class ApiError extends Error {
   constructor(

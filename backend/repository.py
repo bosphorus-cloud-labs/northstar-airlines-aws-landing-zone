@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Protocol
 
-from governance.model.evaluate import load_model
+from compliance_engine.evaluate import load_model
 
 
 @dataclass(frozen=True)

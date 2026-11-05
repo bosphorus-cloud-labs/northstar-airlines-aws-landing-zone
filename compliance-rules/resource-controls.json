@@ -1,0 +1,41 @@
+{
+  "simulated": true,
+  "rules": [
+    {
+      "id": "ec2-imdsv2",
+      "name": "Require IMDSv2",
+      "expected": "required",
+      "reason": "Metadata tokens are optional; IMDSv2 tokens must be required.",
+      "max_age_hours": {
+        "production": 24,
+        "pre-production": 48,
+        "testing": 72,
+        "development": 168
+      }
+    },
+    {
+      "id": "s3-public-access",
+      "name": "Block S3 public access",
+      "expected": true,
+      "reason": "The synthetic bucket does not block public access.",
+      "max_age_hours": {
+        "production": 24,
+        "pre-production": 48,
+        "testing": 72,
+        "development": 168
+      }
+    },
+    {
+      "id": "ebs-encryption",
+      "name": "Encrypt EBS volumes",
+      "expected": true,
+      "reason": "The synthetic volume is not encrypted.",
+      "max_age_hours": {
+        "production": 24,
+        "pre-production": 48,
+        "testing": 72,
+        "development": 168
+      }
+    }
+  ]
+}

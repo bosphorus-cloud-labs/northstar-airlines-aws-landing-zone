@@ -1,5 +1,7 @@
 # Local Demonstration and Console Validation
 
+For the simplified resource-change demonstration, start with [Resource Compliance Operations](RESOURCE_COMPLIANCE_OPERATIONS.md#five-minute-operational-demonstration). The procedures below preserve the earlier account-policy rollout rehearsal and recovery path.
+
 The governance console displays inventory, policy requirements, rollout outcomes and compliance evidence in one read-only application. Current/History select governance snapshots, not application releases. Account distribution and compliance evidence are synthetic; [deployment validation](DEPLOYMENT_ACCEPTANCE.md) records the separate GitHub approval, OIDC publication and recovery results.
 
 ## Local demonstration

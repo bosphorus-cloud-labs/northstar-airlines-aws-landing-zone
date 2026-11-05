@@ -61,7 +61,7 @@ def no_resources(module):
         no_resources(child.get("module", {}))
 
 
-def verify_plan(plan, state, policy_version="2.0.0"):
+def validate_plan_boundary(plan):
     if not isinstance(plan, dict):
         raise ValueError("Invalid Terraform plan structure")
     if (
@@ -74,6 +74,10 @@ def verify_plan(plan, state, policy_version="2.0.0"):
         raise ValueError("Expected a complete, successful provider-free output-only plan")
     no_resources(plan.get("planned_values", {}).get("root_module", {}))
     no_resources(plan.get("configuration", {}).get("root_module", {}))
+
+
+def verify_plan(plan, state, policy_version="2.0.0"):
+    validate_plan_boundary(plan)
     actual = plan["planned_values"]["outputs"]["governance_desired"]["value"]
     expected = desired(state, policy_version)
     # Canonical JSON also distinguishes true from 1, unlike Python dict equality.

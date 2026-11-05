@@ -11,3 +11,6 @@ github_auto_build_enabled = false
 
 # Advance only after the prior migration checkpoint has been applied and verified.
 hosting_migration_stage = "legacy"
+
+# Activate only after compatible Lambda, protected resource publication and acceptance.
+governance_frontend_mode = "catalog"

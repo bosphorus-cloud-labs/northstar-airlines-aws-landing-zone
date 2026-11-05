@@ -13,7 +13,7 @@ from backend.app import create_app
 from backend.auth import Principal
 from backend.lambda_handler import handler
 from backend.repository import FixtureRepository
-from governance.model.evaluate import evaluate, load_model
+from compliance_engine.evaluate import evaluate, load_model
 
 AT = "2026-10-31T12:00:00Z"
 PATHS = [

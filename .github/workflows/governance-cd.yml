@@ -1,24 +1,28 @@
 name: Approved synthetic governance delivery
 
 "on":
+  workflow_run:
+    workflows: ["Governance validation (no AWS deployment)"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       action:
         type: choice
-        options: [bootstrap, publish, rollback]
+        options: [resources, bootstrap, publish, rollback]
         required: true
       source_sha:
         description: Exact current main commit with successful CI and merged PR
         type: string
-        required: true
+        required: false
       snapshot_digest:
         description: Exact SHA-256 from reviewed CI candidate (or registered rollback/V1 target)
         type: string
-        required: true
+        required: false
       expected_generation:
         description: Current registry generation (0 only for initial bootstrap)
         type: string
-        required: true
+        required: false
 
 permissions:
   contents: read
@@ -29,7 +33,7 @@ concurrency:
 
 jobs:
   validate:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'workflow_dispatch' && inputs.action != 'resources' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/governance-ci.yml
     permissions:
       contents: read
@@ -55,7 +59,7 @@ jobs:
           persist-credentials: false
       - name: Verify reviews, exact commit CI, environment protection and digest
         run: |
-          python3 -m scripts.delivery_gate --sha "$SOURCE_SHA" --digest "$APPROVED_DIGEST"
+          python3 -m deployment.delivery_gate --sha "$SOURCE_SHA" --digest "$APPROVED_DIGEST"
           if [ "$ACTION" = publish ] && [ "$APPROVED_DIGEST" != "$CANDIDATE_DIGEST" ]; then
             echo "Approved digest differs from the deterministic candidate"; exit 1
           fi
@@ -93,7 +97,7 @@ jobs:
           path: artifacts/release
       - name: Validate approved input before requesting AWS identity
         if: inputs.action == 'publish'
-        run: .venv/bin/python -m scripts.governance_release check --source-commit "$SOURCE_SHA" --approved-digest "$APPROVED_DIGEST"
+        run: .venv/bin/python -m deployment.governance_release check --source-commit "$SOURCE_SHA" --approved-digest "$APPROVED_DIGEST"
       - name: Assume data-only publisher through OIDC after environment approval
         uses: aws-actions/configure-aws-credentials@4a1596c86fd706dc0521e32f0121ad1a6d1adb74 # v6
         with:
@@ -106,7 +110,7 @@ jobs:
           unset-current-credentials: true
       - name: Conditional publication, strong verification and atomic Current selection
         run: |
-          .venv/bin/python -m scripts.governance_release "$ACTION" --execute \
+          .venv/bin/python -m deployment.governance_release "$ACTION" --execute \
             --table "$TABLE" --confirm-table "$TABLE" --baseline-id "$BASELINE_ID" \
             --approved-digest "$APPROVED_DIGEST" --source-commit "$SOURCE_SHA" \
             --generation "$EXPECTED_GENERATION" --operation "gh-${{ github.run_id }}" | tee publication-result.json
@@ -115,4 +119,119 @@ jobs:
         with:
           name: governance-delivery-receipt-${{ github.run_id }}
           path: publication-result.json
+          retention-days: 30
+
+  resource-gate:
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository) ||
+      (github.event_name == 'workflow_dispatch' && inputs.action == 'resources' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    outputs:
+      source: ${{ steps.source.outputs.sha }}
+      run: ${{ steps.source.outputs.run }}
+      changed: ${{ steps.source.outputs.changed }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GOVERNANCE_APPROVAL_MODEL: ${{ vars.GOVERNANCE_APPROVAL_MODEL || 'independent' }}
+      SOURCE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      VALIDATION_RUN: ${{ github.event.workflow_run.id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Select exact successful main CI and relevant input changes
+        id: source
+        run: |
+          if [ -z "$VALIDATION_RUN" ]; then
+            VALIDATION_RUN=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/governance-ci.yml/runs?event=push&head_sha=$SOURCE_SHA&per_page=100" --jq '[.workflow_runs[] | select(.conclusion == "success")][0].id')
+          fi
+          [[ "$VALIDATION_RUN" =~ ^[0-9]+$ ]]
+          echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          echo "run=$VALIDATION_RUN" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || git diff --name-only HEAD^ HEAD -- mock-aws-resources compliance-rules compliance_engine deployment/resource_plan.py terraform/simulation terraform/modules/simulated_governance | grep -q .; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: resource-release-${{ env.SOURCE_SHA }}
+          run-id: ${{ steps.source.outputs.run }}
+          github-token: ${{ github.token }}
+          path: artifacts
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r backend/requirements.txt
+          .venv/bin/python -m deployment.resource_release check --source-commit "$SOURCE_SHA"
+          DIGEST=$(.venv/bin/python -c 'import json; print(json.load(open("artifacts/resource-release/release.json"))["snapshot_id"])')
+          .venv/bin/python -m deployment.delivery_gate --sha "$SOURCE_SHA" --digest "$DIGEST" --validation-run-id "${{ steps.source.outputs.run }}"
+
+  resource-publish:
+    needs: resource-gate
+    if: needs.resource-gate.outputs.changed == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: governance-production
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      id-token: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GOVERNANCE_APPROVAL_MODEL: ${{ vars.GOVERNANCE_APPROVAL_MODEL || 'independent' }}
+      SOURCE_SHA: ${{ needs.resource-gate.outputs.source }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ env.SOURCE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - run: |
+          python -m venv .venv
+          .venv/bin/python -m pip install -r backend/requirements.txt
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: resource-release-${{ env.SOURCE_SHA }}
+          run-id: ${{ needs.resource-gate.outputs.run }}
+          github-token: ${{ github.token }}
+          path: artifacts
+      - name: Recheck exact artifact and protected metadata before AWS identity
+        run: |
+          .venv/bin/python -m deployment.resource_release check --source-commit "$SOURCE_SHA"
+          DIGEST=$(.venv/bin/python -c 'import json; print(json.load(open("artifacts/resource-release/release.json"))["snapshot_id"])')
+          .venv/bin/python -m deployment.delivery_gate --sha "$SOURCE_SHA" --digest "$DIGEST" --validation-run-id "${{ needs.resource-gate.outputs.run }}"
+      - name: Assume existing data-only publisher after actual environment approval
+        uses: aws-actions/configure-aws-credentials@4a1596c86fd706dc0521e32f0121ad1a6d1adb74 # v6
+        with:
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
+          role-to-assume: ${{ vars.GOVERNANCE_PUBLISH_ROLE_ARN }}
+          allowed-account-ids: ${{ vars.AWS_ACCOUNT_ID }}
+          role-duration-seconds: 900
+          role-session-name: resources-${{ github.run_id }}-${{ github.run_attempt }}
+          unset-current-credentials: true
+      - name: Publish immutable synthetic data and conditionally select Current
+        env:
+          TABLE: ${{ vars.GOVERNANCE_TABLE }}
+        run: |
+          .venv/bin/python -m deployment.resource_release publish --execute --table "$TABLE" --source-commit "$SOURCE_SHA" --validation-run-id "${{ needs.resource-gate.outputs.run }}" | tee resource-publication.json
+          cat resource-publication.json >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: resource-publication-${{ github.run_id }}
+          path: resource-publication.json
           retention-days: 30

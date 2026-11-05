@@ -35,7 +35,7 @@ This is an operating procedure, not standing permission for future cloud changes
 Build the Python 3.13 Linux ARM64 package using the existing pinned vendor wheels:
 
 ```sh
-.venv/bin/python -m scripts.package_lambda --output artifacts/lambda/governance-delivery.zip
+.venv/bin/python -m deployment.package_lambda --output artifacts/lambda/governance-delivery.zip
 ```
 
 The locally inspected real-state plan is `artifacts/governance-delivery-infrastructure.tfplan`, mode 600, ignored and secret-bearing. Initial review used read-only refresh without lock writes; fresh authorized apply plans used normal state locking. The recorded Amplify setup-token input was preserved in memory to avoid unrelated app changes. Do not upload or blindly reuse it after state/source changes. Exact expected actions:
@@ -55,7 +55,7 @@ AWS_PROFILE=north terraform -chdir=terraform/poc plan -input=false \
   -var=enable_governance_delivery=true -var=governance_catalog_enabled=false \
   -var=lambda_package_path=../../artifacts/lambda/governance-delivery.zip \
   -out=../../artifacts/governance-delivery-infrastructure.tfplan
-.venv/bin/python -m scripts.inspect_delivery_plan artifacts/governance-delivery-infrastructure.tfplan
+.venv/bin/python -m deployment.inspect_delivery_plan artifacts/governance-delivery-infrastructure.tfplan
 ```
 
 An operator must separately approve/apply that exact reviewed plan. The authorized foundation apply has completed; see the acceptance record. Future applies still require scope review. Persist completed flags/package path in ignored settings; wrong defaults after deployment could propose removing roles or reverting the reader.
@@ -120,7 +120,7 @@ Only after CI, publication/promotion/rollback and authenticated dashboard refres
 
 ## Local reproduction and costs
 
-Use the existing `./demo.sh v1` / `./demo.sh v2` for an offline local demonstration. Real provider-free plan/parity plus simulated rollout remain separate from real publication. `scripts.governance_release build` requires a clean committed checkout and completed CLI run/real plan JSON; no credential is needed. `check` validates release SHA/digest offline. Only explicit execute modes construct an AWS client, and require table confirmation, generation and approved digest.
+Use the existing `./demo.sh v1` / `./demo.sh v2` for an offline local demonstration. Real provider-free plan/parity plus simulated rollout remain separate from real publication. `deployment.governance_release build` requires a clean committed checkout and completed CLI run/real plan JSON; no credential is needed. `check` validates release SHA/digest offline. Only explicit execute modes construct an AWS client, and require table confirmation, generation and approved digest.
 
 GitHub Actions usage, DynamoDB conditional/strong reads/writes, Lambda polling and Amplify builds/storage/traffic can incur charges. No NAT/VPC/Control Tower/Organizations/AFT infrastructure is added. Closing the dashboard stops catalogue polling. History is retained; there is no automatic deletion/TTL cleanup. Infra teardown, permission removal and data retention need separate reviewed plans. Publication roles cannot delete data or provision infrastructure.
 

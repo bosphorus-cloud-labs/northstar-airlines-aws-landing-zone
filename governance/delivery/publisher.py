@@ -5,9 +5,9 @@ import re
 from backend.deployment.dynamodb import DynamoSnapshotRepository
 from backend.deployment.snapshot import digest
 from backend.repository import FixtureRepository
+from deployment.seed_governance import load
 from governance.delivery import catalog
 from governance.simulation.publication import validate_package
-from scripts.seed_governance import load
 
 
 def verify(client, table, snapshot_id):

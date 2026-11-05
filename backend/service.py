@@ -1,12 +1,12 @@
-"""Application reads and presentation; compliance rules stay in governance.model."""
+"""Application reads and presentation; compliance rules stay in compliance_engine."""
 
 from collections import Counter
 from dataclasses import dataclass
 
 from backend.deployment.snapshot import digest, validate_snapshot
 from backend.versions import DEMO_AT, UnknownVersion, Version
-from governance.model.contracts import timestamp
-from governance.model.evaluate import evaluate, summarize
+from compliance_engine.contracts import timestamp
+from compliance_engine.evaluate import evaluate, summarize
 
 from .repository import GovernanceRepository, GovernanceSnapshot
 

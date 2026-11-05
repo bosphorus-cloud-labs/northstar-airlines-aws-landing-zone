@@ -52,12 +52,12 @@ jobs:
           .venv/bin/python -m pip install -r requirements-dev.txt
           mkdir -p artifacts/ci
       - name: Guard offline Terraform boundary before any planning
-        run: .venv/bin/python -m scripts.ci_governance preflight
+        run: .venv/bin/python -m deployment.ci_governance preflight
       - name: Python lint and governance/backend tests (real offline checks)
         run: |
-          .venv/bin/python -m scripts.check_source_security
-          .venv/bin/ruff check backend governance scripts tests terraform/poc/tests/*.py
-          .venv/bin/ruff format --check backend governance scripts tests terraform/poc/tests/*.py
+          .venv/bin/python -m deployment.check_source_security
+          .venv/bin/ruff check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
+          .venv/bin/ruff format --check backend governance compliance_engine deployment tests terraform/poc/tests/*.py
           .venv/bin/python -m pip check
           .venv/bin/python -m unittest discover -s tests -v 2>&1 | tee artifacts/ci/python-tests.txt
       - name: Validate POC Terraform offline (mock provider only)
@@ -70,6 +70,20 @@ jobs:
           terraform -chdir=terraform/poc test -json -verbose -var=lambda_package_path=../../artifacts/validation/mock-lambda.zip > artifacts/validation/terraform-tests.jsonl
           .venv/bin/python terraform/poc/tests/check_origin_plans.py artifacts/validation/terraform-tests.jsonl
           .venv/bin/python terraform/poc/tests/check_github_hosting_plans.py artifacts/validation/terraform-tests.jsonl
+      - name: Validate resource inputs with REAL Terraform and freeze commit-bound release
+        run: |
+          .venv/bin/python -m deployment.resource_release build --source-commit "${{ github.sha }}"
+          cat artifacts/resource-release/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Retain validated resource release and human-readable Terraform plan
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: resource-release-${{ github.sha }}
+          retention-days: 7
+          path: |
+            artifacts/resource-release/release.json
+            artifacts/resource-release/report.json
+            artifacts/resource-release/summary.md
+            artifacts/policy-rollout/resources-ci/terraform-plan.txt
       - name: Freeze synthetic policy proposal
         run: .venv/bin/python -m governance.simulation.rollout plan --run-dir artifacts/policy-rollout/ci
       - name: REAL Terraform formatting
@@ -111,7 +125,7 @@ jobs:
           cat artifacts/ci/simulation.txt
       - name: Publish job summary (synthetic results only)
         run: |
-          .venv/bin/python -m scripts.ci_governance summary
+          .venv/bin/python -m deployment.ci_governance summary
           cat artifacts/ci/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Retain review artifacts (no state, binary plan or publication package)
         if: always()
@@ -133,7 +147,7 @@ jobs:
         env:
           SOURCE_COMMIT: ${{ github.sha }}
         run: |
-          digest=$(.venv/bin/python -m scripts.governance_release build --source-commit "$SOURCE_COMMIT")
+          digest=$(.venv/bin/python -m deployment.governance_release build --source-commit "$SOURCE_COMMIT")
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "Synthetic candidate digest: $digest" >> "$GITHUB_STEP_SUMMARY"
       - name: Retain synthetic release input only

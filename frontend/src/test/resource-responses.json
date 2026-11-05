@@ -1,0 +1,641 @@
+{
+  "metadata": {
+    "api_version": "v1",
+    "source": "northstar-synthetic-resources",
+    "simulated": true,
+    "evaluated_at": "2026-11-05T12:00:00Z",
+    "published_at": null,
+    "source_commit": null,
+    "workflow_run": null
+  },
+  "data": {
+    "accounts": [
+      {
+        "id": "sim-account-001",
+        "name": "NorthStar production 01",
+        "environment": "production",
+        "ou_id": "sim-ou-production",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-002",
+        "name": "NorthStar production 02",
+        "environment": "production",
+        "ou_id": "sim-ou-production",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-003",
+        "name": "NorthStar production 03",
+        "environment": "production",
+        "ou_id": "sim-ou-production",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-004",
+        "name": "NorthStar pre-production 04",
+        "environment": "pre-production",
+        "ou_id": "sim-ou-pre-production",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-005",
+        "name": "NorthStar pre-production 05",
+        "environment": "pre-production",
+        "ou_id": "sim-ou-pre-production",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "noncompliant"
+      },
+      {
+        "id": "sim-account-006",
+        "name": "NorthStar testing 06",
+        "environment": "testing",
+        "ou_id": "sim-ou-testing",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "unknown"
+      },
+      {
+        "id": "sim-account-007",
+        "name": "NorthStar testing 07",
+        "environment": "testing",
+        "ou_id": "sim-ou-testing",
+        "lifecycle_status": "onboarding",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-008",
+        "name": "NorthStar development 08",
+        "environment": "development",
+        "ou_id": "sim-ou-development",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "compliant"
+      },
+      {
+        "id": "sim-account-009",
+        "name": "NorthStar development 09",
+        "environment": "development",
+        "ou_id": "sim-ou-development",
+        "lifecycle_status": "active",
+        "resource_count": 1,
+        "status": "stale"
+      },
+      {
+        "id": "sim-account-010",
+        "name": "NorthStar development 10",
+        "environment": "development",
+        "ou_id": "sim-ou-development",
+        "lifecycle_status": "suspended",
+        "resource_count": 1,
+        "status": "compliant"
+      }
+    ],
+    "resources": [
+      {
+        "id": "sim-ebs-003",
+        "name": "NorthStar EBS 03",
+        "account_id": "sim-account-003",
+        "environment": "production",
+        "region": "eu-central-1",
+        "resource_type": "ebs_volume",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-04T18:00:00Z",
+        "configuration": {
+          "encrypted": true
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-ebs-003:ebs-encryption",
+          "resource_id": "sim-ebs-003",
+          "account_id": "sim-account-003",
+          "environment": "production",
+          "control_id": "ebs-encryption",
+          "control": "Encrypt EBS volumes",
+          "expected": true,
+          "observed": true,
+          "observed_at": "2026-11-04T18:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ebs-006",
+        "name": "NorthStar EBS 06",
+        "account_id": "sim-account-006",
+        "environment": "testing",
+        "region": "eu-central-1",
+        "resource_type": "ebs_volume",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "encrypted": null
+        },
+        "status": "unknown",
+        "finding": {
+          "id": "sim-ebs-006:ebs-encryption",
+          "resource_id": "sim-ebs-006",
+          "account_id": "sim-account-006",
+          "environment": "testing",
+          "control_id": "ebs-encryption",
+          "control": "Encrypt EBS volumes",
+          "expected": true,
+          "observed": null,
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "unknown",
+          "reason": "Configuration evidence is missing.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ebs-009",
+        "name": "NorthStar EBS 09",
+        "account_id": "sim-account-009",
+        "environment": "development",
+        "region": "eu-central-1",
+        "resource_type": "ebs_volume",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-10-20T12:00:00Z",
+        "configuration": {
+          "encrypted": true
+        },
+        "status": "stale",
+        "finding": {
+          "id": "sim-ebs-009:ebs-encryption",
+          "resource_id": "sim-ebs-009",
+          "account_id": "sim-account-009",
+          "environment": "development",
+          "control_id": "ebs-encryption",
+          "control": "Encrypt EBS volumes",
+          "expected": true,
+          "observed": true,
+          "observed_at": "2026-10-20T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "stale",
+          "reason": "Configuration evidence is older than the environment freshness limit.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ec2-001",
+        "name": "Booking API",
+        "account_id": "sim-account-001",
+        "environment": "production",
+        "region": "eu-central-1",
+        "resource_type": "ec2_instance",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "metadata_options": {
+            "http_endpoint": "enabled",
+            "http_tokens": "required"
+          }
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-ec2-001:ec2-imdsv2",
+          "resource_id": "sim-ec2-001",
+          "account_id": "sim-account-001",
+          "environment": "production",
+          "control_id": "ec2-imdsv2",
+          "control": "Require IMDSv2",
+          "expected": "required",
+          "observed": "required",
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ec2-004",
+        "name": "NorthStar EC2 04",
+        "account_id": "sim-account-004",
+        "environment": "pre-production",
+        "region": "eu-central-1",
+        "resource_type": "ec2_instance",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "metadata_options": {
+            "http_endpoint": "enabled",
+            "http_tokens": "required"
+          }
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-ec2-004:ec2-imdsv2",
+          "resource_id": "sim-ec2-004",
+          "account_id": "sim-account-004",
+          "environment": "pre-production",
+          "control_id": "ec2-imdsv2",
+          "control": "Require IMDSv2",
+          "expected": "required",
+          "observed": "required",
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ec2-007",
+        "name": "NorthStar EC2 07",
+        "account_id": "sim-account-007",
+        "environment": "testing",
+        "region": "eu-central-1",
+        "resource_type": "ec2_instance",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "metadata_options": {
+            "http_endpoint": "enabled",
+            "http_tokens": "required"
+          }
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-ec2-007:ec2-imdsv2",
+          "resource_id": "sim-ec2-007",
+          "account_id": "sim-account-007",
+          "environment": "testing",
+          "control_id": "ec2-imdsv2",
+          "control": "Require IMDSv2",
+          "expected": "required",
+          "observed": "required",
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-ec2-010",
+        "name": "NorthStar EC2 10",
+        "account_id": "sim-account-010",
+        "environment": "development",
+        "region": "eu-central-1",
+        "resource_type": "ec2_instance",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "metadata_options": {
+            "http_endpoint": "enabled",
+            "http_tokens": "required"
+          }
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-ec2-010:ec2-imdsv2",
+          "resource_id": "sim-ec2-010",
+          "account_id": "sim-account-010",
+          "environment": "development",
+          "control_id": "ec2-imdsv2",
+          "control": "Require IMDSv2",
+          "expected": "required",
+          "observed": "required",
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-s3-002",
+        "name": "NorthStar S3 02",
+        "account_id": "sim-account-002",
+        "environment": "production",
+        "region": "eu-central-1",
+        "resource_type": "s3_bucket",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "public_access_blocked": true
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-s3-002:s3-public-access",
+          "resource_id": "sim-s3-002",
+          "account_id": "sim-account-002",
+          "environment": "production",
+          "control_id": "s3-public-access",
+          "control": "Block S3 public access",
+          "expected": true,
+          "observed": true,
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-s3-005",
+        "name": "NorthStar S3 05",
+        "account_id": "sim-account-005",
+        "environment": "pre-production",
+        "region": "eu-central-1",
+        "resource_type": "s3_bucket",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "public_access_blocked": false
+        },
+        "status": "noncompliant",
+        "finding": {
+          "id": "sim-s3-005:s3-public-access",
+          "resource_id": "sim-s3-005",
+          "account_id": "sim-account-005",
+          "environment": "pre-production",
+          "control_id": "s3-public-access",
+          "control": "Block S3 public access",
+          "expected": true,
+          "observed": false,
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "noncompliant",
+          "reason": "The synthetic bucket does not block public access.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      },
+      {
+        "id": "sim-s3-008",
+        "name": "NorthStar S3 08",
+        "account_id": "sim-account-008",
+        "environment": "development",
+        "region": "eu-central-1",
+        "resource_type": "s3_bucket",
+        "source": "northstar-synthetic-resources",
+        "simulated": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "configuration": {
+          "public_access_blocked": true
+        },
+        "status": "compliant",
+        "finding": {
+          "id": "sim-s3-008:s3-public-access",
+          "resource_id": "sim-s3-008",
+          "account_id": "sim-account-008",
+          "environment": "development",
+          "control_id": "s3-public-access",
+          "control": "Block S3 public access",
+          "expected": true,
+          "observed": true,
+          "observed_at": "2026-11-05T12:00:00Z",
+          "evaluated_at": "2026-11-05T12:00:00Z",
+          "status": "compliant",
+          "reason": "Configuration meets the control requirement.",
+          "source": "northstar-synthetic-resources",
+          "simulated": true
+        }
+      }
+    ],
+    "findings": [
+      {
+        "id": "sim-ebs-003:ebs-encryption",
+        "resource_id": "sim-ebs-003",
+        "account_id": "sim-account-003",
+        "environment": "production",
+        "control_id": "ebs-encryption",
+        "control": "Encrypt EBS volumes",
+        "expected": true,
+        "observed": true,
+        "observed_at": "2026-11-04T18:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ebs-006:ebs-encryption",
+        "resource_id": "sim-ebs-006",
+        "account_id": "sim-account-006",
+        "environment": "testing",
+        "control_id": "ebs-encryption",
+        "control": "Encrypt EBS volumes",
+        "expected": true,
+        "observed": null,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "unknown",
+        "reason": "Configuration evidence is missing.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ebs-009:ebs-encryption",
+        "resource_id": "sim-ebs-009",
+        "account_id": "sim-account-009",
+        "environment": "development",
+        "control_id": "ebs-encryption",
+        "control": "Encrypt EBS volumes",
+        "expected": true,
+        "observed": true,
+        "observed_at": "2026-10-20T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "stale",
+        "reason": "Configuration evidence is older than the environment freshness limit.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ec2-001:ec2-imdsv2",
+        "resource_id": "sim-ec2-001",
+        "account_id": "sim-account-001",
+        "environment": "production",
+        "control_id": "ec2-imdsv2",
+        "control": "Require IMDSv2",
+        "expected": "required",
+        "observed": "required",
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ec2-004:ec2-imdsv2",
+        "resource_id": "sim-ec2-004",
+        "account_id": "sim-account-004",
+        "environment": "pre-production",
+        "control_id": "ec2-imdsv2",
+        "control": "Require IMDSv2",
+        "expected": "required",
+        "observed": "required",
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ec2-007:ec2-imdsv2",
+        "resource_id": "sim-ec2-007",
+        "account_id": "sim-account-007",
+        "environment": "testing",
+        "control_id": "ec2-imdsv2",
+        "control": "Require IMDSv2",
+        "expected": "required",
+        "observed": "required",
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-ec2-010:ec2-imdsv2",
+        "resource_id": "sim-ec2-010",
+        "account_id": "sim-account-010",
+        "environment": "development",
+        "control_id": "ec2-imdsv2",
+        "control": "Require IMDSv2",
+        "expected": "required",
+        "observed": "required",
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-s3-002:s3-public-access",
+        "resource_id": "sim-s3-002",
+        "account_id": "sim-account-002",
+        "environment": "production",
+        "control_id": "s3-public-access",
+        "control": "Block S3 public access",
+        "expected": true,
+        "observed": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-s3-005:s3-public-access",
+        "resource_id": "sim-s3-005",
+        "account_id": "sim-account-005",
+        "environment": "pre-production",
+        "control_id": "s3-public-access",
+        "control": "Block S3 public access",
+        "expected": true,
+        "observed": false,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "noncompliant",
+        "reason": "The synthetic bucket does not block public access.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      },
+      {
+        "id": "sim-s3-008:s3-public-access",
+        "resource_id": "sim-s3-008",
+        "account_id": "sim-account-008",
+        "environment": "development",
+        "control_id": "s3-public-access",
+        "control": "Block S3 public access",
+        "expected": true,
+        "observed": true,
+        "observed_at": "2026-11-05T12:00:00Z",
+        "evaluated_at": "2026-11-05T12:00:00Z",
+        "status": "compliant",
+        "reason": "Configuration meets the control requirement.",
+        "source": "northstar-synthetic-resources",
+        "simulated": true
+      }
+    ],
+    "controls": [
+      {
+        "id": "ec2-imdsv2",
+        "name": "Require IMDSv2",
+        "reason": "Metadata tokens are optional; IMDSv2 tokens must be required.",
+        "expected": "required",
+        "max_age_hours": {
+          "production": 24,
+          "pre-production": 48,
+          "testing": 72,
+          "development": 168
+        }
+      },
+      {
+        "id": "s3-public-access",
+        "name": "Block S3 public access",
+        "reason": "The synthetic bucket does not block public access.",
+        "expected": true,
+        "max_age_hours": {
+          "production": 24,
+          "pre-production": 48,
+          "testing": 72,
+          "development": 168
+        }
+      },
+      {
+        "id": "ebs-encryption",
+        "name": "Encrypt EBS volumes",
+        "reason": "The synthetic volume is not encrypted.",
+        "expected": true,
+        "max_age_hours": {
+          "production": 24,
+          "pre-production": 48,
+          "testing": 72,
+          "development": 168
+        }
+      }
+    ],
+    "summary": {
+      "accounts": 10,
+      "resources": 10,
+      "controls": 3,
+      "compliant": 7,
+      "noncompliant": 1,
+      "unknown": 1,
+      "stale": 1
+    },
+    "evaluated_at": "2026-11-05T12:00:00Z",
+    "activity": [],
+    "terraform_validation": null
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "simulated": true,
+  "accounts": [
+    {
+      "id": "sim-account-001",
+      "name": "NorthStar production 01",
+      "environment": "production",
+      "ou_id": "sim-ou-production",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-002",
+      "name": "NorthStar production 02",
+      "environment": "production",
+      "ou_id": "sim-ou-production",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-003",
+      "name": "NorthStar production 03",
+      "environment": "production",
+      "ou_id": "sim-ou-production",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-004",
+      "name": "NorthStar pre-production 04",
+      "environment": "pre-production",
+      "ou_id": "sim-ou-pre-production",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-005",
+      "name": "NorthStar pre-production 05",
+      "environment": "pre-production",
+      "ou_id": "sim-ou-pre-production",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-006",
+      "name": "NorthStar testing 06",
+      "environment": "testing",
+      "ou_id": "sim-ou-testing",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-007",
+      "name": "NorthStar testing 07",
+      "environment": "testing",
+      "ou_id": "sim-ou-testing",
+      "lifecycle_status": "onboarding"
+    },
+    {
+      "id": "sim-account-008",
+      "name": "NorthStar development 08",
+      "environment": "development",
+      "ou_id": "sim-ou-development",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-009",
+      "name": "NorthStar development 09",
+      "environment": "development",
+      "ou_id": "sim-ou-development",
+      "lifecycle_status": "active"
+    },
+    {
+      "id": "sim-account-010",
+      "name": "NorthStar development 10",
+      "environment": "development",
+      "ou_id": "sim-ou-development",
+      "lifecycle_status": "suspended"
+    }
+  ]
+}

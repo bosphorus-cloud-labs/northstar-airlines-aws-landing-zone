@@ -11,8 +11,8 @@ from pathlib import Path
 
 from jsonschema import Draft202012Validator, FormatChecker, ValidationError
 
-from governance.model.contracts import ROOT, timestamp, validate_model
-from governance.model.evaluate import evaluate, load_model, summarize
+from compliance_engine.contracts import ROOT, timestamp, validate_model
+from compliance_engine.evaluate import evaluate, load_model, summarize
 
 PROFILE = "policy-v2"
 CONTROL = "audit-log-integrity"

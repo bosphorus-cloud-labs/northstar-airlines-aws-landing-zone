@@ -3,7 +3,7 @@
 import copy
 import unittest
 
-from scripts.delivery_gate import ENVIRONMENT, REPOSITORY, verify
+from deployment.delivery_gate import ENVIRONMENT, REPOSITORY, verify
 
 
 class DeliveryGateTests(unittest.TestCase):
@@ -196,7 +196,7 @@ class DeliveryGateTests(unittest.TestCase):
         )
 
     def test_tracked_source_rejects_generated_files_and_credentials(self):
-        from scripts.check_source_security import validate
+        from deployment.check_source_security import validate
 
         validate("terraform/poc/settings.example.tfvars", b'owner = "synthetic"')
         validate("terraform/poc/settings.example.tfvars.json", b'{"owner":"synthetic"}')
@@ -232,3 +232,49 @@ class DeliveryGateTests(unittest.TestCase):
             data[self.reviews][0].update(change)
             with self.assertRaises(ValueError):
                 verify(self.sha, self.digest, get=data.__getitem__, env=self.env)
+
+
+class WorkflowRunGateTests(unittest.TestCase):
+    def setUp(self):
+        DeliveryGateTests.setUp(self)
+        self.env["GITHUB_EVENT_NAME"] = "workflow_run"
+        root = f"repos/{REPOSITORY}"
+        self.run_path = f"{root}/actions/runs/123"
+        self.data[self.run_path] = {
+            "head_sha": self.sha,
+            "head_branch": "main",
+            "event": "push",
+            "status": "completed",
+            "conclusion": "success",
+            "path": ".github/workflows/governance-ci.yml",
+            "head_repository": {"full_name": REPOSITORY},
+        }
+        self.data[f"{root}/git/ref/heads/main"] = {"object": {"sha": self.sha}}
+
+    def test_verified_exact_main_workflow_run_passes(self):
+        result = verify(
+            self.sha, self.digest, get=self.data.__getitem__, env=self.env, validation_run_id="123"
+        )
+        self.assertEqual(result["source_commit"], self.sha)
+
+    def test_untrusted_or_outdated_runs_are_denied(self):
+        for field, value in [
+            ("head_sha", "d" * 40),
+            ("head_branch", "feature"),
+            ("event", "pull_request"),
+            ("conclusion", "failure"),
+            ("path", ".github/workflows/untrusted.yml"),
+            ("head_repository", {"full_name": "attacker/fork"}),
+        ]:
+            data = copy.deepcopy(self.data)
+            data[self.run_path][field] = value
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                verify(
+                    self.sha,
+                    self.digest,
+                    get=data.__getitem__,
+                    env=self.env,
+                    validation_run_id="123",
+                )
+        with self.assertRaises(ValueError):
+            verify(self.sha, self.digest, get=self.data.__getitem__, env=self.env)

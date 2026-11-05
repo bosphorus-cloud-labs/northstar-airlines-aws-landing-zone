@@ -21,11 +21,14 @@ def deployed_app(config=None):
     if not all(config.get(name) for name in required):
         # Missing deployment config must never fall back to local fixtures or demo identity.
         return create_app(local_demo=False)
+    from backend.deployment.resources import DynamoResources
+
     repository = DynamoSnapshotRepository(config["GOVERNANCE_TABLE"], config["SNAPSHOT_ID"])
     return create_app(
         local_demo=False,
         repository=repository,
         catalog=deployment_catalog(config, repository),
+        resource_repository=DynamoResources(config["GOVERNANCE_TABLE"]),
         authenticator=GatewayIdentity(
             config["GATEWAY_API_ID"],
             config["GATEWAY_STAGE"],
