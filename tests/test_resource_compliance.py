@@ -424,6 +424,31 @@ class HundredAccountTests(unittest.TestCase):
             for requirement in assignment["requirements"].values():
                 self.assertEqual(requirement["max_age_hours"], limits[assignment["environment"]])
 
+    def test_central_policy_changes_propagate_across_hundred_account_fleet(self):
+        for scope in ("production", "organization"):
+            changed = copy.deepcopy(self.generated)
+            rule = next(r for r in changed["controls"]["rules"] if r["id"] == "ebs-encryption")
+            for environment, hours in list(rule["max_age_hours"].items()):
+                if scope == "organization" or environment == "production":
+                    rule["max_age_hours"][environment] = hours // 2
+            planned, _, plan = prepare(changed, Path(self.temp.name) / ("central-" + scope))
+            self.assertFalse(plan.get("resource_changes"))
+            for account_id, assignment in planned["terraform_validation"]["accounts"].items():
+                self.assertEqual(
+                    assignment["requirements"]["ebs-encryption"]["max_age_hours"],
+                    rule["max_age_hours"][assignment["environment"]],
+                )
+                self.assertEqual(
+                    assignment["requirements"]["ec2-imdsv2"],
+                    self.document["terraform_validation"]["accounts"][account_id]["requirements"][
+                        "ec2-imdsv2"
+                    ],
+                )
+            findings = evaluate(planned)["findings"]
+            production_ebs = next(f for f in findings if f["resource_id"] == "sim-ebs-003")
+            self.assertEqual(production_ebs["status"], "stale")
+            self.assertIs(production_ebs["observed"], True)
+
     def test_existing_history_survives_expansion_regression_and_restoration(self):
         from backend.deployment.resources import read_snapshot, view
 
