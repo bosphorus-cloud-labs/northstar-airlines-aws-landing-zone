@@ -156,7 +156,7 @@ jobs:
           [[ "$VALIDATION_RUN" =~ ^[0-9]+$ ]]
           echo "sha=$SOURCE_SHA" >> "$GITHUB_OUTPUT"
           echo "run=$VALIDATION_RUN" >> "$GITHUB_OUTPUT"
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || git diff --name-only HEAD^ HEAD -- mock-aws-resources compliance-rules compliance_engine deployment/resource_plan.py terraform/simulation terraform/modules/simulated_governance | grep -q .; then
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] || git diff --name-only HEAD^ HEAD -- mock-aws-resources compliance-rules compliance_engine deployment/resource_plan.py deployment/resource_release.py governance/delivery/resource_publisher.py terraform/simulation terraform/modules/simulated_governance | grep -q .; then
             echo 'changed=true' >> "$GITHUB_OUTPUT"
           else
             echo 'changed=false' >> "$GITHUB_OUTPUT"

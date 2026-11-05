@@ -2,6 +2,8 @@
 
 import copy
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -87,3 +89,20 @@ class ResourceReleaseTests(unittest.TestCase):
         ):
             with self.assertRaises(SystemExit):
                 main()
+
+    def test_runtime_checks_and_publisher_do_not_import_ci_only_dependencies(self):
+        code = """
+import builtins
+original = builtins.__import__
+def runtime_only(name, *args, **kwargs):
+    if name == 'hcl2':
+        raise ModuleNotFoundError('Terraform parser is CI-only')
+    return original(name, *args, **kwargs)
+builtins.__import__ = runtime_only
+from deployment.resource_release import check
+from governance.delivery.resource_publisher import publish
+assert callable(check) and callable(publish)
+"""
+        subprocess.run(
+            [sys.executable, "-c", code], cwd=ROOT, capture_output=True, text=True, check=True
+        )
