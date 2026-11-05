@@ -1,19 +1,19 @@
 # CI/CD Operations
 
-The staged resource-change path adds automatic publication preparation after successful main CI, followed by the existing real Environment approval and OIDC boundary. See [Resource Compliance Operations](RESOURCE_COMPLIANCE_OPERATIONS.md#protected-delivery). The explicit catalogue dispatch procedures below remain the preserved recovery path; they are not required for resource-change publication.
+The resource-change path automatically prepares publication after successful main CI, followed by the existing real Environment approval and OIDC boundary. See [Resource Compliance Operations](RESOURCE_COMPLIANCE_OPERATIONS.md#protected-delivery). The explicit catalogue dispatch procedures below remain the preserved recovery path; they are not required for resource-change publication.
 
 ## What is integrated
 
 | Connection | Actual boundary |
 | --- | --- |
 | Feature branch → PR/main CI | GitHub Actions runs Python/schema/security checks, frontend checks, real provider-free Terraform fmt/init/validate/plan/parity and POC mock-provider tests. Read-only permissions; no AWS/OIDC identity. |
-| Main → data CD | Explicit dispatch, exact commit/CI/PR/digest checks, governance-production approval, then short-lived OIDC data-only role. No automatic infrastructure deployment on push. |
+| Main → data CD | Resource changes automatically prepare publication after successful main CI; catalogue recovery uses explicit dispatch. Exact commit/CI/PR/artifact checks, governance-production approval, then a short-lived OIDC data-only role. No automatic infrastructure deployment. |
 | CD → DynamoDB → console | Manifest-last conditional immutable publication, strong digest verification, atomic generation-checked Current/History. Existing authenticated API/React application reads it; no frontend rebuild per policy snapshot. |
 | GitHub main → Amplify frontend | Existing connected app/main branch with main-only auto-build enabled; app-wide auto-build remains disabled. Amplify builds frontend only, not Terraform. |
 | Local demo → live AWS | No connection: demo.sh changes local immutable files/Current only. |
 | Account rollout → compliance | Synthetic canary/waves/failure/retry/onboarding; successful distribution does not imply passing evidence. |
 
-See [real execution evidence](DEPLOYMENT_ACCEPTANCE.md) and [console and local validation](LOCAL_DEMONSTRATION.md). The POC is explicitly single-owner: PR plus strict CI is required; the owner supplies actual environment approval with self-review permitted, administrator bypass disabled and main-only deployment. No independent review is claimed. Default independent-review mode remains available for enterprise teams.
+See [current resource-console evidence](RESOURCE_CONSOLE_ACCEPTANCE.md) and [earlier catalogue evidence](DEPLOYMENT_ACCEPTANCE.md) and [console and local validation](LOCAL_DEMONSTRATION.md). The POC is explicitly single-owner: PR plus strict CI is required; the owner supplies actual environment approval with self-review permitted, administrator bypass disabled and main-only deployment. No independent review is claimed. Default independent-review mode remains available for enterprise teams.
 
 ## Source validation and pull requests
 

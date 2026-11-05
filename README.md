@@ -4,7 +4,7 @@ NorthStar Airlines provides a central view of AWS account governance, policy rol
 
 The application runs in a single AWS account in **eu-central-1 (Frankfurt)**. Its fleet inventory, account customizations and compliance evidence are synthetic. Hosting, authentication, the API and storage use deployed AWS services. GitHub Actions publishes approved governance snapshots through a separate data-delivery workflow.
 
-[Open the governance console](https://main.d1eetlse86595h.amplifyapp.com/). Access requires an invited Amazon Cognito user with governance-reader membership. See [deployment acceptance](docs/DEPLOYMENT_ACCEPTANCE.md) for the verified publication, rollback and application tests.
+[Open the governance console](https://main.d1eetlse86595h.amplifyapp.com/). Access requires an invited Amazon Cognito user with governance-reader membership. See [resource-console acceptance](docs/RESOURCE_CONSOLE_ACCEPTANCE.md) for the current application checks and [catalogue deployment evidence](docs/DEPLOYMENT_ACCEPTANCE.md) for the preserved account-governance history.
 
 ## Architecture
 
@@ -23,7 +23,7 @@ The API exposes account inventory, compliance findings, deployment history, conf
 
 The resource-compliance view shows each synthetic resource, its desired configuration, observed setting and reason for its result. Operators edit `mock-aws-resources/resources.json`; CI validates the data and real Terraform desired-state outputs before a protected publisher can update DynamoDB. A normal Git revert restores earlier resource configuration while preserving the publication audit history. The browser and Lambda remain read-only.
 
-The simplified console is staged behind an explicit activation setting. Its local tests do not constitute live deployment acceptance; the existing deployed catalogue remains the default until the new backend and protected publication have been verified. See [resource compliance operations](docs/RESOURCE_COMPLIANCE_OPERATIONS.md) for activation, exact commands and the operational demonstration.
+The deployed console opens on current resource compliance. The backwards-compatible catalogue mode remains available for recovery; its snapshots and API contracts are preserved. Protected publication, authenticated API rendering and the desired-versus-observed resource view have been verified live. See [resource compliance operations](docs/RESOURCE_COMPLIANCE_OPERATIONS.md) for activation, exact commands and the operational demonstration.
 
 The repository separates two Terraform purposes:
 
@@ -46,7 +46,7 @@ The original account-governance catalogue and its immutable baseline remain avai
 
 [Governance CI](.github/workflows/governance-ci.yml) runs on pull requests and pushes to `main`. It checks Python and frontend code, API contracts, source hygiene, Terraform formatting and validation, POC mock-provider plans, and provider-free governance planning. It also verifies Terraform-to-simulation parity and exercises simulated approval, canary, failure/retry and onboarding. Human-readable plans and synthetic reports are retained as review artifacts. CI has no AWS credentials or deployment authority.
 
-[Governance data CD](.github/workflows/governance-cd.yml) adds a resource-publication path after successful main CI. It verifies the exact main commit, originating CI run, artifact content and protected PR process, then waits for the actual `governance-production` Environment approval. GitHub OIDC supplies short-lived credentials to the separate data-only publisher. Immutable insertion, manifest verification and conditional Current selection preserve historical data. Existing catalogue recovery dispatches remain available. This new path must pass hosted CI and approved deployment acceptance before being described as verified live.
+[Governance data CD](.github/workflows/governance-cd.yml) adds a resource-publication path after successful main CI. It verifies the exact main commit, originating CI run, artifact content and protected PR process, then waits for the actual `governance-production` Environment approval. GitHub OIDC supplies short-lived credentials to the separate data-only publisher. Immutable insertion, manifest verification and conditional Current selection preserve historical data. Existing catalogue recovery dispatches remain available. The resource-publication path has passed hosted CI, actual Environment approval, DynamoDB read-back and authenticated console verification; execution links are recorded in the acceptance report.
 
 Amplify builds the frontend from the protected GitHub `main` branch using [amplify.yml](amplify.yml). Main-only automatic builds are enabled; app-wide automatic builds and PR previews are disabled. These frontend releases are independent of governance-data publication: selecting or publishing a snapshot requires no frontend rebuild.
 

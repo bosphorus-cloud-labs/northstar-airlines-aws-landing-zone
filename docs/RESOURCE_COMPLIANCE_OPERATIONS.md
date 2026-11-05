@@ -2,9 +2,9 @@
 
 ## Scope and activation
 
-The resource console adds a simple Git-based change workflow to the existing application. It is staged behind `governance_frontend_mode = "resources"` (`VITE_GOVERNANCE_API_MODE=resources` in the frontend). The default remains `catalog` so merging the code does not replace the deployed console before backend compatibility and protected data publication are verified. Existing API contracts, authentication, snapshots and account-governance demonstrations remain available.
+The resource console adds a simple Git-based change workflow to the existing application. It is enabled on the deployed main branch with `governance_frontend_mode = "resources"` (`VITE_GOVERNANCE_API_MODE=resources` in the frontend). The default remains `catalog` so merging the code does not replace the deployed console before backend compatibility and protected data publication are verified. Existing API contracts, authentication, snapshots and account-governance demonstrations remain available.
 
-Implementation and offline acceptance are separate from deployment acceptance. Until a successful protected resource-publication run and authenticated cloud check are recorded, this feature is **locally tested, not verified live**. Existing acceptance evidence in [DEPLOYMENT_ACCEPTANCE.md](DEPLOYMENT_ACCEPTANCE.md) applies to the earlier catalogue.
+[Resource-console acceptance](RESOURCE_CONSOLE_ACCEPTANCE.md) records actual protected publication and authenticated cloud checks. [Earlier catalogue evidence](DEPLOYMENT_ACCEPTANCE.md) remains a separate historical record. Keep `governance_frontend_mode = "resources"` in private deployment inputs for future POC plans; the module default deliberately remains `catalog` for backwards compatibility. Neither mode changes authentication or write permissions.
 
 ## Files an operator edits
 
@@ -95,7 +95,7 @@ Prepare successful baseline publication and cloud activation before presenting. 
    ```sh
    git switch main
    git pull --ff-only
-   git switch -c demo/metadata-regression
+   git switch -c demo/metadata-regression-$(date +%Y%m%d-%H%M%S)
    git diff -- mock-aws-resources/resources.json
    git add mock-aws-resources/resources.json
    git commit -m "demo: allow optional metadata tokens on synthetic booking API"
@@ -111,7 +111,7 @@ Prepare successful baseline publication and cloud activation before presenting. 
    ```sh
    git switch main
    git pull --ff-only
-   git switch -c demo/restore-metadata-requirement
+   git switch -c demo/restore-metadata-requirement-$(date +%Y%m%d-%H%M%S)
    git revert "$change_commit"
    git push -u origin HEAD
    gh pr create --base main --title "Restore synthetic IMDSv2 compliance" --body "Revert the synthetic metadata change; expect Booking API compliant again after protected publication."
