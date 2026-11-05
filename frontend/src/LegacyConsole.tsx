@@ -39,7 +39,7 @@ const navigation = [
   { to: "/drift", label: "Configuration Drift", icon: GitCompareArrows },
   { to: "/exceptions", label: "Governance Exceptions", icon: ShieldQuestion },
 ];
-export function LegacyConsole() {
+export function LegacyConsole({ onPreview }: { onPreview?: () => void }) {
   const [requested, setSelection] = useState("current");
   const baselineMode = governanceApiMode() === "baseline-v1";
   const catalog = useQuery({
@@ -81,6 +81,7 @@ export function LegacyConsole() {
   return (
     <SelectionContext.Provider value={selection}>
       <Workspace
+        onPreview={onPreview}
         baselineMode={baselineMode}
         versions={versions}
         change={setSelection}
@@ -97,6 +98,7 @@ export function LegacyConsole() {
   );
 }
 function Workspace({
+  onPreview,
   baselineMode,
   versions,
   change,
@@ -105,6 +107,7 @@ function Workspace({
   currentMode,
   currentRun,
 }: {
+  onPreview?: () => void;
   baselineMode: boolean;
   versions: Selection[];
   change: (value: string) => void;
@@ -278,6 +281,11 @@ function Workspace({
                     ? "Local API"
                     : "Governance API"}
             </span>
+            {onPreview && !baselineMode && (
+              <button className="button" onClick={onPreview}>
+                Preview resource console
+              </button>
+            )}
             {session.signOut && (
               <button className="button" onClick={session.signOut}>
                 Sign out
