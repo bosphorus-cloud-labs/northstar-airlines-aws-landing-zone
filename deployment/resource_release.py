@@ -10,7 +10,6 @@ from pathlib import Path
 
 from compliance_engine.resources import canonical, digest, evaluate, input_digest, load, validate
 from deployment import delivery_gate
-from deployment.resource_plan import prepare
 
 
 def checkout(commit):
@@ -53,6 +52,9 @@ def main():
     parser.add_argument("--execute", action="store_true")
     args = parser.parse_args()
     if args.action == "build":
+        # Terraform/HCL tooling belongs to credential-free CI, not publication.
+        from deployment.resource_plan import prepare
+
         checkout(args.source_commit)
         document, _, _ = prepare(load(), args.run_dir)
         args.release.parent.mkdir(parents=True, exist_ok=True)
