@@ -2,18 +2,23 @@
 
 import copy
 import json
+import os
+import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock
 
 from fastapi.testclient import TestClient
 
 from backend.app import create_app
 from backend.deployment.resources import DynamoResources, read_catalog
-from compliance_engine.resources import ROOT, Document, digest, evaluate, load, validate
+from compliance_engine.resources import ROOT, Document, digest, evaluate, validate
+from compliance_engine.resources import load as load_current
 from deployment.resource_plan import prepare, verify
 from governance.delivery.resource_publisher import publish
 from governance.simulation import rollout
+from tests.resource_fixtures import load
 from tests.test_governance_delivery import MemoryDynamo
 
 
@@ -31,12 +36,12 @@ class ResourceComplianceTests(unittest.TestCase):
     def setUp(self):
         self.client = MemoryDynamo([])
 
-    def publish(self, document=None, operation=1):
+    def publish(self, document=None, operation=1, commit=None):
         return publish(
             self.client,
             "northstar-offline-records",
             document or self.document,
-            source_commit="a" * 39 + str(operation),
+            source_commit=commit or "a" * 39 + str(operation),
             actor="bosphorus-cloud-labs",
             operation=f"gh-{operation}-1",
             published_at="2026-11-05T12:00:00Z",
@@ -78,21 +83,69 @@ class ResourceComplianceTests(unittest.TestCase):
             validate(changed)
 
     def test_compliant_noncompliant_and_git_revert_preserve_immutable_history(self):
-        first = self.publish()
-        bad = load()
-        bad["inventory"]["resources"][0]["configuration"]["metadata_options"]["http_tokens"] = (
-            "optional"
-        )
-        changed, _, _ = prepare(bad, self.temporary.name + "/changed")
-        second = self.publish(changed, 2)
+        working = Path(self.temporary.name) / "git-rehearsal"
+        working.mkdir()
+        for name, key in [
+            ("mock-aws-resources/accounts.json", "accounts"),
+            ("mock-aws-resources/resources.json", "inventory"),
+            ("compliance-rules/resource-controls.json", "controls"),
+        ]:
+            target = working / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(self.document[key], indent=2) + "\n")
+        env = {**os.environ, "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"}
+
+        def git(*args):
+            return subprocess.check_output(
+                [
+                    "git",
+                    "-c",
+                    "user.name=NorthStar offline test",
+                    "-c",
+                    "user.email=synthetic@example.invalid",
+                    "-c",
+                    "commit.gpgsign=false",
+                    "-c",
+                    "core.hooksPath=" + os.devnull,
+                    *args,
+                ],
+                cwd=working,
+                env=env,
+                text=True,
+                stderr=subprocess.STDOUT,
+            ).strip()
+
+        git("init", "--initial-branch=main", "--template=", "-q")
+        git("add", ".")
+        git("commit", "-qm", "Synthetic baseline")
+        baseline_commit = git("rev-parse", "HEAD")
+        first = self.publish(commit=baseline_commit)
+        path = working / "mock-aws-resources/resources.json"
+        bad = json.loads(path.read_text())
+        bad["resources"][0]["configuration"]["metadata_options"]["http_tokens"] = "optional"
+        path.write_text(json.dumps(bad, indent=2) + "\n")
+        git("add", "mock-aws-resources/resources.json")
+        git("commit", "-qm", "Synthetic metadata regression")
+        change_commit = git("rev-parse", "HEAD")
+        changed, _, _ = prepare(load(working), self.temporary.name + "/changed")
+        second = self.publish(changed, 2, commit=change_commit)
         target = next(c for c in second["changes"] if c["resource_name"] == "Booking API")
         self.assertEqual((target["before"], target["after"]), ("compliant", "noncompliant"))
         stored = copy.deepcopy(self.client.rows)
-        third = self.publish(self.document, 3)
+        git("revert", "--no-edit", change_commit)
+        revert_commit = git("rev-parse", "HEAD")
+        self.assertEqual(git("status", "--porcelain"), "")
+        reverted, _, _ = prepare(load(working), self.temporary.name + "/git-reverted")
+        self.assertEqual(digest(reverted), digest(self.document))
+        third = self.publish(reverted, 3, commit=revert_commit)
         target = next(c for c in third["changes"] if c["resource_name"] == "Booking API")
         self.assertEqual((target["before"], target["after"]), ("noncompliant", "compliant"))
         catalog = read_catalog(self.client, "northstar-offline-records")
         self.assertEqual(catalog["generation"], 3)
+        self.assertEqual(
+            [event["source_commit"] for event in catalog["history"]],
+            [baseline_commit, change_commit, revert_commit],
+        )
         self.assertEqual(catalog["current"], digest(self.document))
         self.assertEqual(first["generation"], 1)
         for key, value in stored.items():
@@ -118,6 +171,17 @@ class ResourceComplianceTests(unittest.TestCase):
         )
         self.assertEqual(result, evaluate(self.document))
 
+    def test_operator_inputs_validate_without_requiring_a_compliant_dataset(self):
+        document = load_current()
+        result = evaluate(document)
+        self.assertEqual(
+            sum(
+                result["summary"][key] for key in ["compliant", "noncompliant", "unknown", "stale"]
+            ),
+            len(document["inventory"]["resources"]),
+        )
+        self.assertEqual(result, evaluate(document))
+
     def test_schema_matches_actual_validated_contract(self):
         schema = json.loads(
             (ROOT / "governance/contracts/resource-compliance.schema.json").read_text()
@@ -125,7 +189,16 @@ class ResourceComplianceTests(unittest.TestCase):
         self.assertEqual(schema, Document.model_json_schema())
 
     def test_invalid_input_and_weakened_rules_fail(self):
-        for kind in ("account", "duplicate", "rule", "future", "extra", "region", "ou"):
+        for kind in (
+            "account",
+            "duplicate",
+            "rule",
+            "freshness",
+            "future",
+            "extra",
+            "region",
+            "ou",
+        ):
             bad = load()
             if kind == "account":
                 bad["inventory"]["resources"][0]["account_id"] = "sim-account-999"
@@ -133,6 +206,8 @@ class ResourceComplianceTests(unittest.TestCase):
                 bad["inventory"]["resources"].append(bad["inventory"]["resources"][0])
             elif kind == "rule":
                 bad["controls"]["rules"][0]["expected"] = "optional"
+            elif kind == "freshness":
+                bad["controls"]["rules"][0]["max_age_hours"]["production"] = 25
             elif kind == "future":
                 bad["inventory"]["resources"][0]["observed_at"] = "2026-12-01T12:00:00Z"
             elif kind == "extra":

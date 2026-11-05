@@ -66,14 +66,48 @@ def main():
             )
             + "\n"
         )
+        evaluation = evaluate(document)
         report = {
             "source_commit": args.source_commit,
             "simulated": True,
             "real_terraform": "fmt/init/validate/plan and full desired-state parity passed",
-            "compliance": evaluate(document)["summary"],
+            "compliance": evaluation["summary"],
+            "findings": evaluation["findings"],
         }
         (args.release.parent / "report.json").write_text(json.dumps(report, indent=2) + "\n")
-        print(json.dumps(report))
+
+        def cell(value):
+            return str(value).replace("|", "\\|").replace("\n", " ")
+
+        lines = [
+            "# Synthetic resource compliance",
+            "",
+            "Real provider-free Terraform fmt/init/validate/plan and complete assignment parity passed. No AWS provisioning or remediation.",
+            "",
+            "| Resource | Account | Environment | Control | Desired | Observed | Status | Reason |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        ]
+        names = {
+            resource["id"]: resource["name"] for resource in document["inventory"]["resources"]
+        }
+        for finding in evaluation["findings"]:
+            fields = [
+                finding[key]
+                for key in [
+                    "resource_id",
+                    "account_id",
+                    "environment",
+                    "control",
+                    "expected",
+                    "observed",
+                    "status",
+                    "reason",
+                ]
+            ]
+            fields[0] = names[finding["resource_id"]] + " (" + finding["resource_id"] + ")"
+            lines.append("| " + " | ".join(cell(value) for value in fields) + " |")
+        (args.release.parent / "summary.md").write_text("\n".join(lines) + "\n")
+        print(json.dumps({key: value for key, value in report.items() if key != "findings"}))
         return
     release = check(args.release, args.source_commit)
     if args.action == "check":

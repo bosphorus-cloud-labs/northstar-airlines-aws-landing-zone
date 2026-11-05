@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Menu, Navigation, RefreshCw, X } from "lucide-react";
-import { resourceState, type ResourceData } from "./api/resources";
-import { request } from "./api/client";
+import {
+  accountRecords,
+  resourceState,
+  type ResourceData,
+} from "./api/resources";
 import { Badge } from "./components/ui";
 import { useSession } from "./auth/context";
 const navigation = [
@@ -17,10 +20,12 @@ const navigation = [
 const readable = (value: unknown) =>
   value === null ? "Missing evidence" : String(value);
 const environment = (value: string) =>
-  value
-    .split("-")
-    .map((s) => s[0].toUpperCase() + s.slice(1))
-    .join(" ");
+  value === "pre-production"
+    ? "Pre-Production"
+    : value
+        .split("-")
+        .map((s) => s[0].toUpperCase() + s.slice(1))
+        .join(" ");
 export function ResourceConsole() {
   const query = useQuery({
     queryKey: ["resource-current"],
@@ -30,6 +35,7 @@ export function ResourceConsole() {
   });
   const [menu, setMenu] = useState(false);
   const session = useSession();
+  const client = useQueryClient();
   const path = useLocation().pathname;
   return (
     <div className="app-shell resource-console">
@@ -89,7 +95,12 @@ export function ResourceConsole() {
           <span>NorthStar / Governance</span>
           <span className="simulation-badge">SIMULATED DATA</span>
           <button
-            onClick={() => void query.refetch()}
+            onClick={() => {
+              void query.refetch();
+              void client.invalidateQueries({
+                queryKey: ["account-operations"],
+              });
+            }}
             disabled={query.isFetching}
           >
             <RefreshCw size={15} aria-hidden="true" /> Refresh
@@ -145,6 +156,16 @@ export function ResourceConsole() {
       </div>
     </div>
   );
+}
+function approvalIntent(data: ResourceData, env: string) {
+  if (!data.terraform_validation) return "Not planned for local fixture";
+  const accounts = Object.values(data.terraform_validation.accounts).filter(
+    (account) => account.environment === env,
+  );
+  if (!accounts.length) return "No target accounts";
+  return accounts.every((account) => account.approval_required)
+    ? "Required by Terraform baseline"
+    : "Standard CI validation";
 }
 function Overview({ data }: { data: ResourceData }) {
   return (
@@ -212,12 +233,19 @@ function Overview({ data }: { data: ResourceData }) {
                           .length
                       }
                     </td>
-                    <td>{data.controls[0].max_age_hours[env]} hours</td>
                     <td>
-                      {["production", "pre-production"].includes(env)
-                        ? "Required by desired baseline"
-                        : "Standard CI validation"}
+                      {Array.from(
+                        new Set(
+                          data.controls.map(
+                            (control) => control.max_age_hours[env],
+                          ),
+                        ),
+                      )
+                        .sort((a, b) => a - b)
+                        .join(" / ")}{" "}
+                      hours by control
                     </td>
+                    <td>{approvalIntent(data, env)}</td>
                   </tr>
                 ),
               )}
@@ -478,7 +506,18 @@ function Resources({
                 <td>{r.finding.control}</td>
                 <td>{readable(r.finding.expected)}</td>
                 <td>{readable(r.finding.observed)}</td>
-                <td>{r.observed_at}</td>
+                <td>
+                  {r.observed_at}
+                  <small>
+                    Maximum age:{" "}
+                    {
+                      data.controls.find(
+                        (control) => control.id === r.finding.control_id,
+                      )?.max_age_hours[r.environment]
+                    }{" "}
+                    hours
+                  </small>
+                </td>
                 <td>
                   <Badge status={r.status} />
                   <p>{r.finding.reason}</p>
@@ -533,10 +572,7 @@ function Activity({ data }: { data: ResourceData }) {
 function AccountOperations({ exceptions }: { exceptions: boolean }) {
   const query = useQuery({
     queryKey: ["account-operations", exceptions],
-    queryFn: async ({ signal }) =>
-      exceptions
-        ? await request("/api/v1/exceptions", signal, { limit: 100 })
-        : await request("/api/v1/deployments", signal, { limit: 100 }),
+    queryFn: ({ signal }) => accountRecords(exceptions, signal),
     retry: false,
   });
   return (
@@ -544,7 +580,7 @@ function AccountOperations({ exceptions }: { exceptions: boolean }) {
       <h2>
         {exceptions
           ? "Account-governance exceptions"
-          : "Simulated account configuration distribution"}
+          : "Historical simulated account distribution"}
       </h2>
       <p>
         Existing account-governance records, separate from the resource

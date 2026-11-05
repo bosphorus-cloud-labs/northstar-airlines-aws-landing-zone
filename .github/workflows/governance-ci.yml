@@ -71,7 +71,9 @@ jobs:
           .venv/bin/python terraform/poc/tests/check_origin_plans.py artifacts/validation/terraform-tests.jsonl
           .venv/bin/python terraform/poc/tests/check_github_hosting_plans.py artifacts/validation/terraform-tests.jsonl
       - name: Validate resource inputs with REAL Terraform and freeze commit-bound release
-        run: .venv/bin/python -m deployment.resource_release build --source-commit "${{ github.sha }}"
+        run: |
+          .venv/bin/python -m deployment.resource_release build --source-commit "${{ github.sha }}"
+          cat artifacts/resource-release/summary.md >> "$GITHUB_STEP_SUMMARY"
       - name: Retain validated resource release and human-readable Terraform plan
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
@@ -80,6 +82,7 @@ jobs:
           path: |
             artifacts/resource-release/release.json
             artifacts/resource-release/report.json
+            artifacts/resource-release/summary.md
             artifacts/policy-rollout/resources-ci/terraform-plan.txt
       - name: Freeze synthetic policy proposal
         run: .venv/bin/python -m governance.simulation.rollout plan --run-dir artifacts/policy-rollout/ci

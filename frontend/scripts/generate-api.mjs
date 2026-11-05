@@ -9,7 +9,12 @@ import json
 from fastapi.testclient import TestClient
 from backend.app import create_app
 schema = create_app().openapi()
-with TestClient(create_app(local_demo=True), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
+from types import SimpleNamespace
+from backend.deployment.resources import view
+from tests.resource_fixtures import load as frozen_resources
+# Contract examples are frozen test scenarios, not a second runtime data source.
+resource_repository = SimpleNamespace(read=lambda: view(frozen_resources()))
+with TestClient(create_app(local_demo=True, resource_repository=resource_repository), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
     resource_response = client.get('/api/v1/summary?view=resources')
     assert resource_response.status_code == 200
     resources = resource_response.json()

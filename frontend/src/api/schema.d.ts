@@ -529,6 +529,19 @@ export interface components {
        */
       status: "compliant" | "noncompliant" | "unknown" | "stale";
     };
+    /** ResourceAssignment */
+    ResourceAssignment: {
+      /** Account Id */
+      account_id: string;
+      /** Environment */
+      environment: string;
+      /** Approval Required */
+      approval_required: boolean;
+      /** Requirements */
+      requirements: {
+        [key: string]: components["schemas"]["ResourceRequirement"];
+      };
+    };
     /** ResourceCounts */
     ResourceCounts: {
       /** Accounts */
@@ -561,10 +574,7 @@ export interface components {
       evaluated_at: string;
       /** Activity */
       activity: components["schemas"]["Activity"][];
-      /** Terraform Validation */
-      terraform_validation: {
-        [key: string]: unknown;
-      } | null;
+      terraform_validation: components["schemas"]["ResourceTerraformReceipt"] | null;
     };
     /** ResourceEnvelope */
     ResourceEnvelope: {
@@ -636,6 +646,37 @@ export interface components {
       source_commit: string | null;
       /** Workflow Run */
       workflow_run: string | null;
+    };
+    /** ResourceRequirement */
+    ResourceRequirement: {
+      /** Expected Json */
+      expected_json: string;
+      /** Max Age Hours */
+      max_age_hours: number;
+    };
+    /** ResourceTerraformReceipt */
+    ResourceTerraformReceipt: {
+      /**
+       * Source
+       * @constant
+       */
+      source: "northstar-terraform-resource-desired-v1";
+      /**
+       * Simulated
+       * @constant
+       */
+      simulated: true;
+      /** Input Digest */
+      input_digest: string;
+      /** Accounts */
+      accounts: {
+        [key: string]: components["schemas"]["ResourceAssignment"];
+      };
+      /**
+       * Terraform Version
+       * @constant
+       */
+      terraform_version: "1.14.6";
     };
     /** ResourceView */
     ResourceView: {

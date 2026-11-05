@@ -5,6 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { App } from "../App";
 import { resourceState } from "../api/resources";
+import * as configuration from "../auth/config";
 import { setTokenProvider } from "../auth/session";
 import response from "./resource-responses.json";
 import legacy from "./api-responses.json";
@@ -149,7 +150,40 @@ it("retains visible approved and expired exceptions without hiding violations", 
     await screen.findByText("sim-account-002 · baseline-encryption"),
   ).toBeInTheDocument();
   expect(screen.getByText("Expired")).toBeInTheDocument();
+  const url = fetcher.mock.calls
+    .map(([input]) => String(input))
+    .find((path) => path.includes("/exceptions"));
+  expect(url).toBe("/api/v1/exceptions?limit=100");
   expect(
     screen.getAllByText("The underlying compliance violation remains visible."),
   ).toHaveLength(2);
+});
+
+it("requires a Cognito session and transmits its access token only as a read authorization header", async () => {
+  const config = vi.spyOn(configuration, "runtimeConfig").mockReturnValue({
+    mode: "cognito",
+    apiBase: "https://synthetic.execute-api.eu-central-1.amazonaws.com/poc",
+    issuer:
+      "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_synthetic",
+    clientId: "synthetic",
+    domain: "https://synthetic.auth.eu-central-1.amazoncognito.com",
+    appOrigin: "https://synthetic.amplifyapp.com",
+  });
+  try {
+    await expect(resourceState(new AbortController().signal)).rejects.toThrow(
+      "Sign in",
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+    setTokenProvider(() => "synthetic-unit-token");
+    await resourceState(new AbortController().signal);
+    expect(fetcher.mock.calls[0][1]?.headers).toMatchObject({
+      Authorization: "Bearer synthetic-unit-token",
+    });
+    expect(fetcher.mock.calls[0][1]?.credentials).toBe("omit");
+    expect(String(fetcher.mock.calls[0][0])).not.toContain(
+      "synthetic-unit-token",
+    );
+  } finally {
+    config.mockRestore();
+  }
 });

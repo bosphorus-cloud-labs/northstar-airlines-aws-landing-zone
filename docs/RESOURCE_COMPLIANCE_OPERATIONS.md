@@ -16,7 +16,7 @@ Implementation and offline acceptance are separate from deployment acceptance. U
 | `terraform/modules/simulated_governance/main.tf` | Existing reusable, provider-free desired-state module. |
 | `terraform/simulation/main.tf` | Existing planning root, extended with optional resource/control inputs. |
 
-Production, Pre-Production, Testing and Development use 24, 48, 72 and 168-hour evidence limits respectively. Production and Pre-Production inherit approval intent from the account-governance baseline. Real publication into the POC always additionally requires GitHub Environment approval, regardless of the target environment. These are synthetic requirements, not deployed SCPs. Production EBS observation `sim-ebs-003` is 18 hours old at the explicit evaluation time: tightening Production freshness from 24 to 12 hours changes its result from compliant to stale. This preserves the original Production policy-change demonstration without changing existing snapshot files.
+Production, Pre-Production, Testing and Development use 24, 48, 72 and 168-hour evidence limits respectively. Production and Pre-Production inherit approval intent from the account-governance baseline. Real publication into the POC always additionally requires GitHub Environment approval, regardless of the target environment. Freshness may be tightened within each environment ceiling; weakening the baseline is rejected. These are synthetic requirements, not deployed SCPs. Production EBS observation `sim-ebs-003` is 18 hours old at the explicit evaluation time: tightening Production freshness from 24 to 12 hours changes its result from compliant to stale. This preserves the original Production policy-change demonstration without changing existing snapshot files.
 
 ## Real Terraform connection
 
@@ -27,7 +27,7 @@ The Terraform plan represents desired configuration. It does not provision or re
 ## Protected delivery
 
 1. A feature PR runs the existing credential-free governance CI, including schemas, security, all Python tests, frontend tests, real Terraform planning and complete parity.
-2. CI produces `resource-release-<source SHA>`: a commit-bound release, readable Terraform plan and compliance report. It contains synthetic data, not state or credentials.
+2. CI produces `resource-release-<source SHA>`: a commit-bound release, readable Terraform plan, per-resource findings and a Markdown check summary. It contains synthetic data, not state or credentials.
 3. After successful **push-to-main** CI, the existing delivery workflow verifies the exact run, repository, protected main commit, merged PR and approval model. Fork/PR validation runs cannot publish. Documentation-only merges do not request resource publication.
 4. The publisher job waits for the actual `governance-production` approval. The explicitly documented single-owner POC model permits owner review; administrator bypass and non-main deployment remain prohibited.
 5. Only then is the existing least-privilege OIDC role assumed. The job revalidates provenance before requesting credentials and rechecks current main immediately before writes and promotion. No long-lived AWS credentials are introduced.
@@ -36,6 +36,10 @@ The Terraform plan represents desired configuration. It does not provision or re
 The new catalogue uses `GOVERNANCE#CATALOG / RESOURCE-COMPLIANCE`. The existing `STATE` catalogue and all historical snapshots remain untouched. Snapshot identifiers and internal compare-and-swap generations remain implementation details; users do not manage them. A Git revert reuses immutable content and records a new approved publication event. A bounded history of 128 publications and 25 accounts/100 resources intentionally limits this POC; indexed fleet-scale storage and archival are future work.
 
 Use the existing delivery workflow's `resources` action on main only for a controlled baseline retry; source SHA and content identity are selected and verified automatically. Older dispatch actions remain available for the preserved catalogue recovery procedure, not the new presentation workflow.
+
+## Tests and editable input
+
+Fixed positive/negative test scenarios live in `tests/fixtures/resource-compliance.json`. The frontend contract examples are generated from that fixture through the actual FastAPI route. They are never a runtime browser data source. This intentional separation lets an operator edit one resource observation without rewriting golden test results. CI separately validates and plans the actual `mock-aws-resources/` and `compliance-rules/` inputs; valid noncompliant observations produce a report rather than failing schema validation.
 
 ## Local validation
 
@@ -76,6 +80,8 @@ Prepare successful baseline publication and cloud activation before presenting. 
 3. **Git change and CI (90 seconds):** in VS Code edit only `mock-aws-resources/resources.json`: for `sim-ec2-001`, change `configuration.metadata_options.http_tokens` from `required` to `optional`. On a fresh feature branch run:
 
    ```sh
+   git switch main
+   git pull --ff-only
    git switch -c demo/metadata-regression
    git diff -- mock-aws-resources/resources.json
    git add mock-aws-resources/resources.json

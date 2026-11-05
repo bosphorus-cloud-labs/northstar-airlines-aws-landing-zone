@@ -115,8 +115,10 @@ class Rule(Strict):
         expected = FIELDS[self.id][2]
         if type(self.expected) is not type(expected) or self.expected != expected:
             raise ValueError("Resource rules cannot weaken the security baseline")
+        ceilings = {"production": 24, "pre-production": 48, "testing": 72, "development": 168}
         if set(self.max_age_hours) != ENVIRONMENTS or any(
-            type(v) is not int or not 1 <= v <= 168 for v in self.max_age_hours.values()
+            type(value) is not int or not 1 <= value <= ceilings[environment]
+            for environment, value in self.max_age_hours.items()
         ):
             raise ValueError("Explicit bounded freshness is required in all four environments")
         return self

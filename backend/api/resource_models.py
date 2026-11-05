@@ -67,6 +67,26 @@ class Activity(StrictModel):
     changes: list[Change]
 
 
+class ResourceRequirement(StrictModel):
+    expected_json: str
+    max_age_hours: int = Field(ge=1, le=168)
+
+
+class ResourceAssignment(StrictModel):
+    account_id: str
+    environment: str
+    approval_required: bool
+    requirements: dict[str, ResourceRequirement]
+
+
+class ResourceTerraformReceipt(StrictModel):
+    source: Literal["northstar-terraform-resource-desired-v1"]
+    simulated: Literal[True]
+    input_digest: str
+    accounts: dict[str, ResourceAssignment]
+    terraform_version: Literal["1.14.6"]
+
+
 class ResourceData(StrictModel):
     accounts: list[ResourceAccountView]
     resources: list[ResourceView]
@@ -75,7 +95,7 @@ class ResourceData(StrictModel):
     summary: ResourceCounts
     evaluated_at: str
     activity: list[Activity]
-    terraform_validation: dict | None
+    terraform_validation: ResourceTerraformReceipt | None
 
 
 class ResourceMetadata(StrictModel):
