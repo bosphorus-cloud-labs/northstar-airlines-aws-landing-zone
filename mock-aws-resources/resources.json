@@ -154,6 +154,1356 @@
           "http_tokens": "required"
         }
       }
+    },
+    {
+      "id": "sim-ec2-011",
+      "name": "Reservations EC2 011",
+      "account_id": "sim-account-011",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-012",
+      "name": "Flight Operations S3 012",
+      "account_id": "sim-account-012",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-013",
+      "name": "Baggage EBS 013",
+      "account_id": "sim-account-013",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-014",
+      "name": "Cargo EC2 014",
+      "account_id": "sim-account-014",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-015",
+      "name": "Crew S3 015",
+      "account_id": "sim-account-015",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-016",
+      "name": "Loyalty EBS 016",
+      "account_id": "sim-account-016",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-017",
+      "name": "Finance EC2 017",
+      "account_id": "sim-account-017",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-018",
+      "name": "Airport Services S3 018",
+      "account_id": "sim-account-018",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": false
+      }
+    },
+    {
+      "id": "sim-ebs-019",
+      "name": "Customer Care EBS 019",
+      "account_id": "sim-account-019",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": null
+      }
+    },
+    {
+      "id": "sim-ec2-020",
+      "name": "Reservations EC2 020",
+      "account_id": "sim-account-020",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-021",
+      "name": "Flight Operations S3 021",
+      "account_id": "sim-account-021",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-022",
+      "name": "Baggage EBS 022",
+      "account_id": "sim-account-022",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-023",
+      "name": "Cargo EC2 023",
+      "account_id": "sim-account-023",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-024",
+      "name": "Crew S3 024",
+      "account_id": "sim-account-024",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-025",
+      "name": "Loyalty EBS 025",
+      "account_id": "sim-account-025",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-026",
+      "name": "Finance EC2 026",
+      "account_id": "sim-account-026",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-027",
+      "name": "Airport Services S3 027",
+      "account_id": "sim-account-027",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-028",
+      "name": "Customer Care EBS 028",
+      "account_id": "sim-account-028",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": false
+      }
+    },
+    {
+      "id": "sim-ec2-029",
+      "name": "Reservations EC2 029",
+      "account_id": "sim-account-029",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": null
+        }
+      }
+    },
+    {
+      "id": "sim-s3-030",
+      "name": "Flight Operations S3 030",
+      "account_id": "sim-account-030",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-031",
+      "name": "Baggage EBS 031",
+      "account_id": "sim-account-031",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-032",
+      "name": "Cargo EC2 032",
+      "account_id": "sim-account-032",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-033",
+      "name": "Crew S3 033",
+      "account_id": "sim-account-033",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-034",
+      "name": "Loyalty EBS 034",
+      "account_id": "sim-account-034",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-035",
+      "name": "Finance EC2 035",
+      "account_id": "sim-account-035",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-036",
+      "name": "Airport Services S3 036",
+      "account_id": "sim-account-036",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-037",
+      "name": "Customer Care EBS 037",
+      "account_id": "sim-account-037",
+      "environment": "production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-038",
+      "name": "Reservations EC2 038",
+      "account_id": "sim-account-038",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-039",
+      "name": "Flight Operations S3 039",
+      "account_id": "sim-account-039",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-040",
+      "name": "Baggage EBS 040",
+      "account_id": "sim-account-040",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-041",
+      "name": "Cargo EC2 041",
+      "account_id": "sim-account-041",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-042",
+      "name": "Crew S3 042",
+      "account_id": "sim-account-042",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-043",
+      "name": "Loyalty EBS 043",
+      "account_id": "sim-account-043",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-044",
+      "name": "Finance EC2 044",
+      "account_id": "sim-account-044",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-045",
+      "name": "Airport Services S3 045",
+      "account_id": "sim-account-045",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": false
+      }
+    },
+    {
+      "id": "sim-ebs-046",
+      "name": "Customer Care EBS 046",
+      "account_id": "sim-account-046",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": null
+      }
+    },
+    {
+      "id": "sim-ec2-047",
+      "name": "Reservations EC2 047",
+      "account_id": "sim-account-047",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-048",
+      "name": "Flight Operations S3 048",
+      "account_id": "sim-account-048",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-049",
+      "name": "Baggage EBS 049",
+      "account_id": "sim-account-049",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-050",
+      "name": "Cargo EC2 050",
+      "account_id": "sim-account-050",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-051",
+      "name": "Crew S3 051",
+      "account_id": "sim-account-051",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-052",
+      "name": "Loyalty EBS 052",
+      "account_id": "sim-account-052",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-053",
+      "name": "Finance EC2 053",
+      "account_id": "sim-account-053",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-054",
+      "name": "Airport Services S3 054",
+      "account_id": "sim-account-054",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-055",
+      "name": "Customer Care EBS 055",
+      "account_id": "sim-account-055",
+      "environment": "pre-production",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": false
+      }
+    },
+    {
+      "id": "sim-ec2-056",
+      "name": "Reservations EC2 056",
+      "account_id": "sim-account-056",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-057",
+      "name": "Flight Operations S3 057",
+      "account_id": "sim-account-057",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-058",
+      "name": "Baggage EBS 058",
+      "account_id": "sim-account-058",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-059",
+      "name": "Cargo EC2 059",
+      "account_id": "sim-account-059",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-060",
+      "name": "Crew S3 060",
+      "account_id": "sim-account-060",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-061",
+      "name": "Loyalty EBS 061",
+      "account_id": "sim-account-061",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-062",
+      "name": "Finance EC2 062",
+      "account_id": "sim-account-062",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-063",
+      "name": "Airport Services S3 063",
+      "account_id": "sim-account-063",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": false
+      }
+    },
+    {
+      "id": "sim-ebs-064",
+      "name": "Customer Care EBS 064",
+      "account_id": "sim-account-064",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": null
+      }
+    },
+    {
+      "id": "sim-ec2-065",
+      "name": "Reservations EC2 065",
+      "account_id": "sim-account-065",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-066",
+      "name": "Flight Operations S3 066",
+      "account_id": "sim-account-066",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-067",
+      "name": "Baggage EBS 067",
+      "account_id": "sim-account-067",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-068",
+      "name": "Cargo EC2 068",
+      "account_id": "sim-account-068",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-069",
+      "name": "Crew S3 069",
+      "account_id": "sim-account-069",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-070",
+      "name": "Loyalty EBS 070",
+      "account_id": "sim-account-070",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-071",
+      "name": "Finance EC2 071",
+      "account_id": "sim-account-071",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-072",
+      "name": "Airport Services S3 072",
+      "account_id": "sim-account-072",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-073",
+      "name": "Customer Care EBS 073",
+      "account_id": "sim-account-073",
+      "environment": "testing",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": false
+      }
+    },
+    {
+      "id": "sim-ec2-074",
+      "name": "Reservations EC2 074",
+      "account_id": "sim-account-074",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-075",
+      "name": "Flight Operations S3 075",
+      "account_id": "sim-account-075",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-076",
+      "name": "Baggage EBS 076",
+      "account_id": "sim-account-076",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-077",
+      "name": "Cargo EC2 077",
+      "account_id": "sim-account-077",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-078",
+      "name": "Crew S3 078",
+      "account_id": "sim-account-078",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-079",
+      "name": "Loyalty EBS 079",
+      "account_id": "sim-account-079",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-080",
+      "name": "Finance EC2 080",
+      "account_id": "sim-account-080",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-081",
+      "name": "Airport Services S3 081",
+      "account_id": "sim-account-081",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": false
+      }
+    },
+    {
+      "id": "sim-ebs-082",
+      "name": "Customer Care EBS 082",
+      "account_id": "sim-account-082",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": null
+      }
+    },
+    {
+      "id": "sim-ec2-083",
+      "name": "Reservations EC2 083",
+      "account_id": "sim-account-083",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-084",
+      "name": "Flight Operations S3 084",
+      "account_id": "sim-account-084",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-085",
+      "name": "Baggage EBS 085",
+      "account_id": "sim-account-085",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-086",
+      "name": "Cargo EC2 086",
+      "account_id": "sim-account-086",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-087",
+      "name": "Crew S3 087",
+      "account_id": "sim-account-087",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-088",
+      "name": "Loyalty EBS 088",
+      "account_id": "sim-account-088",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-089",
+      "name": "Finance EC2 089",
+      "account_id": "sim-account-089",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-090",
+      "name": "Airport Services S3 090",
+      "account_id": "sim-account-090",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-091",
+      "name": "Customer Care EBS 091",
+      "account_id": "sim-account-091",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": false
+      }
+    },
+    {
+      "id": "sim-ec2-092",
+      "name": "Reservations EC2 092",
+      "account_id": "sim-account-092",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": null
+        }
+      }
+    },
+    {
+      "id": "sim-s3-093",
+      "name": "Flight Operations S3 093",
+      "account_id": "sim-account-093",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-10-20T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-094",
+      "name": "Baggage EBS 094",
+      "account_id": "sim-account-094",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-095",
+      "name": "Cargo EC2 095",
+      "account_id": "sim-account-095",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-096",
+      "name": "Crew S3 096",
+      "account_id": "sim-account-096",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-097",
+      "name": "Loyalty EBS 097",
+      "account_id": "sim-account-097",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
+    },
+    {
+      "id": "sim-ec2-098",
+      "name": "Finance EC2 098",
+      "account_id": "sim-account-098",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ec2_instance",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "metadata_options": {
+          "http_endpoint": "enabled",
+          "http_tokens": "required"
+        }
+      }
+    },
+    {
+      "id": "sim-s3-099",
+      "name": "Airport Services S3 099",
+      "account_id": "sim-account-099",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "s3_bucket",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "public_access_blocked": true
+      }
+    },
+    {
+      "id": "sim-ebs-100",
+      "name": "Customer Care EBS 100",
+      "account_id": "sim-account-100",
+      "environment": "development",
+      "region": "eu-central-1",
+      "resource_type": "ebs_volume",
+      "source": "northstar-synthetic-resources",
+      "simulated": true,
+      "observed_at": "2026-11-05T12:00:00Z",
+      "configuration": {
+        "encrypted": true
+      }
     }
   ]
 }

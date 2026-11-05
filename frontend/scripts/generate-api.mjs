@@ -18,6 +18,12 @@ with TestClient(create_app(local_demo=True, resource_repository=resource_reposit
     resource_response = client.get('/api/v1/summary?view=resources')
     assert resource_response.status_code == 200
     resources = resource_response.json()
+from deployment.generate_synthetic_fleet import extend
+scale_repository = SimpleNamespace(read=lambda: view(extend(frozen_resources())))
+with TestClient(create_app(local_demo=True, resource_repository=scale_repository), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
+    scale_response = client.get('/api/v1/summary?view=resources')
+    assert scale_response.status_code == 200
+    scale_resources = scale_response.json()
 fixtures = {}
 with TestClient(create_app(local_demo=True), base_url='http://127.0.0.1', client=('127.0.0.1', 50000)) as client:
     for path in ['/api/v1/summary', '/api/v1/accounts', '/api/v1/findings', '/api/v1/deployments', '/api/v1/drift', '/api/v1/exceptions', '/api/v1/accounts/sim-account-001', '/api/v1/accounts/sim-account-002']:
@@ -44,15 +50,19 @@ with TestClient(create_app(local_demo=True, catalog=catalogue()), base_url='http
             assert response.status_code in [200, 404]
             records[path] = response.json()
         version_fixtures[version] = records
-print(json.dumps({'schema': schema, 'fixtures': fixtures, 'versions': version_fixtures, 'resources': resources}))
+print(json.dumps({'schema': schema, 'fixtures': fixtures, 'versions': version_fixtures, 'resources': resources, 'scale_resources': scale_resources}))
 `;
-const { schema, fixtures, versions, resources } = JSON.parse(
+const { schema, fixtures, versions, resources, scale_resources } = JSON.parse(
   execFileSync(`${root}.venv/bin/python`, ["-c", python], {
     cwd: root,
     encoding: "utf8",
   }),
 );
 const outputs = [
+  [
+    new URL("../src/test/resource-scale-responses.json", import.meta.url),
+    `${JSON.stringify(scale_resources, null, 2)}\n`,
+  ],
   [
     new URL("../src/test/resource-responses.json", import.meta.url),
     `${JSON.stringify(resources, null, 2)}\n`,

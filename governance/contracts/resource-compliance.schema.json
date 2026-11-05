@@ -56,7 +56,7 @@
           "items": {
             "$ref": "#/$defs/Account"
           },
-          "maxItems": 25,
+          "maxItems": 100,
           "minItems": 1,
           "title": "Accounts",
           "type": "array"
@@ -90,7 +90,7 @@
           "items": {
             "$ref": "#/$defs/Resource"
           },
-          "maxItems": 100,
+          "maxItems": 200,
           "minItems": 1,
           "title": "Resources",
           "type": "array"

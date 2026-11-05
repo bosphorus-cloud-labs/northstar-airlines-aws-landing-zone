@@ -131,7 +131,9 @@ export function ResourceConsole() {
           ) : (
             <>
               <p className="resource-context">
-                Evidence evaluation: {query.data.data.evaluated_at} ·{" "}
+                Evaluating {query.data.data.summary.accounts} synthetic AWS
+                accounts across four environments. · Evidence evaluation:{" "}
+                {query.data.data.evaluated_at} ·{" "}
                 {query.data.metadata.published_at
                   ? `Published ${query.data.metadata.published_at}`
                   : "Local fixture — not published"}
@@ -190,6 +192,7 @@ function Overview({ data }: { data: ResourceData }) {
         </p>
         {data.findings
           .filter((f) => f.status !== "compliant")
+          .slice(0, 5)
           .map((f) => (
             <article className="resource-issue" key={f.id}>
               <Badge status={f.status} />
@@ -204,6 +207,7 @@ function Overview({ data }: { data: ResourceData }) {
               </Link>
             </article>
           ))}
+        <Link to="/compliance">View all findings</Link>
       </section>
       <Terraform data={data} />
       <section className="panel">
@@ -321,12 +325,17 @@ function Inventory({ data }: { data: ResourceData }) {
   const [search, setSearch] = useState("");
   const [env, setEnv] = useState("");
   const [status, setStatus] = useState("");
-  const [page, setPage] = useState(0);
+  const [requestedPage, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const rows = data.accounts.filter(
     (a) =>
       `${a.name} ${a.id}`.toLowerCase().includes(search.toLowerCase()) &&
       (!env || a.environment === env) &&
       (!status || a.status === status),
+  );
+  const page = Math.min(
+    requestedPage,
+    Math.max(0, Math.ceil(rows.length / pageSize) - 1),
   );
   return (
     <section className="panel">
@@ -355,7 +364,7 @@ function Inventory({ data }: { data: ResourceData }) {
             </tr>
           </thead>
           <tbody>
-            {rows.slice(page * 5, page * 5 + 5).map((a) => (
+            {rows.slice(page * pageSize, (page + 1) * pageSize).map((a) => (
               <tr key={a.id}>
                 <td>
                   <Link to={`/accounts/${a.id}`}>{a.name}</Link>
@@ -376,21 +385,67 @@ function Inventory({ data }: { data: ResourceData }) {
         </table>
       </div>
       {!rows.length && <p>No accounts match these filters.</p>}
-      <div className="resource-pagination">
-        <button disabled={!page} onClick={() => setPage(page - 1)}>
-          Previous
-        </button>
-        <span>
-          {rows.length} accounts · Page {page + 1}
-        </span>
-        <button
-          disabled={(page + 1) * 5 >= rows.length}
-          onClick={() => setPage(page + 1)}
-        >
-          Next
-        </button>
-      </div>
+      <Pagination
+        count={rows.length}
+        noun="accounts"
+        page={page}
+        pageSize={pageSize}
+        setPage={setPage}
+        setPageSize={setPageSize}
+      />
     </section>
+  );
+}
+function Pagination({
+  count,
+  noun,
+  page,
+  pageSize,
+  setPage,
+  setPageSize,
+}: {
+  count: number;
+  noun: string;
+  page: number;
+  pageSize: number;
+  setPage: (page: number) => void;
+  setPageSize: (size: number) => void;
+}) {
+  const last = Math.max(0, Math.ceil(count / pageSize) - 1);
+  return (
+    <div className="resource-pagination">
+      <label>
+        Rows per page{" "}
+        <select
+          value={pageSize}
+          onChange={(e) => {
+            setPageSize(Number(e.target.value));
+            setPage(0);
+          }}
+        >
+          {[5, 10, 25, 50].map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button disabled={!page} onClick={() => setPage(0)}>
+        First
+      </button>
+      <button disabled={!page} onClick={() => setPage(page - 1)}>
+        Previous
+      </button>
+      <span>
+        {count} {noun} · Page {page + 1} of {last + 1}
+      </span>
+      <button disabled={page === last} onClick={() => setPage(page + 1)}>
+        Next
+      </button>
+      <button disabled={page === last} onClick={() => setPage(last)}>
+        Last
+      </button>
+    </div>
   );
 }
 function Filters({
@@ -453,13 +508,19 @@ function Resources({
   const [search, setSearch] = useState("");
   const [env, setEnv] = useState("");
   const [status, setStatus] = useState("");
+  const [requestedPage, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
   const rows = data.resources.filter(
     (r) =>
-      `${r.name} ${r.id} ${r.finding.control}`
+      `${r.name} ${r.id} ${r.account_id} ${r.finding.control}`
         .toLowerCase()
         .includes(search.toLowerCase()) &&
       (!env || r.environment === env) &&
       (!status || r.status === status),
+  );
+  const page = Math.min(
+    requestedPage,
+    Math.max(0, Math.ceil(rows.length / pageSize) - 1),
   );
   return (
     <section className="panel">
@@ -472,9 +533,10 @@ function Resources({
         search={search}
         env={env}
         status={status}
-        update={(key, value) =>
-          ({ search: setSearch, env: setEnv, status: setStatus })[key](value)
-        }
+        update={(key, value) => {
+          ({ search: setSearch, env: setEnv, status: setStatus })[key](value);
+          setPage(0);
+        }}
       />
       <div
         className="table-scroll"
@@ -493,7 +555,7 @@ function Resources({
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
+            {rows.slice(page * pageSize, (page + 1) * pageSize).map((r) => (
               <tr key={r.id}>
                 <td>
                   <strong>{r.name}</strong>
@@ -528,6 +590,14 @@ function Resources({
         </table>
       </div>
       {!rows.length && <p>No resources match these filters.</p>}
+      <Pagination
+        count={rows.length}
+        noun="resources"
+        page={page}
+        pageSize={pageSize}
+        setPage={setPage}
+        setPageSize={setPageSize}
+      />
     </section>
   );
 }
@@ -552,15 +622,19 @@ function Activity({ data }: { data: ResourceData }) {
               Published by {event.actor} · Source commit{" "}
               {event.source_commit.slice(0, 12)}
             </p>
-            {event.changes.map((change) => (
-              <p key={change.resource_id}>
-                <strong>{change.resource_name}</strong>:{" "}
-                {change.before ?? "New resource"} → {change.after ?? "Removed"}{" "}
-                · {readable(change.old_value)} → {readable(change.new_value)}
-                <br />
-                {change.reason}
-              </p>
-            ))}
+            <details open={event.changes.length <= 5}>
+              <summary>{event.changes.length} resource changes</summary>
+              {event.changes.map((change) => (
+                <p key={change.resource_id}>
+                  <strong>{change.resource_name}</strong>:{" "}
+                  {change.before ?? "New resource"} →{" "}
+                  {change.after ?? "Removed"} · {readable(change.old_value)} →{" "}
+                  {readable(change.new_value)}
+                  <br />
+                  {change.reason}
+                </p>
+              ))}
+            </details>
           </article>
         ))}
       </section>

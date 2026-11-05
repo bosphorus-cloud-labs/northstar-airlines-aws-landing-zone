@@ -46,11 +46,11 @@ output "governance_desired" {
   precondition {
     condition = (
       local.state.simulated == true && local.state.source == "northstar-policy-rollout-v1" &&
-      (var.resource_accounts_json == "null" ? length(local.accounts) == 10 : length(local.accounts) >= 1 && length(local.accounts) <= 25) &&
+      (var.resource_accounts_json == "null" ? length(local.accounts) == 10 : length(local.accounts) >= 1 && length(local.accounts) <= 100) &&
       toset(keys(local.environments)) == toset(["production", "pre-production", "testing", "development"]) &&
       alltrue([for account in local.accounts : local.ous[account.ou_id].environment == account.environment])
     )
-    error_message = "Use a valid ten-account synthetic CLI proposal with matching OU/environment assignments."
+    error_message = "Use the original ten-account CLI proposal or up to 100 validated synthetic resource accounts, with matching OU/environment assignments."
   }
 }
 

@@ -138,7 +138,7 @@ def read_snapshot(client, table, identifier):
 def view(document, catalog=None):
     result = evaluate(document)
     latest = catalog["history"][-1] if catalog else None
-    return {
+    response = {
         "metadata": {
             "api_version": "v1",
             "source": "northstar-synthetic-resources",
@@ -154,6 +154,10 @@ def view(document, catalog=None):
             "activity": list(reversed(copy.deepcopy(catalog["history"]))) if catalog else [],
         },
     }
+
+    if len(canonical(response).encode()) > 2_000_000:
+        raise ValueError("Resource response exceeds the bounded API read budget")
+    return response
 
 
 class FixtureResources:

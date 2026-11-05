@@ -2093,10 +2093,22 @@ th {
 }
 .resource-pagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-top: 20px;
+}
+.resource-pagination label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.resource-pagination select {
+  padding: 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+  background: white;
 }
 .content {
   padding: 28px;

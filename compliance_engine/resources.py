@@ -41,7 +41,7 @@ class Account(Strict):
 
 class Accounts(Strict):
     simulated: Literal[True]
-    accounts: list[Account] = Field(min_length=1, max_length=25)
+    accounts: list[Account] = Field(min_length=1, max_length=100)
 
 
 class Resource(Strict):
@@ -92,7 +92,7 @@ class Inventory(Strict):
     format: Literal["resource-compliance/1"]
     simulated: Literal[True]
     evaluated_at: str
-    resources: list[Resource] = Field(min_length=1, max_length=100)
+    resources: list[Resource] = Field(min_length=1, max_length=200)
 
     @field_validator("evaluated_at")
     @classmethod
