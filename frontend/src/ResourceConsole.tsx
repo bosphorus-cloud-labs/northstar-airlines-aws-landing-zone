@@ -146,11 +146,10 @@ export function ResourceConsole() {
                 <AccountOperations exceptions />
               ) : path === "/deployments" ? (
                 <Activity data={query.data.data} />
+              ) : path === "/compliance" ? (
+                <Compliance data={query.data.data} />
               ) : (
-                <Resources
-                  data={query.data.data}
-                  compliance={path === "/compliance"}
-                />
+                <Resources data={query.data.data} />
               )}
             </>
           )}
@@ -313,8 +312,7 @@ function Accounts({ data, path }: { data: ResourceData; path: string }) {
               (r) => r.account_id === account.id,
             ),
           }}
-          compliance={false}
-        />
+         />
       </>
     ) : (
       <p role="alert">Account not found.</p>
@@ -498,13 +496,7 @@ function Filters({
     </div>
   );
 }
-function Resources({
-  data,
-  compliance,
-}: {
-  data: ResourceData;
-  compliance: boolean;
-}) {
+function Resources({ data }: { data: ResourceData }) {
   const [search, setSearch] = useState("");
   const [env, setEnv] = useState("");
   const [status, setStatus] = useState("");
@@ -525,9 +517,8 @@ function Resources({
   return (
     <section className="panel">
       <p>
-        {compliance
-          ? "Evidence determines compliance; exceptions never convert failures into passes."
-          : "Desired state comes from central controls. Observed state is synthetic configuration; differences represent simulated drift."}
+        Desired state comes from central controls. Observed state is synthetic
+        configuration; differences represent simulated drift.
       </p>
       <Filters
         search={search}
@@ -598,6 +589,70 @@ function Resources({
         setPage={setPage}
         setPageSize={setPageSize}
       />
+    </section>
+  );
+}
+function Compliance({ data }: { data: ResourceData }) {
+  const [env, setEnv] = useState("");
+  const findings = data.findings.filter((finding) => !env || finding.environment === env);
+  const statuses = ["compliant", "noncompliant", "unknown", "stale"] as const;
+  const count = (rows: typeof findings, status: (typeof statuses)[number]) =>
+    rows.filter((finding) => finding.status === status).length;
+  return (
+    <section className="panel">
+      <h2>Compliance by governance control</h2>
+      <p>
+        Evaluated synthetic evidence grouped by central control. Missing and
+        stale evidence are not counted as compliant. These results do not
+        represent live AWS Config or Security Hub collection.
+      </p>
+      <label>
+        Environment
+        <select value={env} onChange={(event) => setEnv(event.target.value)}>
+          <option value="">All environments</option>
+          {["production", "pre-production", "testing", "development"].map((value) => (
+            <option key={value} value={value}>{environment(value)}</option>
+          ))}
+        </select>
+      </label>
+      <p>{findings.length} synthetic control evaluations in this view.</p>
+      <div className="table-scroll" tabIndex={0} aria-label="Compliance by control">
+        <table>
+          <thead>
+            <tr>
+              <th>Governance control</th>
+              <th>Total</th>
+              <th>Compliant</th>
+              <th>Noncompliant</th>
+              <th>Unknown</th>
+              <th>Stale</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.controls.map((control) => {
+              const rows = findings.filter((finding) => finding.control_id === control.id);
+              return (
+                <tr key={control.id}>
+                  <td><strong>{control.name}</strong><small>{control.reason}</small></td>
+                  <td>{rows.length}</td>
+                  {statuses.map((status) => <td key={status}>{count(rows, status)}</td>)}
+                </tr>
+              );
+            })}
+            <tr>
+              <th scope="row">All controls</th>
+              <td>{findings.length}</td>
+              {statuses.map((status) => <td key={status}>{count(findings, status)}</td>)}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        To investigate individual desired and observed values, open{" "}
+        <Link to="/resources">Resources &amp; drift</Link>.
+        Governance exceptions are tracked separately and do not change a failed
+        control into a passing result.
+      </p>
     </section>
   );
 }
