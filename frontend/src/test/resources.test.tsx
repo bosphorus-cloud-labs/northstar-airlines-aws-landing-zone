@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
@@ -84,7 +84,7 @@ it("navigates, paginates and filters account inventory then opens account resour
 });
 it("shows why a specific resource fails and handles empty resource filters", async () => {
   const user = userEvent.setup();
-  show("/compliance");
+  show("/resources");
   await screen.findByText("Booking API");
   await user.selectOptions(
     screen.getByLabelText("Compliance status"),
@@ -274,4 +274,140 @@ it("paginates 100 resource findings and keeps Booking API discoverable by accoun
   expect(
     screen.getByRole("link", { name: "sim-account-100" }),
   ).toBeInTheDocument();
+});
+
+it("summarizes backend evidence by control and environment across the 100-account fleet", async () => {
+  const scale = (await import("./resource-scale-responses.json")).default;
+  fetcher.mockImplementation(async () => new Response(JSON.stringify(scale)));
+  const user = userEvent.setup();
+  show("/compliance");
+  await screen.findByRole("heading", {
+    name: "Compliance by governance control",
+  });
+  expect(screen.getByText("SIMULATED DATA")).toBeInTheDocument();
+  expect(
+    screen.queryByRole("columnheader", { name: "Observed" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Search")).not.toBeInTheDocument();
+  expect(screen.getAllByRole("row")).toHaveLength(5);
+  const statuses = ["compliant", "noncompliant", "unknown", "stale"] as const;
+  for (const env of [
+    "",
+    "production",
+    "pre-production",
+    "testing",
+    "development",
+  ]) {
+    await user.selectOptions(screen.getByLabelText("Environment"), env);
+    const evidence = scale.data.findings.filter(
+      (finding) => !env || finding.environment === env,
+    );
+    for (const control of scale.data.controls) {
+      const row = screen.getByRole("row", { name: new RegExp(control.name) });
+      const findings = evidence.filter(
+        (finding) => finding.control_id === control.id,
+      );
+      const counts = within(row)
+        .getAllByRole("cell")
+        .slice(1)
+        .map((cell) => Number(cell.textContent));
+      expect(counts).toEqual([
+        findings.length,
+        ...statuses.map(
+          (status) =>
+            findings.filter((finding) => finding.status === status).length,
+        ),
+      ]);
+      expect(screen.queryByText(control.reason)).not.toBeInTheDocument();
+    }
+    const totals = within(screen.getByRole("row", { name: /^All controls/ }))
+      .getAllByRole("cell")
+      .map((cell) => Number(cell.textContent));
+    expect(totals).toEqual([
+      evidence.length,
+      ...statuses.map(
+        (status) =>
+          evidence.filter((finding) => finding.status === status).length,
+      ),
+    ]);
+    if (!env)
+      expect(totals).toEqual([
+        scale.data.summary.resources,
+        ...statuses.map((status) => scale.data.summary[status]),
+      ]);
+    expect(
+      screen.getByText(
+        `${evidence.length} synthetic control evaluations in this view.`,
+      ),
+    ).toBeInTheDocument();
+  }
+  expect(fetcher).toHaveBeenCalledTimes(1);
+  expect(fetcher.mock.calls[0][0]).toBe("/api/v1/summary?view=resources");
+});
+
+it("navigates from control-level Compliance to distinct resource drift and account details", async () => {
+  const user = userEvent.setup();
+  show("/compliance");
+  await screen.findByRole("heading", {
+    name: "Compliance by governance control",
+  });
+  expect(screen.queryByText("Booking API")).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("columnheader", { name: "Desired" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("main")).getByRole("link", {
+      name: "Resources & drift",
+    }),
+  );
+  expect(await screen.findByText("Booking API")).toBeInTheDocument();
+  expect(
+    screen.getByRole("columnheader", { name: "Desired" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("columnheader", { name: "Observed" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Compliance by governance control" }),
+  ).not.toBeInTheDocument();
+  await user.type(screen.getByLabelText("Search"), "Booking API");
+  await user.click(screen.getByRole("link", { name: "sim-account-001" }));
+  expect(
+    await screen.findByRole("heading", {
+      name: response.data.accounts[0].name,
+    }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Booking API")).toBeInTheDocument();
+  expect(
+    fetcher.mock.calls.every(([, options]) => options?.method === "GET"),
+  ).toBe(true);
+});
+
+it("does not manufacture results for unobserved controls and refreshes the current evidence", async () => {
+  const user = userEvent.setup();
+  show("/compliance");
+  await screen.findByRole("heading", {
+    name: "Compliance by governance control",
+  });
+  await user.selectOptions(
+    screen.getByLabelText("Environment"),
+    "pre-production",
+  );
+  const ebs = screen.getByRole("row", { name: /Encrypt EBS volumes/ });
+  expect(
+    within(ebs)
+      .getAllByRole("cell")
+      .slice(1)
+      .map((cell) => Number(cell.textContent)),
+  ).toEqual([0, 0, 0, 0, 0]);
+  await user.selectOptions(screen.getByLabelText("Environment"), "");
+  const scale = (await import("./resource-scale-responses.json")).default;
+  fetcher.mockImplementation(async () => new Response(JSON.stringify(scale)));
+  await user.click(screen.getByRole("button", { name: "Refresh" }));
+  await screen.findByText("100 synthetic control evaluations in this view.");
+  const totals = within(screen.getByRole("row", { name: /^All controls/ }))
+    .getAllByRole("cell")
+    .map((cell) => Number(cell.textContent));
+  expect(totals).toEqual([100, 77, 9, 7, 7]);
+  expect(fetcher).toHaveBeenCalledTimes(2);
 });

@@ -647,7 +647,7 @@ function Compliance({ data }: { data: ResourceData }) {
                 <tr key={control.id}>
                   <td>
                     <strong>{control.name}</strong>
-                    <small>{control.reason}</small>
+                    <small>Required value: {readable(control.expected)}</small>
                   </td>
                   <td>{rows.length}</td>
                   {statuses.map((status) => (
@@ -668,9 +668,9 @@ function Compliance({ data }: { data: ResourceData }) {
       </div>
       <p>
         To investigate individual desired and observed values, open{" "}
-        <Link to="/resources">Resources &amp; drift</Link>. Governance exceptions
-        are tracked separately and do not change a failed control into a passing
-        result.
+        <Link to="/resources">Resources &amp; drift</Link>. Governance
+        exceptions are tracked separately and do not change a failed control
+        into a passing result.
       </p>
     </section>
   );
