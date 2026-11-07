@@ -104,12 +104,12 @@ Use the existing [governance console](https://main.d1eetlse86595h.amplifyapp.com
 
 ### Verified starting state and exact change
 
-Read-only AWS checks on 7 November 2026 verified Current generation 6: 100 accounts, 100 resources, Booking API compliant, totals **77 compliant / 9 noncompliant / 7 unknown / 7 stale**. This is a checkpoint, not a guarantee of future Current; verify the application before each walkthrough.
+Read-only AWS checks on 7 November 2026 verified Current generation 6: 100 accounts, 100 resources, NorthStar EC2 01 compliant, totals **77 compliant / 9 noncompliant / 7 unknown / 7 stale**. This is a checkpoint, not a guarantee of future Current; verify the application before each walkthrough.
 
 | Item | Exact value |
 | --- | --- |
 | File | `mock-aws-resources/resources.json` |
-| Resource / account / environment | Booking API / `sim-ec2-001` / `sim-account-001` / Production |
+| Resource / account / environment | NorthStar EC2 01 / `sim-ec2-001` / `sim-account-001` / Production |
 | Control | `ec2-imdsv2` — Require IMDSv2 |
 | Desired setting | `metadata_options.http_tokens = required`; defined in `compliance-rules/resource-controls.json` |
 | Noncompliant preparation | Change only observed `configuration.metadata_options.http_tokens` to `optional` |
@@ -129,28 +129,28 @@ These numbers describe the validated 100-account fixture. If Current differs, us
    git status --short
    git switch main
    git pull --ff-only
-   git switch -c demo/booking-noncompliant-$(date +%Y%m%d-%H%M%S)
-   # In VS Code: change only Booking API http_tokens from required to optional.
+   git switch -c demo/ec2_instance-noncompliant-$(date +%Y%m%d-%H%M%S)
+   # In VS Code: change only NorthStar EC2 01 http_tokens from required to optional.
    git diff -- mock-aws-resources/resources.json
    git add mock-aws-resources/resources.json
-   git commit -m "demo: prepare noncompliant synthetic Booking API evidence"
+   git commit -m "demo: prepare noncompliant synthetic NorthStar EC2 01 evidence"
    change_commit=$(git rev-parse HEAD)
    git push -u origin HEAD
-   gh pr create --draft --base main --title "Prepare synthetic Booking API regression" --body "One synthetic observation only. Expected 76/10/7/7. Merge and publication require explicit approval."
+   gh pr create --draft --base main --title "Prepare synthetic NorthStar EC2 01 regression" --body "One synthetic observation only. Expected 76/10/7/7. Merge and publication require explicit approval."
    ```
 
 3. After the session fix merges, update any already-open data branch from current main and rerun its CI. Inspect the PR's **Governance checks** and **Frontend checks**. Open the resource-release artifact's `summary.md`, `report.json` and readable `terraform-plan.txt`: real provider-free fmt/init/validate/plan and all 100 account/control assignments must pass. An insecure observation is valid input and must produce a noncompliant finding; schema validation is not an instruction to make every resource pass.
-4. **Approval boundary:** do not merge or publish without the owner's explicit approval. After approved protected merge, wait for main CI, then approve the actual `resource-publish` deployment in `governance-production`. Verify the published receipt, Current, Booking API's optional/noncompliant observation, IMDSv2 counts and Deployment Activity. No terminal publisher or direct DynamoDB update is part of this walkthrough.
+4. **Approval boundary:** do not merge or publish without the owner's explicit approval. After approved protected merge, wait for main CI, then approve the actual `resource-publish` deployment in `governance-production`. Verify the published receipt, Current, NorthStar EC2 01's optional/noncompliant observation, IMDSv2 counts and Deployment Activity. No terminal publisher or direct DynamoDB update is part of this walkthrough.
 5. Prepare the compliant restoration from updated main:
 
    ```sh
    git switch main
    git pull --ff-only
-   git switch -c demo/booking-compliant-$(date +%Y%m%d-%H%M%S)
+   git switch -c demo/ec2_instance-compliant-$(date +%Y%m%d-%H%M%S)
    git revert "$change_commit"
    git diff HEAD^ HEAD -- mock-aws-resources/resources.json
    git push -u origin HEAD
-   gh pr create --base main --title "Restore synthetic Booking API compliance" --body "Git revert of the observation change. Expected 77/9/7/7 after approved publication; all 100 accounts retained."
+   gh pr create --base main --title "Restore synthetic NorthStar EC2 01 compliance" --body "Git revert of the observation change. Expected 77/9/7/7 after approved publication; all 100 accounts retained."
    ```
 
    If the earlier PR was squash-merged, use its actual merged data commit, not the original feature SHA. If the terminal variable was lost, copy the exact data commit from the PR. Do not revert the 100-account fleet-extension commit.
@@ -161,7 +161,7 @@ These numbers describe the validated 100-account fixture. If Current differs, us
 | Time | Screen/action | State clearly |
 | --- | --- | --- |
 | 0:00–0:45 | Overview: 100 accounts, four environment requirements and Terraform verification | Live authenticated API data; accounts and observations synthetic. |
-| 0:45–1:45 | Resources & Drift: search Booking API, show desired required / observed optional and the violation reason | Live Current, after approved preparation. If preparation was not published, show its real compliant state and use recorded evidence instead. |
+| 0:45–1:45 | Resources & Drift: search NorthStar EC2 01, show desired required / observed optional and the violation reason | Live Current, after approved preparation. If preparation was not published, show its real compliant state and use recorded evidence instead. |
 | 1:45–2:30 | Compliance: IMDSv2 counts and overall 76/10/7/7; briefly show exceptions | Counts from the same backend findings; exceptions unchanged and do not exempt this resource. |
 | 2:30–3:15 | GitHub: one-field restoration PR, completed Governance/Frontend checks, readable Terraform plan for all 100 accounts | Validation already executed; do not pretend a new CI run completed instantly. |
 | 3:15–4:15 | Open the prevalidated restoration's waiting `resource-publish` job. Authorized owner reviews `governance-production` and selects Approve and deploy | This approval and subsequent OIDC publication are live only if actually performed. Do not bypass or auto-approve it. |
@@ -184,7 +184,7 @@ For a local fallback, run the API and Vite commands above and change the same ob
 
 ### Speaking outline
 
-“Here are 100 synthetic accounts across four environments. Terraform calculates their desired baseline, and Python evaluates independent resource observations. Booking API currently allows optional metadata tokens, which violates IMDSv2. The control summary aggregates that same evidence. This reviewed Git change restores the required setting; its validation ran before this walkthrough. Only the actual Environment approval lets a short-lived, data-only OIDC role publish to DynamoDB. Refresh now shows the approved result and its audit event. The application infrastructure and pipeline are real; no AWS instance or security policy was changed.”
+“Here are 100 synthetic accounts across four environments. Terraform calculates their desired baseline, and Python evaluates independent resource observations. NorthStar EC2 01 currently allows optional metadata tokens, which violates IMDSv2. The control summary aggregates that same evidence. This reviewed Git change restores the required setting; its validation ran before this walkthrough. Only the actual Environment approval lets a short-lived, data-only OIDC role publish to DynamoDB. Refresh now shows the approved result and its audit event. The application infrastructure and pipeline are real; no AWS instance or security policy was changed.”
 
 For the recorded path, replace “currently” with “in this recorded regression” and “publish now” with “this completed approved run published the restoration”.
 
@@ -212,7 +212,7 @@ Keep the previous Lambda artifact and existing frontend mode for operational rec
 
 ## Reproducing the 100-account fleet
 
-There are 100 current accounts in total, not 100 additional accounts. `mock-aws-resources/` is the single editable current fleet. The original ten account/resource records, including Booking API and the Production 18-hour EBS observation, are retained unchanged. Ninety deterministic workload accounts extend that inventory; fixed ten-account test scenarios and immutable historical snapshots are regression/audit evidence, not another active fleet.
+There are 100 current accounts in total, not 100 additional accounts. `mock-aws-resources/` is the single editable current fleet. The original ten account/resource records, including NorthStar EC2 01 and the Production 18-hour EBS observation, are retained unchanged. Ninety deterministic workload accounts extend that inventory; fixed ten-account test scenarios and immutable historical snapshots are regression/audit evidence, not another active fleet.
 
 To reproduce the initial extension without changing source files or contacting AWS:
 
@@ -220,7 +220,7 @@ To reproduce the initial extension without changing source files or contacting A
 .venv/bin/python -m deployment.generate_synthetic_fleet
 ```
 
-This writes preview JSON to ignored `artifacts/synthetic-fleet/`. Do not regenerate over an operator's later observation changes. Normal demonstrations still edit only the Booking API attribute in `mock-aws-resources/resources.json`.
+This writes preview JSON to ignored `artifacts/synthetic-fleet/`. Do not regenerate over an operator's later observation changes. Normal demonstrations still edit only the NorthStar EC2 01 attribute in `mock-aws-resources/resources.json`.
 
 Real Terraform plans all 100 accounts and checks every environment/control/approval assignment against Python. The same bounded atomic API snapshot feeds summary, account details, filters and client-side pagination; no per-page cloud scans or separate data source is introduced. Page-size controls offer 5/10/25/50 rows with first/last navigation. Refresh clamps pagination if a restored dataset has fewer records. Large publication entries collapse, while single-resource changes remain visible.
 
@@ -228,4 +228,4 @@ Capacity is bounded at 100 accounts, 200 resources and 200 KB of canonical snaps
 
 Deploy the validated backwards-compatible Lambda package before approving the 100-account publication: the previous deployed validator permits only 25 accounts. Expect exactly one Lambda code update and zero other resource changes. Keep existing Current untouched until that code is verified, then use the normal protected publication. No table migration, new IAM permissions or enterprise resources are required.
 
-After promoting 100 accounts, retain a 100-account-capable reader during normal Git rollback. Revert the individual observation change, not the fleet-extension commit. The previous 25-account validator cannot read a 100-account snapshot. The demonstrated rollback keeps the complete fleet and changes only Booking API evidence.
+After promoting 100 accounts, retain a 100-account-capable reader during normal Git rollback. Revert the individual observation change, not the fleet-extension commit. The previous 25-account validator cannot read a 100-account snapshot. The demonstrated rollback keeps the complete fleet and changes only NorthStar EC2 01 evidence.

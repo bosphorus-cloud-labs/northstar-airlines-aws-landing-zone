@@ -129,7 +129,7 @@ class ResourceComplianceTests(unittest.TestCase):
         change_commit = git("rev-parse", "HEAD")
         changed, _, _ = prepare(load(working), self.temporary.name + "/changed")
         second = self.publish(changed, 2, commit=change_commit)
-        target = next(c for c in second["changes"] if c["resource_name"] == "Booking API")
+        target = next(c for c in second["changes"] if c["resource_name"] == "NorthStar EC2 01")
         self.assertEqual((target["before"], target["after"]), ("compliant", "noncompliant"))
         stored = copy.deepcopy(self.client.rows)
         git("revert", "--no-edit", change_commit)
@@ -138,7 +138,7 @@ class ResourceComplianceTests(unittest.TestCase):
         reverted, _, _ = prepare(load(working), self.temporary.name + "/git-reverted")
         self.assertEqual(digest(reverted), digest(self.document))
         third = self.publish(reverted, 3, commit=revert_commit)
-        target = next(c for c in third["changes"] if c["resource_name"] == "Booking API")
+        target = next(c for c in third["changes"] if c["resource_name"] == "NorthStar EC2 01")
         self.assertEqual((target["before"], target["after"]), ("noncompliant", "compliant"))
         catalog = read_catalog(self.client, "northstar-offline-records")
         self.assertEqual(catalog["generation"], 3)
@@ -456,8 +456,8 @@ class HundredAccountTests(unittest.TestCase):
         baseline, _, _ = prepare(load(), Path(self.temp.name) / "ten")
         documents = [baseline, self.document]
         bad = copy.deepcopy(self.generated)
-        booking = next(r for r in bad["inventory"]["resources"] if r["id"] == "sim-ec2-001")
-        booking["configuration"]["metadata_options"]["http_tokens"] = "optional"
+        ec2_instance = next(r for r in bad["inventory"]["resources"] if r["id"] == "sim-ec2-001")
+        ec2_instance["configuration"]["metadata_options"]["http_tokens"] = "optional"
         regression, _, _ = prepare(bad, Path(self.temp.name) / "regression")
         documents.extend([regression, self.document])
         with TestClient(

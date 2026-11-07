@@ -74,7 +74,7 @@ it("navigates, paginates and filters account inventory then opens account resour
   await user.click(
     screen.getByRole("link", { name: response.data.accounts[0].name }),
   );
-  expect(await screen.findByText("Booking API")).toBeInTheDocument();
+  expect(await screen.findByText("NorthStar EC2 01")).toBeInTheDocument();
   expect(
     screen.getByRole("columnheader", { name: "Desired" }),
   ).toBeInTheDocument();
@@ -85,12 +85,12 @@ it("navigates, paginates and filters account inventory then opens account resour
 it("shows why a specific resource fails and handles empty resource filters", async () => {
   const user = userEvent.setup();
   show("/resources");
-  await screen.findByText("Booking API");
+  await screen.findByText("NorthStar EC2 01");
   await user.selectOptions(
     screen.getByLabelText("Compliance status"),
     "noncompliant",
   );
-  expect(screen.queryByText("Booking API")).not.toBeInTheDocument();
+  expect(screen.queryByText("NorthStar EC2 01")).not.toBeInTheDocument();
   expect(
     screen.getByText(
       response.data.findings.find((f) => f.status === "noncompliant")!.reason,
@@ -256,7 +256,7 @@ it("navigates the full 100-account fleet, filters environments and handles curre
   expect(screen.getByText("sim-account-001")).toBeInTheDocument();
 });
 
-it("paginates 100 resource findings and keeps Booking API discoverable by account or name", async () => {
+it("paginates 100 resource findings and keeps NorthStar EC2 01 discoverable by account or name", async () => {
   const scale = (await import("./resource-scale-responses.json")).default;
   fetcher.mockImplementation(async () => new Response(JSON.stringify(scale)));
   const user = userEvent.setup();
@@ -265,9 +265,9 @@ it("paginates 100 resource findings and keeps Booking API discoverable by accoun
   expect(screen.getAllByRole("row")).toHaveLength(11);
   await user.click(screen.getByRole("button", { name: "Last" }));
   expect(screen.getByText(/Page 10 of 10/)).toBeInTheDocument();
-  await user.type(screen.getByLabelText("Search"), "Booking API");
+  await user.type(screen.getByLabelText("Search"), "NorthStar EC2 01");
   expect(screen.getByText(/1 resources · Page 1 of 1/)).toBeInTheDocument();
-  expect(screen.getByText("Booking API")).toBeInTheDocument();
+  expect(screen.getByText("NorthStar EC2 01")).toBeInTheDocument();
   await user.clear(screen.getByLabelText("Search"));
   await user.type(screen.getByLabelText("Search"), "sim-account-100");
   expect(screen.getByText(/1 resources · Page 1 of 1/)).toBeInTheDocument();
@@ -351,7 +351,7 @@ it("navigates from control-level Compliance to distinct resource drift and accou
   await screen.findByRole("heading", {
     name: "Compliance by governance control",
   });
-  expect(screen.queryByText("Booking API")).not.toBeInTheDocument();
+  expect(screen.queryByText("NorthStar EC2 01")).not.toBeInTheDocument();
   expect(
     screen.queryByRole("columnheader", { name: "Desired" }),
   ).not.toBeInTheDocument();
@@ -360,7 +360,7 @@ it("navigates from control-level Compliance to distinct resource drift and accou
       name: "Resources & drift",
     }),
   );
-  expect(await screen.findByText("Booking API")).toBeInTheDocument();
+  expect(await screen.findByText("NorthStar EC2 01")).toBeInTheDocument();
   expect(
     screen.getByRole("columnheader", { name: "Desired" }),
   ).toBeInTheDocument();
@@ -370,14 +370,14 @@ it("navigates from control-level Compliance to distinct resource drift and accou
   expect(
     screen.queryByRole("heading", { name: "Compliance by governance control" }),
   ).not.toBeInTheDocument();
-  await user.type(screen.getByLabelText("Search"), "Booking API");
+  await user.type(screen.getByLabelText("Search"), "NorthStar EC2 01");
   await user.click(screen.getByRole("link", { name: "sim-account-001" }));
   expect(
     await screen.findByRole("heading", {
       name: response.data.accounts[0].name,
     }),
   ).toBeInTheDocument();
-  expect(screen.getByText("Booking API")).toBeInTheDocument();
+  expect(screen.getByText("NorthStar EC2 01")).toBeInTheDocument();
   expect(
     fetcher.mock.calls.every(([, options]) => options?.method === "GET"),
   ).toBe(true);
