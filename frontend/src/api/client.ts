@@ -1,6 +1,6 @@
 import { DEFAULT_SELECTION, useSelection, type Selection } from "./selection";
 import { runtimeConfig } from "../auth/config";
-import { accessToken } from "../auth/session";
+import { freshAccessToken, rejectSession } from "../auth/session";
 import { useQuery } from "@tanstack/react-query";
 import type { components, paths } from "./schema";
 
@@ -50,7 +50,7 @@ export async function request<P extends ApiPath>(
   for (const [key, value] of Object.entries(params))
     query.set(key, String(value));
   const config = runtimeConfig();
-  const token = config.mode === "cognito" ? accessToken() : null;
+  const token = config.mode === "cognito" ? await freshAccessToken() : null;
   if (config.mode === "cognito" && !token)
     throw new ApiError(
       401,
@@ -79,6 +79,7 @@ export async function request<P extends ApiPath>(
     );
   }
   if (!response.ok) {
+    if (config.mode === "cognito" && response.status === 401) rejectSession();
     const message =
       response.status === 401
         ? config.mode === "local"

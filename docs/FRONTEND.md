@@ -30,22 +30,36 @@ Production builds require public Cognito settings and never permit a local-demo 
 
 ## Experience and navigation
 
-A dark teal navigation rail, light workspace, understated aviation branding, text-and-icon status badges, and a persistent amber **SIMULATED DATA** banner distinguish the demo from actual cloud assessments. System fonts and bundled icons avoid remote font/image dependencies. CSS reflows cards and filters on smaller screens. Tables scroll within their panels, with keyboard focus and mobile hints. Mobile navigation supports focus containment and Escape; route changes focus the page heading. Controls have explicit labels, visible focus styles, a skip link, and reduced-motion support.
+A dark teal navigation rail, light workspace, understated aviation branding, text-and-icon status badges, and a persistent amber **SIMULATED DATA** banner distinguish the demo from actual cloud assessments. System fonts and bundled icons avoid remote font/image dependencies. CSS reflows cards and filters on smaller screens. Tables scroll within their panels, with keyboard focus and mobile hints. Navigation and tables remain usable on smaller screens. Controls have explicit labels, visible focus styles, a skip link, and reduced-motion support.
 
-| Page | API-backed behavior |
+| Page | Current API-backed behavior |
 | --- | --- |
-| Overview | Summary totals, four-state account posture, environment distribution, finding counts, latest deployment records, and links to violations/failures/drift |
-| Accounts | Complete inventory, name/ID/OU search, environment/compliance filters, five-row pagination, and API-backed account details |
-| Compliance | Individual findings; account/environment/control/status filters; evidence classification from API reasons; linked exception states and status explanations |
-| Deployments | Simulated Terraform/AFT history, environment/tool/status filters, desired/observed revisions, failures, completion context, correlation IDs |
-| Configuration Drift | Desired/observed values and revisions, affected account/control, observation date, drift-state filter |
-| Governance Exceptions | Rationale, owners, approvers, approval references, expiry, evaluated exception state, and the original finding status; pending states render when returned, with an empty state when absent |
+| Overview | 100 synthetic accounts, resource status totals, environment distribution and verified provider-free Terraform receipt |
+| Accounts | Account/resource status, environment/search/status filters, 5/10/25/50-row pagination and resource details |
+| Resources & Drift | Individual resources with desired/observed values, evidence time, status/reason, filtering and account navigation |
+| Compliance | Three central controls with compliant/noncompliant/unknown/stale counts derived from backend findings, plus environment filtering |
+| Deployment Activity | Actual approved publication audit and before/after changes; historical simulated account distribution is separate |
+| Governance Exceptions | Existing account-governance exceptions and expiration; these do not exempt the resource controls |
 
-Accounts and findings retain their deterministic API order. Deployments sort by started timestamp descending with ID as tie-breaker. Pagination and search operate over the **entire API-returned dataset**, not only the first API page. Environment/control display labels are presentation mappings, not policy evaluation logic.
+The current console loads one bounded, immutable resource view through `GET /api/v1/summary?view=resources`. Resource details, Compliance totals and publication activity derive from that same response. The browser aggregates returned evidence; it does not evaluate AWS policies or manufacture findings. Refresh retrieves Current again. Exceptions and historical account distribution use their existing read endpoints and remain separate. No browser mutation or alternative fixture source exists.
 
-## Contracts and data flow
+## Cognito session management
 
-`backend OpenAPI → generated TypeScript contracts → typed GET client → TanStack Query cache → React routes`.
+The deployed public client was read on 7 November 2026: access and ID tokens last ten minutes, refresh tokens one day, revocation is enabled, and Authorization Code/PKCE requires no client secret. No application idle timeout exists. The previous `AuthGate` cleared the session on access-token expiry without using the already-issued refresh token, which caused the reported short-session sign-outs.
+
+The proposed session fix uses the pinned `oidc-client-ts` refresh-token grant, sixty seconds before expiry. Generic automatic iframe renewal stays disabled, and an empty silent redirect prevents iframe fallback. `AuthGate` permits renewal only while an OIDC-established refresh token exists. Both API clients await a fresh token before sending requests; tab focus/visibility also checks freshness after background suspension. Renewal is single-flight and updates the token used by later requests, rather than retaining the original callback token.
+
+All access, ID and refresh tokens remain memory-only. PKCE transaction state alone uses sessionStorage. Full reload intentionally loses the memory session and requires Cognito sign-in/SSO again; use the console's **Refresh** button during a walkthrough. No localStorage token, password, client secret, AWS credential, new IAM permission or longer access-token lifetime is introduced.
+
+A revoked/expired refresh grant clears identity, cached queries and library storage with a sanitized sign-in message. A transient refresh error retains a still-valid access token, but expired tokens are never sent. A governance API 401 ends the session without an unlimited retry loop; 403 remains a permission error. Logout/unmount prevent a late refresh from restoring a cleared session. Actual server-side JWT/scope/group checks are unchanged.
+
+`frontend/src/test/auth.test.tsx` accelerates thirty minutes with the actual OIDC library timers and three mocked token-endpoint refresh grants. Additional tests cover concurrent renewal, wake after expiry, revoked grants, transient failure, stale completion, no persistent credentials and 401 versus 403. This is **offline protocol/lifecycle verification**, not a claim that this unmerged fix has passed a real thirty-minute Cognito session. After reviewed merge and Amplify release, sign in and verify the live console at 0, 10, 20 and 30 minutes, without recording tokens or changing Cognito lifetimes.
+
+Sources: [Cognito token endpoint](https://docs.aws.amazon.com/cognito/latest/developerguide/token-endpoint.html), [OIDC client guidance](https://github.com/authts/oidc-client-ts/blob/main/docs/index.md).
+
+## Retained account-catalogue client
+
+The following version-scoped behavior belongs to the retained account-catalogue client, not the default resource console. Both clients use generated OpenAPI types and the same Cognito session.
 
 - `src/api/schema.d.ts` is generated from the real FastAPI OpenAPI document. No HTTP server or AWS access is required to regenerate it.
 - `src/api/client.ts` uses the generated route/response types. Every data request is pinned to its selected policy version, snapshot digest and reference evaluation timestamp. V1 uses 2026-10-31T12:00:00Z and V2 uses 2026-10-31T12:28:00Z. No wall-clock time affects evaluation.
@@ -91,9 +105,9 @@ Dependencies are exact-pinned with an included npm lockfile. Development-only ov
 
 Amplify builds the frontend from protected main; Terraform supplies public API/Cognito settings and exact origins. Actual sign-in, API data, Current/History and main-only auto-build were verified in [deployment acceptance](DEPLOYMENT_ACCEPTANCE.md). The local proxy/identity bypass cannot be used for deployed authentication. Automated accessibility certification, durable frontend telemetry and fleet-scale server queries remain future work.
 
-## Read-only policy selector
+## Historical catalogue compatibility
 
-The frontend reads the version catalogue from the API summary and renders options dynamically. Each dataset/detail query is scoped by policy version, immutable hash and evaluation time, and validates returned identity before displaying data. Switching resets page filters and does not show another version's data during loading/error. A failed V2 load is visible; return to V1 explicitly. Catalogue-unavailable legacy APIs remain V1-only. Authentication and deployed configuration are unchanged.
+The retained `LegacyConsole` reads the version catalogue from the API summary and renders options dynamically. Each dataset/detail query is scoped by policy version, immutable hash and evaluation time, and validates returned identity before displaying data. Switching resets page filters and does not show another version's data during loading/error. A failed V2 load is visible; return to V1 explicitly. Catalogue-unavailable legacy APIs remain V1-only. Authentication and deployed configuration are unchanged.
 
 The UI shows simulated rollout stages and environment-specific requirements from API responses, plus evidence observation timestamps. The generated V1/V2 fixtures are test-only, not a frontend fallback. Hosted Current/History is deployed; [LOCAL_DEMONSTRATION.md](LOCAL_DEMONSTRATION.md) provides the live demonstration and local fallback.
 
@@ -101,4 +115,4 @@ The operations-console refinement follows the server-owned Current marker by def
 
 ## Hosting migration compatibility
 
-`VITE_GOVERNANCE_API_MODE=baseline-v1` is an explicit temporary mode for the deployed V1 backend: it requests the normal fixed-time baseline summary without catalogue/version parameters, clearly labels baseline-only data and disables history. It retains Cognito authentication and all API error/provenance checks. It never catches authorization errors to substitute data. Default `catalog` retains full Current/History/V2 behavior; the active hosted main branch uses `catalog`. Retain baseline mode for explicit compatibility testing, not as an error fallback. See the [hosting migration procedure](AMPLIFY_GITHUB_INTEGRATION.md).
+`VITE_GOVERNANCE_API_MODE=baseline-v1` is an explicit temporary mode for the deployed V1 backend: it requests the normal fixed-time baseline summary without catalogue/version parameters, clearly labels baseline-only data and disables history. It retains Cognito authentication and all API error/provenance checks. It never catches authorization errors to substitute data. Default `catalog` retains full Current/History/V2 behavior; the active hosted main branch uses `resources`. Retain baseline mode for explicit compatibility testing, not as an error fallback. See the [hosting migration procedure](AMPLIFY_GITHUB_INTEGRATION.md).

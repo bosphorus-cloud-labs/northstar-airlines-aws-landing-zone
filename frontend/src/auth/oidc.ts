@@ -16,7 +16,11 @@ export function oidcSettings(
     response_type: "code",
     scope: "openid email profile northstar-governance/read",
     disablePKCE: false,
+    // Cognito refresh is explicitly guarded in AuthGate: never fall back to an iframe.
     automaticSilentRenew: false,
+    silent_redirect_uri: "",
+    accessTokenExpiringNotificationTimeInSeconds: 60,
+    silentRequestTimeoutInSeconds: 10,
     loadUserInfo: false,
     userStore: new WebStorageStateStore({ store: new InMemoryWebStorage() }),
     stateStore: new WebStorageStateStore({

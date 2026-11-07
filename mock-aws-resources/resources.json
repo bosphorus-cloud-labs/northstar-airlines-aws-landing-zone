@@ -5,7 +5,7 @@
   "resources": [
     {
       "id": "sim-ec2-001",
-      "name": "Booking API",
+      "name": "NorthStar EC2 01",
       "account_id": "sim-account-001",
       "environment": "production",
       "region": "eu-central-1",

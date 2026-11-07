@@ -1,12 +1,12 @@
 import { runtimeConfig } from "../auth/config";
-import { accessToken } from "../auth/session";
+import { freshAccessToken, rejectSession } from "../auth/session";
 import { ApiError } from "./client";
 import type { components } from "./schema";
 export type ResourceResponse = components["schemas"]["ResourceEnvelope"];
 export type ResourceData = ResourceResponse["data"];
 async function read(path: string, signal: AbortSignal): Promise<unknown> {
   const config = runtimeConfig();
-  const token = config.mode === "cognito" ? accessToken() : null;
+  const token = config.mode === "cognito" ? await freshAccessToken() : null;
   if (config.mode === "cognito" && !token)
     throw new ApiError(401, "Sign in to read compliance evidence.");
   let response: Response;
@@ -28,13 +28,15 @@ async function read(path: string, signal: AbortSignal): Promise<unknown> {
       "The compliance API could not be reached. Try refreshing.",
     );
   }
-  if (!response.ok)
+  if (!response.ok) {
+    if (config.mode === "cognito" && response.status === 401) rejectSession();
     throw new ApiError(
       response.status,
       response.status === 401 || response.status === 403
         ? "Access denied. Sign in with an authorized governance reader account."
         : "Current compliance data is unavailable. No local or historical fallback has been substituted.",
     );
+  }
   let value: unknown;
   try {
     value = await response.json();

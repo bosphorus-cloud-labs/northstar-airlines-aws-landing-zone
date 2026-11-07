@@ -129,7 +129,7 @@ class ResourceComplianceTests(unittest.TestCase):
         change_commit = git("rev-parse", "HEAD")
         changed, _, _ = prepare(load(working), self.temporary.name + "/changed")
         second = self.publish(changed, 2, commit=change_commit)
-        target = next(c for c in second["changes"] if c["resource_name"] == "Booking API")
+        target = next(c for c in second["changes"] if c["resource_name"] == "NorthStar EC2 01")
         self.assertEqual((target["before"], target["after"]), ("compliant", "noncompliant"))
         stored = copy.deepcopy(self.client.rows)
         git("revert", "--no-edit", change_commit)
@@ -138,7 +138,7 @@ class ResourceComplianceTests(unittest.TestCase):
         reverted, _, _ = prepare(load(working), self.temporary.name + "/git-reverted")
         self.assertEqual(digest(reverted), digest(self.document))
         third = self.publish(reverted, 3, commit=revert_commit)
-        target = next(c for c in third["changes"] if c["resource_name"] == "Booking API")
+        target = next(c for c in third["changes"] if c["resource_name"] == "NorthStar EC2 01")
         self.assertEqual((target["before"], target["after"]), ("noncompliant", "compliant"))
         catalog = read_catalog(self.client, "northstar-offline-records")
         self.assertEqual(catalog["generation"], 3)
@@ -456,20 +456,53 @@ class HundredAccountTests(unittest.TestCase):
         baseline, _, _ = prepare(load(), Path(self.temp.name) / "ten")
         documents = [baseline, self.document]
         bad = copy.deepcopy(self.generated)
-        booking = next(r for r in bad["inventory"]["resources"] if r["id"] == "sim-ec2-001")
-        booking["configuration"]["metadata_options"]["http_tokens"] = "optional"
+        ec2_instance = next(r for r in bad["inventory"]["resources"] if r["id"] == "sim-ec2-001")
+        ec2_instance["configuration"]["metadata_options"]["http_tokens"] = "optional"
         regression, _, _ = prepare(bad, Path(self.temp.name) / "regression")
         documents.extend([regression, self.document])
-        for number, document in enumerate(documents, 1):
-            publish(
-                client,
-                "northstar-offline-records",
-                document,
-                source_commit=f"{number:040x}",
-                actor="synthetic-reviewer",
-                operation=f"gh-{number}-1",
-                published_at="2026-11-05T12:00:00Z",
-            )
+        with TestClient(
+            create_app(
+                local_demo=True,
+                resource_repository=DynamoResources(
+                    "northstar-offline-records", client_factory=lambda: client
+                ),
+            ),
+            base_url="http://127.0.0.1",
+            client=("127.0.0.1", 50000),
+        ) as api:
+            exceptions_before = api.get("/api/v1/exceptions").json()
+            for number, document in enumerate(documents, 1):
+                publish(
+                    client,
+                    "northstar-offline-records",
+                    document,
+                    source_commit=f"{number:040x}",
+                    actor="synthetic-reviewer",
+                    operation=f"gh-{number}-1",
+                    published_at="2026-11-05T12:00:00Z",
+                )
+                current = api.get("/api/v1/summary?view=resources").json()["data"]
+                finding = next(f for f in current["findings"] if f["resource_id"] == "sim-ec2-001")
+                resource = next(r for r in current["resources"] if r["id"] == "sim-ec2-001")
+                negative = number == 3
+                expected_status = "noncompliant" if negative else "compliant"
+                self.assertEqual(finding["status"], expected_status)
+                self.assertEqual(resource["status"], expected_status)
+                self.assertEqual(finding["observed"], "optional" if negative else "required")
+                self.assertEqual(finding["expected"], "required")
+                self.assertEqual(current["activity"][0]["operation"], f"gh-{number}-1")
+                self.assertEqual(current["activity"][0]["source_commit"], f"{number:040x}")
+                if number >= 2:
+                    self.assertEqual(current["summary"]["compliant"], 76 if negative else 77)
+                    self.assertEqual(current["summary"]["noncompliant"], 10 if negative else 9)
+                    imds = [f for f in current["findings"] if f["control_id"] == "ec2-imdsv2"]
+                    self.assertEqual(
+                        sum(f["status"] == "compliant" for f in imds), 27 if negative else 28
+                    )
+                    self.assertEqual(
+                        sum(f["status"] == "noncompliant" for f in imds), int(negative)
+                    )
+                self.assertEqual(api.get("/api/v1/exceptions").json(), exceptions_before)
         catalogue = read_catalog(client, "northstar-offline-records")
         self.assertEqual(catalogue["generation"], 4)
         self.assertEqual(catalogue["current"], digest(self.document))
