@@ -312,7 +312,7 @@ function Accounts({ data, path }: { data: ResourceData; path: string }) {
               (r) => r.account_id === account.id,
             ),
           }}
-         />
+        />
       </>
     ) : (
       <p role="alert">Account not found.</p>
@@ -594,7 +594,9 @@ function Resources({ data }: { data: ResourceData }) {
 }
 function Compliance({ data }: { data: ResourceData }) {
   const [env, setEnv] = useState("");
-  const findings = data.findings.filter((finding) => !env || finding.environment === env);
+  const findings = data.findings.filter(
+    (finding) => !env || finding.environment === env,
+  );
   const statuses = ["compliant", "noncompliant", "unknown", "stale"] as const;
   const count = (rows: typeof findings, status: (typeof statuses)[number]) =>
     rows.filter((finding) => finding.status === status).length;
@@ -610,13 +612,21 @@ function Compliance({ data }: { data: ResourceData }) {
         Environment
         <select value={env} onChange={(event) => setEnv(event.target.value)}>
           <option value="">All environments</option>
-          {["production", "pre-production", "testing", "development"].map((value) => (
-            <option key={value} value={value}>{environment(value)}</option>
-          ))}
+          {["production", "pre-production", "testing", "development"].map(
+            (value) => (
+              <option key={value} value={value}>
+                {environment(value)}
+              </option>
+            ),
+          )}
         </select>
       </label>
       <p>{findings.length} synthetic control evaluations in this view.</p>
-      <div className="table-scroll" tabIndex={0} aria-label="Compliance by control">
+      <div
+        className="table-scroll"
+        tabIndex={0}
+        aria-label="Compliance by control"
+      >
         <table>
           <thead>
             <tr>
@@ -630,28 +640,37 @@ function Compliance({ data }: { data: ResourceData }) {
           </thead>
           <tbody>
             {data.controls.map((control) => {
-              const rows = findings.filter((finding) => finding.control_id === control.id);
+              const rows = findings.filter(
+                (finding) => finding.control_id === control.id,
+              );
               return (
                 <tr key={control.id}>
-                  <td><strong>{control.name}</strong><small>{control.reason}</small></td>
+                  <td>
+                    <strong>{control.name}</strong>
+                    <small>{control.reason}</small>
+                  </td>
                   <td>{rows.length}</td>
-                  {statuses.map((status) => <td key={status}>{count(rows, status)}</td>)}
+                  {statuses.map((status) => (
+                    <td key={status}>{count(rows, status)}</td>
+                  ))}
                 </tr>
               );
             })}
             <tr>
               <th scope="row">All controls</th>
               <td>{findings.length}</td>
-              {statuses.map((status) => <td key={status}>{count(findings, status)}</td>)}
+              {statuses.map((status) => (
+                <td key={status}>{count(findings, status)}</td>
+              ))}
             </tr>
           </tbody>
         </table>
       </div>
       <p>
         To investigate individual desired and observed values, open{" "}
-        <Link to="/resources">Resources &amp; drift</Link>.
-        Governance exceptions are tracked separately and do not change a failed
-        control into a passing result.
+        <Link to="/resources">Resources &amp; drift</Link>. Governance exceptions
+        are tracked separately and do not change a failed control into a passing
+        result.
       </p>
     </section>
   );
