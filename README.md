@@ -128,7 +128,7 @@ See [requirements traceability](docs/REQUIREMENTS_TRACEABILITY.md), the [data mo
 
 ## Security and POC limits
 
-Cognito Authorization Code + S256 PKCE, API Gateway JWT authorization and server-side reader permissions protect data access. Browser tokens remain in memory; reload or expiry requires sign-in through Cognito. Exact approved HTTPS origins are used for callbacks and CORS. The browser has no AWS credentials or direct DynamoDB access.
+Cognito Authorization Code + S256 PKCE, API Gateway JWT authorization and server-side reader permissions protect data access. Browser tokens remain in memory. The session-renewal change uses the valid refresh grant without increasing access-token lifetime; reload or genuine expiry/revocation requires Cognito sign-in. See [session management](docs/FRONTEND.md#cognito-session-management) for rollout and validation boundaries. Exact approved HTTPS origins are used for callbacks and CORS. The browser has no AWS credentials or direct DynamoDB access.
 
 GitHub publisher trust pins immutable repository/owner IDs, the protected environment and STS audience. Runtime reads and publisher writes use separate IAM roles. State, saved plans, sensitive tfvars, tokens, ZIPs and generated builds stay outside source control. See [SECURITY.md](SECURITY.md) for reporting, audit commands and trust boundaries.
 
